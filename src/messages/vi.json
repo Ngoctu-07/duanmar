@@ -1,0 +1,1170 @@
+{
+  "booking": {
+    "title": "Đặt vé",
+    "subtitle": "Điền thông tin bên dưới — chúng tôi sẽ liên hệ xác nhận tình trạng chỗ và giá cuối cùng.",
+    "bookNow": "Đặt vé",
+    "backToTour": "Quay lại tour",
+    "contactTitle": "1. Thông tin liên hệ",
+    "fullName": "Họ và tên",
+    "email": "Email",
+    "phone": "Số điện thoại",
+    "notes": "Ghi chú (không bắt buộc)",
+    "notesPlaceholder": "Yêu cầu đặc biệt, điểm đón, giờ khởi hành mong muốn…",
+    "dateTitle": "2. Ngày khởi hành",
+    "travelDateLabel": "Ngày khởi hành",
+    "spotsLeft": "{count} chỗ trống",
+    "soldOut": "Hết chỗ",
+    "priceMissingNote": "Chưa có giá tour nên vé chưa được lưu vào My Trips — chúng tôi sẽ liên hệ để xác nhận giá cuối cùng.",
+    "pricingTitle": "3. Số khách & tổng giá",
+    "guests": "Số khách",
+    "perGuest": "{price} × {count} khách",
+    "total": "Tổng cộng",
+    "difficultyTitle": "4. Mức độ thử thách",
+    "difficulty": "Độ khó",
+    "difficultyPlaceholder": "Chọn độ khó",
+    "easy": "Dễ",
+    "medium": "Trung bình",
+    "hard": "Khó",
+    "submit": "Xác nhận đặt vé",
+    "summaryTitle": "Yêu cầu đặt vé đã được ghi nhận",
+    "summaryNote": "Chúng tôi sẽ liên hệ qua email hoặc điện thoại để xác nhận tình trạng chỗ và giá cuối cùng. Chưa có khoản thanh toán nào được thực hiện.",
+    "reference": "Mã yêu cầu",
+    "tour": "Tour",
+    "paymentTitle": "Phương thức thanh toán",
+    "methodMomo": "MoMo",
+    "methodBank": "Chuyển khoản ngân hàng",
+    "payable": "Số tiền cần thanh toán",
+    "qrHint": "Quét mã QR bằng ứng dụng ngân hàng hoặc MoMo",
+    "qrAlt": "Mã QR thanh toán",
+    "demoQr": "QR demo — chưa kết nối cổng thanh toán thật",
+    "statusPending": "Đang chờ thanh toán",
+    "statusSuccess": "Thanh toán thành công",
+    "viewMyTrips": "Xem các chuyến đi của tôi →",
+    "error": {
+      "requiredName": "Vui lòng nhập họ và tên",
+      "nameTooShort": "Họ tên cần ít nhất 2 ký tự",
+      "emailRequired": "Vui lòng nhập email",
+      "emailInvalid": "Email không hợp lệ",
+      "phoneRequired": "Vui lòng nhập số điện thoại",
+      "phoneInvalid": "Số điện thoại không hợp lệ",
+      "dateRequired": "Vui lòng chọn ngày khởi hành",
+      "dateOutOfRange": "Chỉ có thể khởi hành trong 7 ngày tới",
+      "dateFull": "Ngày này không còn đủ chỗ cho số khách của bạn",
+      "guestsRequired": "Vui lòng nhập số khách",
+      "guestsInvalid": "Số khách phải từ 1 đến 99",
+      "difficultyRequired": "Vui lòng chọn độ khó"
+    }
+  },
+  "priceRange": {
+    "label": "Giá tham khảo"
+  },
+  "pricing": {
+    "label": "Giá",
+    "tier": "Quy mô nhóm",
+    "perGuest": "Mỗi khách",
+    "groupTotal": "Tổng nhóm",
+    "guestsRange": "{min}–{max} khách",
+    "guestsSingle": "{count} khách",
+    "guestsAtLeast": "{min}+ khách",
+    "disclaimer": "Giá mang tính tham khảo theo nhóm và có thể thay đổi — giá cuối được xác nhận khi đặt tour."
+  },
+  "common": {
+    "home": "Trang chủ",
+    "explore": "Khám phá Việt Nam",
+    "planTrip": "Lập kế hoạch du lịch",
+    "culture": "Văn hóa & Di sản",
+    "deals": "Ưu đãi & Gói du lịch",
+    "business": "Doanh nghiệp & MICE",
+    "trade": "Đối tác du lịch",
+    "news": "Tin tức & Câu chuyện",
+    "sustainability": "Phát triển bền vững",
+    "about": "Về chúng tôi",
+    "support": "Hỗ trợ",
+    "menu": "Menu",
+    "search": "Tìm kiếm"
+  },
+  "home": {
+    "heroTitle": "Khám phá Việt Nam",
+    "heroSubtitle": "Trải nghiệm vẻ đẹp, văn hóa và sự thân thiện của Việt Nam",
+    "searchPlaceholder": "Bạn muốn đi đâu?",
+    "featuredDestinations": "Điểm đến nổi bật",
+    "exploreNow": "Khám phá ngay",
+    "experienceCategories": "Loại hình trải nghiệm",
+    "nature": "Thiên nhiên & Phiêu lưu",
+    "culture": "Văn hóa & Di sản",
+    "food": "Ẩm thực & Ẩm thực",
+    "beaches": "Biển & Đảo",
+    "wellness": "Sức khỏe & Thư giãn",
+    "nightlife": "Giải trí & Đêm",
+    "trendingViewAll": "Xem tất cả lộ trình",
+    "trade": {
+      "title": "Đối tác & Truyền thông",
+      "tradeCta": "Đối tác lữ hành",
+      "mediaCta": "Trung tâm báo chí"
+    }
+  },
+  "nav": {
+    "language": "Ngôn ngữ",
+    "english": "English",
+    "vietnamese": "Tiếng Việt"
+  },
+  "destinations": {
+    "title": "Điểm đến",
+    "subtitle": "Khám phá các địa điểm trên khắp Việt Nam",
+    "all": "Tất cả",
+    "north": "Miền Bắc",
+    "central": "Miền Trung",
+    "south": "Miền Nam",
+    "empty": "Không tìm thấy điểm đến nào cho khu vực này.",
+    "viewDetails": "Xem chi tiết",
+    "backToList": "Quay lại danh sách điểm đến",
+    "region": "Khu vực"
+  },
+  "notFound": {
+    "title": "Không tìm thấy trang",
+    "description": "Trang bạn tìm kiếm không tồn tại hoặc đã được di chuyển.",
+    "backHome": "Về trang chủ"
+  },
+  "planTrip": {
+    "title": "Lập kế hoạch du lịch",
+    "subtitle": "Mọi điều cần biết trước khi đến Việt Nam",
+    "guides": {
+      "visa": {
+        "title": "Thị thực & Thủ tục nhập cảnh",
+        "summary": "E-visa, miễn thị thực và thủ tục nhập cảnh.",
+        "sections": [
+          {
+            "heading": "E-Visa",
+            "body": "Hầu hết du khách có thể nộp đơn e-visa 90 ngày (1 lần hoặc nhiều lần nhập cảnh) trực tuyến. Thời gian xử lý thường 3-5 ngày làm việc. Chỉ nộp qua cổng chính phủ chính thức."
+          },
+          {
+            "heading": "Miễn thị thực",
+            "body": "Công dân một số nước được miễn thị thực trong thời gian giới hạn (thường 15-45 ngày). Kiểm tra danh sách miễn cập nhật mới nhất trước khi đi."
+          },
+          {
+            "heading": "Thủ tục nhập cảnh",
+            "body": "Hộ chiếu phải còn hiệu lực ít nhất 6 tháng kể từ ngày nhập cảnh. Chuẩn bị vé khứ hồi và chỗ ở xác nhận khi làm thủ tục hải quan."
+          }
+        ]
+      },
+      "weather": {
+        "title": "Thời tiết & Thời điểm lý tưởng",
+        "summary": "Hướng dẫn theo mùa cho Bắc, Trung và Nam Việt Nam.",
+        "sections": [
+          {
+            "heading": "Miền Bắc (Hà Nội, Sapa, Hạ Long)",
+            "body": "Đông mát (12-2, 15-20°C), hè nóng (5-8). Thời điểm lý tưởng: tháng 10-12 khi trời quang mát."
+          },
+          {
+            "heading": "Miền Trung (Đà Nẵng, Hội An, Huế)",
+            "body": "Nắng nóng 2-5; mùa mưa 9-11 kèm bão. Thời điểm lý tưởng: tháng 2-5."
+          },
+          {
+            "heading": "Miền Nam (TP.HCM, Đồng bằng sông Cửu Long, Phú Quốc)",
+            "body": "Nhiệt đới hai mùa: khô 12-4, mưa 5-11 (thường mưa chiều). Thời điểm lý tưởng: tháng 12-4."
+          }
+        ]
+      },
+      "getting-around": {
+        "title": "Di chuyển",
+        "summary": "Máy bay, tàu hỏa, xe buýt và phương tiện địa phương.",
+        "sections": [
+          {
+            "heading": "Máy bay nội địa",
+            "body": "Nhanh và hợp lý cho quãng đường dài (Hà Nội - TP.HCM ~2 giờ). Đặt sớm để có giá tốt trên Vietnam Airlines, Vietjet và Bamboo Airways."
+          },
+          {
+            "heading": "Tàu hỏa",
+            "body": "Tàu Thống Nhất chạy dọc đất nước - ngắm cảnh và thoải mái cho các chặng đêm giữa Hà Nội, Huế, Đà Nẵng và TP.HCM."
+          },
+          {
+            "heading": "Phương tiện địa phương",
+            "body": "Ứng dụng gọi xe (Grab, Xanh SM), taxi có đồng hồ và xe buýt phủ khắp đô thị. Thuê xe máy cần giấy phép lái xe quốc tế."
+          }
+        ]
+      },
+      "accommodation": {
+        "title": "Hướng dẫn lưu trú",
+        "summary": "Khách sạn, homestay và resort cho mọi ngân sách.",
+        "sections": [
+          {
+            "heading": "Khách sạn & Resort",
+            "body": "Từ chuỗi 5 sao quốc tế đến khách sạn boutique. Resort biển tập trung ở Đà Nẵng, Nha Trang, Phú Quốc và Quy Nhơn."
+          },
+          {
+            "heading": "Homestay",
+            "body": "Cách tuyệt vời để trải nghiệm đời sống địa phương, đặc biệt ở Sapa, Hà Giang và Đồng bằng sông Cửu Long. Chọn homestay gia đình để thưởng thức bữa cơm gia đình và giao lưu văn hóa."
+          },
+          {
+            "heading": "Tùy chọn tiết kiệm",
+            "body": "Hostel và nhà nghỉ phổ biến ở khu du lịch với giá rất cạnh tranh, thường kèm ăn sáng miễn phí và dịch vụ đặt tour."
+          }
+        ]
+      },
+      "health-safety": {
+        "title": "Sức khỏe & An toàn",
+        "summary": "Bảo hiểm du lịch, tiêm phòng và số khẩn cấp.",
+        "sections": [
+          {
+            "heading": "Bảo hiểm du lịch",
+            "body": "Nên mua bảo hiểm du lịch toàn diện có quyền lợi y tế. Kiểm tra chính sách có bao gồm hoạt động mạo hiểm nếu bạn định trekking hoặc lặn."
+          },
+          {
+            "heading": "Tiêm phòng & Sức khỏe",
+            "body": "Khám phòng khám du lịch 4-6 tuần trước chuyến đi. Nước máy không uống được; nước đóng chai rẻ và có khắp nơi. Thoa kem chống nắng và giữ đủ nước trong nắng nóng."
+          },
+          {
+            "heading": "Số khẩn cấp",
+            "body": "Công an 113, Cứu hỏa 114, Cấp cứu 115. Có cảnh sát du lịch ở các thành phố lớn. Giữ bản sao giấy tờ quan trọng tách khỏi bản gốc."
+          }
+        ]
+      },
+      "getting-to-vietnam": {
+        "title": "Đến Việt Nam",
+        "summary": "Sân bay, việc di chuyển sau hạ cánh, cửa khẩu biên giới và những gì cần chuẩn bị trước khi đến.",
+        "sections": [
+          {
+            "heading": "Đường hàng không",
+            "body": "Chuyến bay quốc tế đến các sân bay Nội Bài (Hà Nội), Tân Sơn Nhất (TP. Hồ Chí Minh), Đà Nẵng và Phú Quốc, với đường trung chuyển qua các trung tâm lớn ở châu Á. Hành trình dài thường trung chuyển qua Singapore, Bangkok, Hồng Kông hoặc các cửa ngõ trong khu vực."
+          },
+          {
+            "heading": "Trước khi đặt vé",
+            "body": "Kiểm tra yêu cầu thị thực và nhập cảnh trước — hầu hết công dân cần thị thực hoặc e-visa, và quy định thỉnh thoảng thay đổi. Xem hướng dẫn thị thực để biết chi tiết, rồi đặt vé (vé linh hoạt là lựa chọn khôn ngoan vào dịp lễ)."
+          },
+          {
+            "heading": "Đường bộ",
+            "body": "Campuchia, Trung Quốc và Lào có đường biên giới chung với Việt Nam. Hành khách quốc tế chỉ được xuất nhập cảnh tại cửa khẩu chính thức; xác nhận quy định nhập cảnh hiện hành và xin thị thực trước khi tới biên giới."
+          },
+          {
+            "heading": "Sau khi hạ cánh",
+            "body": "Xe buýt sân bay, taxi và ứng dụng gọi xe phục vụ các sân bay lớn. Với chuyến bay nội địa, tàu hỏa hoặc xe khách tiếp theo, hãy đặt trước vào dịp lễ và cao điểm — Tết là thời kỳ bận rộn nhất trong năm."
+          }
+        ]
+      },
+      "money-costs": {
+        "title": "Tiền tệ & Chi phí",
+        "summary": "Đơn vị tiền, thanh toán, ATM, ngân sách và tiền boa — những điều cơ bản về tiền bạc.",
+        "sections": [
+          {
+            "heading": "Đơn vị tiền tệ",
+            "body": "Đồng Việt Nam (VND) là đơn vị tiền tệ chính thức. Giá thường được niêm yết theo nghìn đồng; tiền giấy polyme là phổ biến và tiền xu hiếm được dùng trong giao dịch hằng ngày."
+          },
+          {
+            "heading": "Thanh toán",
+            "body": "Tiền mặt là phương án linh hoạt nhất, đặc biệt ở chợ, quán vỉa hè và cửa hàng nhỏ. Thẻ được chấp nhận rộng rãi tại khách sạn, nhà hàng tầm trung trở lên và cửa hàng lớn. ATM phổ biến ở thành phố và thị xã — báo cho ngân hàng trước khi đi để tránh bị khóa thẻ."
+          },
+          {
+            "heading": "Ngân sách",
+            "body": "Chi phí thay đổi nhiều theo mùa, thành phố và mức độ tiện nghi, nên không có một con số hàng ngày cố định. Chỗ ở và phương tiện nội địa kín chỗ và tăng giá vào cao điểm, ngày lễ — hãy đặt trước. Giữ một ít tiền mặt cho chợ, đồ ăn đường phố và các chuyến xe ôm ngắn."
+          },
+          {
+            "heading": "Tiền boa & giá cả",
+            "body": "Tiền boa được đánh giá cao nhưng không bắt buộc: làm tròn hóa đơn hoặc để lại tiền thừa là cách phổ biến, hướng dẫn viên hoặc tài xế thường được boa sau một ngày tốt. Mặc cả là chuyện bình thường ở chợ — giữ thái độ vui vẻ, và thỏa thuận giá trước với các chuyến xe không dùng đồng hồ."
+          }
+        ]
+      },
+      "etiquette": {
+        "title": "Phong tục & Tập quán du lịch",
+        "summary": "Vài nghi thức đơn giản giúp bạn được đón tiếp nồng hậu ở mọi nơi.",
+        "sections": [
+          {
+            "heading": "Chào hỏi & tôn trọng",
+            "body": "Nụ cười và lời chào nhã nhặn có sức nặng lớn. Người Việt Nam nói chung thân thiện với du khách; kính trọng người lớn tuổi và giữ giọng điệu bình tĩnh, vui vẻ được đánh giá cao trong giao tiếp hằng ngày."
+          },
+          {
+            "heading": "Trang phục nơi thờ tự",
+            "body": "Khi thăm chùa, đền, nhà thờ và đền thờ, hãy che vai và gối, tránh ồn ào. Cởi giày khi được yêu cầu, ở lối vào và trước bàn thờ."
+          },
+          {
+            "heading": "Chụp ảnh",
+            "body": "Hỏi ý kiến trước khi chụp ảnh người, đặc biệt ở vùng nông thôn, chợ và trong lễ hội. Một số điểm và làng cấm chụp ảnh — làm theo bảng hiệu và hướng dẫn của người địa phương."
+          },
+          {
+            "heading": "Phép lịch sự hằng ngày",
+            "body": "Cởi giày khi vào nhà ai đó, và nhận đồ uống hoặc quà bằng hai tay như một cử chỉ lịch sự. Giữ những bất đồng bình tĩnh và kín đáo — cãi nhau nơi công cộng bị coi là thiếu tế nhị."
+          }
+        ]
+      },
+      "accessible-travel": {
+        "title": "Thông tin tiếp cận",
+        "summary": "Ghi chú thực tế cho người khuyết tật — trung thực về những điểm khác nhau và điều cần sắp xếp trước.",
+        "sections": [
+          {
+            "heading": "Chuẩn bị trước",
+            "body": "Khả năng tiếp cận khác nhau nhiều giữa khách sạn hiện đại, trung tâm thành phố và vùng nông thôn. Cho chúng tôi hoặc chỗ ở biết nhu cầu của bạn trước — thông tin đáng tin dễ sắp xếp hơn khi báo trước thay vì khi đến nơi."
+          },
+          {
+            "heading": "Di chuyển",
+            "body": "Vỉa hè nhiều nơi không bằng phẳng hoặc đông đúc, và tòa nhà cũ có thể thiếu lối lên. Taxi và xe gọi xe thường là cách dễ nhất để di chuyển giữa các điểm tham quan; khách sạn mới và trung tâm giao thông thường trang bị tốt hơn nơi cũ — hỏi khi đặt chỗ."
+          },
+          {
+            "heading": "Biển & thiên nhiên",
+            "body": "Nhiều điểm tham quan tự nhiên có bậc thang, cát hoặc đường gồ ghề. Hỏi về địa hình và khả năng tiếp cận trước khi đặt tour, và cân nhắc các chuyến tham quan có hướng dẫn để nhân viên hỗ trợ."
+          },
+          {
+            "heading": "Nhận hỗ trợ",
+            "body": "Chia sẻ nhu cầu của bạn qua trang liên hệ — chúng tôi sẽ giúp tìm chỗ ở, phương tiện và hoạt động phù hợp với tình hình của bạn."
+          }
+        ]
+      },
+      "sustainable-travel": {
+        "title": "Du lịch bền vững & có trách nhiệm",
+        "summary": "Những lựa chọn nhỏ giúp cảnh quan, di sản và cộng đồng Việt Nam phát triển cho du khách tương lai.",
+        "sections": [
+          {
+            "heading": "Giảm nhựa",
+            "body": "Mang bình nước và túi cá nhân, hạn chế ống hút và túi dùng một lần khi có thể, và lấy nước ở khách sạn thay vì mua chai nhỏ mỗi ngày."
+          },
+          {
+            "heading": "Tôn trọng thiên nhiên & di sản",
+            "body": "Đi trên lối mòn được đánh dấu, mang rác theo bạn, và để đá, vỏ sò, hiện vật ở nguyên chỗ. Giữ khoảng cách tôn trọng với động vật hoang dã và không bao giờ mua sản phẩm từ loài nguy cấp."
+          },
+          {
+            "heading": "Lựa chọn có trách nhiệm",
+            "body": "Chọn nhà điều hành tour và thuyền có giấy phép, tuân thủ quy tắc an toàn và môi trường. Ở làng nghề, mua trực tiếp từ người thợ để nhiều tiền hơn ở lại cộng đồng."
+          },
+          {
+            "heading": "Hỗ trợ cộng đồng",
+            "body": "Ở homestay do người địa phương quản lý, ăn ở quán gia đình và học vài từ tiếng Việt — cử chỉ nhỏ tạo ra khác biệt thực sự. Luôn hỏi trước khi chụp ảnh người hoặc vào không gian riêng tư."
+          }
+        ]
+      }
+    }
+  },
+  "about": {
+    "title": "Về chúng tôi",
+    "subtitle": "Tổ chức du lịch quốc gia quảng bá Việt Nam ra thế giới",
+    "missionTitle": "Sứ mệnh",
+    "missionBody": "Đưa Việt Nam trở thành điểm đến hàng đầu, bền vững và cạnh tranh, truyền cảm hứng cho du khách bằng cảnh quan, di sản và sự chân tình của con người chúng tôi.",
+    "visionTitle": "Tầm nhìn",
+    "visionBody": "Một ngành du lịch có trách nhiệm, mang lại lợi ích cho cộng đồng địa phương đồng thời bảo tồn những giá trị thiên nhiên và văn hóa của Việt Nam.",
+    "orgTitle": "Cơ cấu tổ chức",
+    "orgBody": "Chúng tôi phối hợp với các văn phòng du lịch khu vực, đại diện quốc tế và đối tác công-tư trong tiếp thị, phát triển sản phẩm, tiêu chuẩn chất lượng và hợp tác thương mại.",
+    "valuesTitle": "Giá trị theo đuổi",
+    "valuesBody": "Bền vững, bản sắc, hiếu khách và xuất sắc - là kim chỉ nam cho mọi chiến dịch, hợp tác và trải nghiệm du khách mà chúng tôi tạo dựng.",
+    "contact": {
+      "title": "Liên hệ",
+      "subtitle": "Rất mong được lắng nghe bạn",
+      "channelsTitle": "Cách liên hệ",
+      "channels": [
+        {
+          "label": "Chung",
+          "email": "info@vietnam-tourism.com",
+          "note": "Câu hỏi du lịch, phản hồi và đề xuất hợp tác"
+        },
+        {
+          "label": "Báo chí",
+          "email": "press@vietnam-tourism.com",
+          "note": "Đề nghị phỏng vấn, bài viết và tư liệu truyền thông"
+        },
+        {
+          "label": "Lữ hành",
+          "email": "trade@vietnam-tourism.com",
+          "note": "Công ty lữ hành, đại lý và chương trình hợp tác"
+        }
+      ],
+      "hoursTitle": "Giờ làm việc",
+      "hours": "Thứ Hai – Thứ Sáu, 08:00 – 17:00 (GMT+7)",
+      "officesTitle": "Văn phòng du lịch khu vực",
+      "offices": [
+        {
+          "city": "Hà Nội",
+          "email": "hanoi@vietnam-tourism.com"
+        },
+        {
+          "city": "TP. Hồ Chí Minh",
+          "email": "hochiminh@vietnam-tourism.com"
+        },
+        {
+          "city": "Đà Nẵng",
+          "email": "danang@vietnam-tourism.com"
+        }
+      ]
+    },
+    "careers": {
+      "title": "Tuyển dụng",
+      "subtitle": "Cùng chúng tôi giới thiệu Việt Nam ra thế giới",
+      "intro": "Chúng tôi là đội ngũ nhỏ với nhiệm vụ lớn: chia sẻ phong cảnh, di sản và lòng hiếu khách của Việt Nam với du khách khắp nơi. Chúng tôi tìm kiếm người ham khám phá, quan tâm du lịch bền vững và giao tiếp rõ ràng.",
+      "openingsTitle": "Vị trí đang tuyển",
+      "positions": [
+        {
+          "title": "Chuyên viên Marketing Kỹ thuật số",
+          "type": "Toàn thời gian",
+          "location": "Hà Nội",
+          "summary": "Triển khai nội dung chiến dịch và báo cáo hiệu quả trên các kênh quốc tế."
+        },
+        {
+          "title": "Biên tập viên nội dung điểm đến (EN/VI)",
+          "type": "Toàn thời gian",
+          "location": "Đà Nẵng (hybrid)",
+          "summary": "Nghiên cứu và viết cẩm nang điểm đến, hành trình và câu chuyện bằng cả hai thứ tiếng."
+        },
+        {
+          "title": "Thực tập sinh Truyền thông",
+          "type": "Thực tập",
+          "location": "TP. Hồ Chí Minh",
+          "summary": "Hỗ trợ thông cáo báo chí, theo dõi truyền thông và điều phối sự kiện."
+        }
+      ],
+      "applyLabel": "Ứng tuyển qua email",
+      "applyEmail": "hr@vietnam-tourism.com",
+      "applyNote": "Gửi CV kèm tên vị trí trong tiêu đề email. Chúng tôi xét hồ sơ theo tiến độ."
+    },
+    "press": {
+      "title": "Báo chí & Truyền thông",
+      "subtitle": "Tài nguyên và liên hệ dành cho nhà báo",
+      "boilerplateTitle": "Về tổ chức",
+      "boilerplateBody": "Tổ chức Du lịch Việt Nam là cơ quan quốc gia chịu trách nhiệm giới thiệu Việt Nam như một điểm đến dẫn đầu, bền vững và cạnh tranh. Cùng các văn phòng khu vực và đối tác công – tư, tổ chức phụ trách tiếp thị, phát triển sản phẩm, chuẩn chất lượng và hợp tác lữ hành trên toàn thế giới.",
+      "factsTitle": "Số liệu nổi bật",
+      "facts": [
+        {
+          "label": "Di sản Thế giới UNESCO",
+          "value": "8"
+        },
+        {
+          "label": "Bờ biển",
+          "value": "3.260+ km"
+        },
+        {
+          "label": "Dân tộc",
+          "value": "54"
+        },
+        {
+          "label": "Múi giờ",
+          "value": "GMT+7"
+        }
+      ],
+      "factsDisclaimer": "Số liệu mang tính minh họa cho trang trình diễn này.",
+      "mediaContactTitle": "Liên hệ truyền thông",
+      "mediaEmail": "press@vietnam-tourism.com",
+      "mediaNote": "Dành cho đề nghị phỏng vấn, kiểm chứng thông tin và tư liệu độ phân giải cao."
+    }
+  },
+  "footer": {
+    "tagline": "Khám phá vẻ đẹp, văn hóa và sự hiếu khách của Việt Nam",
+    "thingsToDo": "Trải nghiệm",
+    "itineraries": "Lịch trình",
+    "festivals": "Lễ hội",
+    "visaInfo": "Thị thực",
+    "gettingAround": "Di chuyển",
+    "accommodation": "Lưu trú",
+    "healthSafety": "Sức khỏe & An toàn",
+    "contact": "Liên hệ",
+    "careers": "Tuyển dụng",
+    "pressKit": "Báo chí",
+    "rights": "Bảo lưu mọi quyền.",
+    "destinations": "Điểm đến",
+    "aboutUs": "Về chúng tôi",
+    "support": "Hỗ trợ & Câu hỏi thường gặp",
+    "privacy": "Quyền riêng tư & Điều khoản",
+    "blog": "Câu chuyện & Blog",
+    "events": "Lịch sự kiện",
+    "trade": "Đối tác lữ hành",
+    "accessibility": "Khả năng tiếp cận",
+    "sitemapHtml": "Sitemap"
+  },
+  "thingsToDo": {
+    "title": "Trải nghiệm",
+    "subtitle": "Khám phá trải nghiệm khắp Việt Nam",
+    "categories": {
+      "nature": {
+        "title": "Thiên nhiên & Phiêu lưu",
+        "summary": "Từ ruộng bậc thang phía Bắc đến hang động miền Trung, phong cảnh Việt Nam chinh phục mọi nhà khám phá.",
+        "activities": [
+          "Trekking ruộng bậc thang Sapa, Hà Giang",
+          "Khám phá hang động Phong Nha – Kẻ Bàng",
+          "Du thuyền vịnh Lan Hạ, Hạ Long",
+          "Chinh phục Fansipan — nóc nhà Đông Dương",
+          "Quan sát động vật ở vườn quốc gia Cát Tiên"
+        ]
+      },
+      "culture": {
+        "title": "Văn hóa & Di sản",
+        "summary": "Hai nghìn năm lịch sử sống trong chùa chiền, phố cổ và những phong tục còn nguyên vẹn.",
+        "activities": [
+          "Dạo phố cổ Hội An",
+          "Khám phá Kinh thành Huế",
+          "Thăm các di sản UNESCO như Mỹ Sơn",
+          "Xem múa rối nước ở Hà Nội",
+          "Tham dự đêm hội trăng rằm Hội An"
+        ]
+      },
+      "food": {
+        "title": "Ẩm thực",
+        "summary": "Ẩm thực đường phố là linh hồn của Việt Nam — từng bát, từng cuốn một.",
+        "activities": [
+          "Tour ẩm thực qua Phố Cổ Hà Nội",
+          "Thử cao lầu, bánh mì Hội An",
+          "Lớp học nấu ăn kết hợp chợ dân sinh",
+          "Ăn phở vỉa hè đúng điệu",
+          "Du thuyền miền Tây thưởng hoa quả nhiệt đới"
+        ]
+      },
+      "beaches": {
+        "title": "Biển & Đảo",
+        "summary": "Hơn 3.000 km bờ biển, hòn đảo và rạn san hô.",
+        "activities": [
+          "Nghỉ dưỡng biển Mỹ Khê, Đà Nẵng",
+          "Nhảy đảo Phú Quốc",
+          "Lặn ngắm san hô Côn Đảo",
+          "Chèo kayak giữa vịnh Nha Trang",
+          "Ngắm hoàng hôn ở biển Lăng Cô"
+        ]
+      },
+      "wellness": {
+        "title": "Wellness & Nghỉ dưỡng",
+        "summary": "Từ homestay núi rừng đến khu nghỉ dưỡng ven biển, chậm lại và nạp lại năng lượng.",
+        "activities": [
+          "Tập thái cực quyền lúc rạng đông ở Hội An",
+          "Ngâm suối nước nóng gần Đà Lạt",
+          "Nghỉ dưỡng ven biển Quy Nhơn",
+          "Tắm lá thuốc truyền thống",
+          "Trại yoga và thiền"
+        ]
+      },
+      "nightlife": {
+        "title": "Vui chơi về đêm",
+        "summary": "Khi mặt trời lặn, các thành phố lên đèn.",
+        "activities": [
+          "Quần bar trên cao ở TP. Hồ Chí Minh",
+          "Góc bia hơi Hà Nội",
+          "Chợ đêm Đà Nẵng và Hội An",
+          "Địa điểm nhạc sống ở Sài Gòn",
+          "Pháo hoa và trình diễn mùa lễ hội"
+        ]
+      }
+    }
+  },
+  "itineraries": {
+    "title": "Hành trình gợi ý",
+    "subtitle": "Lịch trình có sẵn từ 3 đến 14 ngày khắp Việt Nam",
+    "viewDetails": "Xem hành trình",
+    "backToList": "Quay lại danh sách",
+    "items": {
+      "classic-north": {
+        "title": "Bắc Bộ cổ điển",
+        "duration": "3 ngày",
+        "regions": "Hà Nội · Vịnh Hạ Long · Ninh Bình",
+        "summary": "Vòng phía Bắc tinh túy: năng lượng thủ đô, mặt nước vịnh và vùng đá vôi.",
+        "days": [
+          {
+            "day": "Ngày 1",
+            "title": "Đến Hà Nội",
+            "content": "Nhận phòng, dạo Phố Cổ và hồ Hoàn Kiếm, buổi tối xem múa rối nước."
+          },
+          {
+            "day": "Ngày 2",
+            "title": "Du thuyền vịnh Hạ Long",
+            "content": "Đêm trên du thuyền giữa núi đá vôi; chèo kayak và tắm biển lúc bình minh."
+          },
+          {
+            "day": "Ngày 3",
+            "title": "Ninh Bình & tiễn sân bay",
+            "content": "Chèo thuyền Tam Cốc giữa cánh đồng lúa, chùa Bái Đính, ra sân bay."
+          }
+        ]
+      },
+      "highlights": {
+        "title": "Điểm nổi bật Việt Nam",
+        "duration": "7 ngày",
+        "regions": "Hà Nội · Hạ Long · Hội An · TP. Hồ Chí Minh",
+        "summary": "Bảy ngày qua những điểm đến được yêu thích nhất, từ bắc xuống nam.",
+        "days": [
+          {
+            "day": "Ngày 1",
+            "title": "Hà Nội",
+            "content": "Dạo Phố Cổ và thăm Văn Miếu Quốc Tử Giám."
+          },
+          {
+            "day": "Ngày 2",
+            "title": "Hà Nội",
+            "content": "Lăng Chủ tịch Hồ Chí Minh, Phố Đào, cà phê trứng."
+          },
+          {
+            "day": "Ngày 3",
+            "title": "Vịnh Hạ Long",
+            "content": "Du thuyền đêm + chèo kayak giữa núi đá vôi."
+          },
+          {
+            "day": "Ngày 4",
+            "title": "Hội An",
+            "content": "Bay tới Đà Nẵng, tối dạo phố cổ lung linh đèn lồng."
+          },
+          {
+            "day": "Ngày 5",
+            "title": "Hội An",
+            "content": "Sáng biển An Bàng, lớp học nấu ăn và chợ."
+          },
+          {
+            "day": "Ngày 6",
+            "title": "TP. Hồ Chí Minh",
+            "content": "Bay vào Nam — Bảo tàng Chứng tích, chợ Bến Thành."
+          },
+          {
+            "day": "Ngày 7",
+            "title": "Miền Tây",
+            "content": "Tham quan chợ nổi Cái Răng, tối ra sân bay."
+          }
+        ]
+      },
+      "full-vietnam": {
+        "title": "Việt Nam trọn vẹn 14 ngày",
+        "duration": "14 ngày",
+        "regions": "Hà Nội → Sa Pa → Huế → Hội An → Sài Gòn",
+        "summary": "Hành trình trọn vẹn: núi rừng, phố di sản, thành phố lớn và miền Tây.",
+        "days": [
+          {
+            "day": "Ngày 1–3",
+            "title": "Hà Nội & Vịnh Hạ Long",
+            "content": "Điểm tham quan thủ đô, ẩm thực Phố Cổ, du thuyền đêm trên vịnh."
+          },
+          {
+            "day": "Ngày 4–5",
+            "title": "Sa Pa",
+            "content": "Trekking núi đồi qua ruộng bậc thang và bản làng dân tộc."
+          },
+          {
+            "day": "Ngày 6–7",
+            "title": "Ninh Bình",
+            "content": "Phong cảnh đá vôi, thuyền Tam Cốc và các ngôi chùa cổ."
+          },
+          {
+            "day": "Ngày 8–9",
+            "title": "Huế",
+            "content": "Kinh thành, lăng tẩm hoàng gia và sông Hương."
+          },
+          {
+            "day": "Ngày 10–11",
+            "title": "Hội An",
+            "content": "Phố cổ, tiệm may, biển và lớp học nấu ăn."
+          },
+          {
+            "day": "Ngày 12–13",
+            "title": "TP. Hồ Chí Minh",
+            "content": "Lịch sử chiến tranh, nhà cao tầng và nhịp sống phố thị."
+          },
+          {
+            "day": "Ngày 14",
+            "title": "Miền Tây & tiễn sân bay",
+            "content": "Chợ nổi buổi sáng, ra sân bay."
+          }
+        ]
+      }
+    }
+  },
+  "festivals": {
+    "title": "Lễ hội & Sự kiện",
+    "subtitle": "Lịch lễ hội quanh năm khắp Việt Nam",
+    "items": [
+      {
+        "name": "Tết Nguyên Đán",
+        "when": "Cuối tháng 1 – đầu tháng 2",
+        "location": "Toàn quốc",
+        "description": "Sự kiện quan trọng nhất năm — sum họp gia đình, cỗ bàn, hoa và pháo hoa.",
+        "months": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Lễ hội Lim",
+        "when": "12 tháng Giêng",
+        "location": "Bắc Ninh",
+        "description": "Hát quan họ trên thuyền và sườn đồi, gìn giữ truyền thống hát giao duyên lâu đời.",
+        "months": [
+          2,
+          3
+        ]
+      },
+      {
+        "name": "Lễ hội Giỗ Tổ Hùng Vương",
+        "when": "10 tháng 3 âm lịch",
+        "location": "Phú Thọ",
+        "description": "Tưởng niệm các vua Hùng với rước kiệu, dâng hương và trò chơi dân gian.",
+        "months": [
+          4,
+          5
+        ]
+      },
+      {
+        "name": "Lễ hội Ooc Pom Bok",
+        "when": "Tháng 7",
+        "location": "Tây Nguyên",
+        "description": "Lễ mừng cơm mới của người Jrai — cồng chiêng, múa và tiệc cộng đồng.",
+        "months": [
+          7
+        ]
+      },
+      {
+        "name": "Festival Huế",
+        "when": "Tháng 6, các năm chẵn",
+        "location": "Huế",
+        "description": "Festival nghệ thuật hai năm một lần phủ kín Kinh thành bằng biểu diễn, diễu hành và ánh sáng.",
+        "months": [
+          6
+        ]
+      },
+      {
+        "name": "Lễ hội đèn lồng Hội An",
+        "when": "Rằm hằng tháng",
+        "location": "Hội An",
+        "description": "Phố cổ tắt điện, thắp sáng bằng đèn lồng; đèn hoa đăng trôi trên sông Thu Bồn.",
+        "months": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      },
+      {
+        "name": "Tết Trung Thu",
+        "when": "Tháng 9 – tháng 10",
+        "location": "Toàn quốc",
+        "description": "Lễ hội thiếu nhi với đèn ngôi sao, bánh nến, múa lân và rước đèn.",
+        "months": [
+          9,
+          10
+        ]
+      },
+      {
+        "name": "Lễ hội đua thuyền Lộc Ngược",
+        "when": "Tháng 10",
+        "location": "Hà Giang",
+        "description": "Đua thuyền truyền thống trên sông Lô, thu hút đông đảo người khắp vùng cao.",
+        "months": [
+          10
+        ]
+      }
+    ]
+  },
+  "culture": {
+    "title": "Văn hóa & Di sản",
+    "subtitle": "Hai nghìn năm phong tục sống",
+    "cuisineLink": "Khám phá trải nghiệm ẩm thực →",
+    "festivalLink": "Xem lịch lễ hội →",
+    "sections": {
+      "history": {
+        "heading": "Tổng quan lịch sử",
+        "body": "Lịch sử Việt Nam trải từ các vương quốc sông Hồng cổ đại qua nghìn năm độc lập, thời Pháp thuộc và quá trình thống nhất hiện đại. Mỗi giai đoạn đều để lại dấu ấn trong kiến trúc, ngôn ngữ và tính cách đất nước.",
+        "points": [
+          "Các vua Hùng và truyền thuyết Lạc Long Quân – Âu Cơ",
+          "Thăng Long — nghìn năm kinh đô",
+          "Hội An là thương cảng thế kỷ 16–18",
+          "Thống nhất Bắc – Nam năm 1975"
+        ]
+      },
+      "unesco": {
+        "heading": "Di sản Thế giới UNESCO",
+        "body": "Việt Nam sở hữu cụm di sản UNESCO nổi bật, trải từ kỳ quan thiên nhiên đến công trình văn hóa.",
+        "points": [
+          "Vịnh Hạ Long — hàng nghìn đảo đá vôi trên mặt nước ngọc bích",
+          "Phố cổ Hội An — thương cảng được gìn giữ",
+          "Kinh thành Huế — kinh đô cuối cùng",
+          "Mỹ Sơn — đền tháp Champa",
+          "Phong Nha – Kẻ Bàng — mạng hang động lớn nhất thế giới",
+          "Tràng An — cảnh quan đá vôi và hang sông"
+        ]
+      },
+      "ethnic": {
+        "heading": "Dân tộc thiểu số & Truyền thống",
+        "body": "54 dân tộc cùng sinh sống, mỗi dân tộc có ngôn ngữ, trang phục, lễ hội và nghề thủ công riêng. Các vùng cao và miền núi phía Bắc là nơi sắc màu này rõ nét nhất.",
+        "points": [
+          "Thêu và bạc H'Mong ở Sa Pa, Hà Giang",
+          "Nhà sàn Thái và múa xòe vùng tây bắc",
+          "Văn hóa chiêng gõ Jarai, Ba Na ở Tây Nguyên",
+          "Chợ phiên vải brocade Bắc Hà, Cán Cấu"
+        ]
+      },
+      "cuisine": {
+        "heading": "Ẩm thực",
+        "body": "Ẩm thực Việt Nam cân bằng rau thơm, nước dùng và nước chấm theo từng vùng: phở Bắc, bún bò Huế, món ngọt-mặn phương Nam.",
+        "points": [
+          "Phở và bánh mì — biểu tượng quốc gia",
+          "Cao lầu Hội An — chỉ có ở đây",
+          "Ẩm thực cung đình Huế — tinh tế từng món",
+          "Hoa quả nhiệt đới và chợ nổi miền Tây"
+        ]
+      },
+      "arts": {
+        "heading": "Nghệ thuật, Thủ công & Biểu diễn",
+        "body": "Từ múa rối nước sinh từ ruộng lúa đến sơn mài và dệt lụa, nghệ thuật Việt bắt nguồn từ làng quê và nét tinh tế cung đình.",
+        "points": [
+          "Múa rối nước — truyền thống nghìn năm",
+          "Tranh sơn mài, thêu lụa, nghề tre",
+          "Hát quan họ Bắc Ninh",
+          "Tuồng và cải lương"
+        ]
+      },
+      "festivals": {
+        "heading": "Lễ hội chuyên sâu",
+        "body": "Lễ hội điểm xuyết lịch âm — từ sum họp Tết đến hội làng với rước kiệu, trò chơi và tiệc cộng đồng.",
+        "points": [
+          "Tết Nguyên Đán — cả nước cùng đón",
+          "Tết Trung Thu — đèn ông sao, múa lân",
+          "Đêm hội trăng rằm Hội An",
+          "Lễ hội vùng: Lim, Ooc Pom Bok, Giỗ Tổ Hùng Vương"
+        ]
+      }
+    }
+  },
+  "deals": {
+    "title": "Ưu đãi & Gói tour",
+    "subtitle": "Ưu đãi tuyển chọn cho hành trình Việt Nam",
+    "disclaimer": "Ưu đãi mang tính minh họa — giá và tình trạng cuối cùng được đối tác xác nhận tại thời điểm đặt.",
+    "items": [
+      {
+        "tag": "Khuyến mãi",
+        "title": "Ưu đãi đặt sớm: tour mùa đông",
+        "description": "Đặt sớm và tiết kiệm cho các tour mùa thu – đông chọn lọc ở miền Bắc và miền Trung.",
+        "terms": "Đặt trước 31/12 cho khởi hành đến 31/03. Chỉ áp dụng tour chọn lọc."
+      },
+      {
+        "tag": "Gói tour",
+        "title": "Vòng Bắc Bộ kinh điển — 6 ngày 5 đêm",
+        "description": "Hà Nội, Vịnh Hạ Long và Ninh Bình trong một lịch trình kèm du thuyền, tham quan có hướng dẫn và xe đưa đón.",
+        "terms": "Khởi hành nhóm ghép. Phụ thu phòng đơn tùy chọn."
+      },
+      {
+        "tag": "Combo",
+        "title": "Vé máy bay + khách sạn: Hà Nội & TP. Hồ Chí Minh",
+        "description": "Kết hợp chuyến bay nội địa với khách sạn 4 sao tuyển chọn tại hai thành phố cho hành trình bắc – nam liền mạch.",
+        "terms": "Tùy tình trạng hãng hàng không và khách sạn."
+      },
+      {
+        "tag": "Theo mùa",
+        "title": "Nghỉ dưỡng biển mùa hè",
+        "description": "Đảo ngọc Phú Quốc hoặc biển Đà Nẵng – Hội An, kèm tín dụng nghỉ dưỡng tại một số khách sạn.",
+        "terms": "Áp dụng tháng 5–8. Tín dụng tùy cơ sở."
+      }
+    ]
+  },
+  "news": {
+    "title": "Tin tức & Câu chuyện",
+    "subtitle": "Thông cáo báo chí và câu chuyện du lịch khắp Việt Nam",
+    "viewArticle": "Đọc tiếp",
+    "backToList": "Quay lại tin tức",
+    "items": {
+      "record-arrivals-2026": {
+        "title": "Việt Nam đón kỷ lục khách quốc tế nửa đầu 2026",
+        "date": "28/08/2026",
+        "category": "Thông cáo báo chí",
+        "excerpt": "Số lượt khách tăng mạnh nhờ đường bay mới và quy trình e-visa tinh gọn, đưa Việt Nam đến gần hơn bao giờ hết.",
+        "content": [
+          "Lượt khách quốc tế đạt mức cao mới trong sáu tháng đầu năm 2026, nhờ các đường bay thẳng tăng cường từ Đông Bắc Á và châu Âu cùng tăng trưởng kết nối trong khu vực.",
+          "Tổ chức du lịch quốc gia cho rằng quy trình e-visa đơn giản hóa và chuỗi sự kiện quanh năm là động lực chính, với các điểm di sản như Hạ Long, Hội An và Huế dẫn đầu nhu cầu.",
+          "Cơ quan chức năng cho biết phần còn lại của năm sẽ tập trung quản lý du lịch bền vững tại các điểm đông khách và hỗ trợ dự án du lịch cộng đồng ở vùng cao."
+        ]
+      },
+      "hanoi-street-food-48h": {
+        "title": "48 giờ ở Hà Nội: bức thư tình gửi ẩm thực đường phố",
+        "date": "15/08/2026",
+        "category": "Câu chuyện",
+        "excerpt": "Hai ngày, mỗi khu phố một nhịp — chỗ ăn phở, bún chả và cà phê trứng ở Phố Cổ.",
+        "content": [
+          "Bắt đầu sớm tại quán phở vỉa hè nơi nước dùng đã ninh từ trước bình minh, rồi đi bộ quanh hồ Hoàn Kiếm trong lúc thành phố thức dậy.",
+          "Bữa trưa là bún chả nướng than giữa Phố Cổ, theo sau là cà phê trứng trong khuôn viên cafe khuất — ngọt, đậm và hợp với buổi chiều nắng nóng.",
+          "Bữa tối thuộc về các quán nướng phố Tạ Hiện, nơi ghế nhựa tràn ra vỉa hè và bia lạnh tuôn chảy. Dành chỗ cho bánh mì khuya từ xe hàng gần đường ray."
+        ]
+      },
+      "hue-festival-programme": {
+        "title": "Festival Huế công bố chương trình đầy đủ",
+        "date": "02/08/2026",
+        "category": "Thông cáo báo chí",
+        "excerpt": "Biểu diễn, diễu hành và trình diễn ánh sáng phủ kín Kinh thành trong lễ hội nghệ thuật hai năm một lần.",
+        "content": [
+          "Ban tổ chức công bố hơn 60 sự kiện trải âm nhạc, sân khấu, mỹ thuật và tọa đàm di sản, tại Kinh thành và dọc sông Hương.",
+          "Điểm nhấn gồm chiếu sáng đêm cổng hoàng thành, tái hiện nhạc cung đình và giao lưu nghệ thuật quốc tế với các đoàn từ châu Á và châu Âu.",
+          "Vé và lịch chi tiết sẽ được công bố trên các kênh chính thức, nhiều tiết mục sân trong miễn phí tham dự."
+        ]
+      },
+      "fansipan-sunrise-trek": {
+        "title": "Chinh phục Fansipan đón bình minh: cẩm nang cho người mới",
+        "date": "20/07/2026",
+        "category": "Câu chuyện",
+        "excerpt": "Cần gì để chạm đỉnh Nóc nhà Đông Dương — thể lực, hướng dẫn viên và cung đường lên từ Sa Pa.",
+        "content": [
+          "Fansipan cao 3.143 m trong tầm với của người đi bộ khỏe mạnh, nhưng ngọn núi đòi hỏi sự tôn trọng: đoạn dốc, thời tiết thay đổi và độ cao cộng dồn.",
+          "Hầu hết tour khởi hành từ Sa Pa có hướng dẫn viên địa phương, cắm trại qua đêm ở trạm cao rồi xuất phát trước rạng đông để đón bình minh trên tầng mây.",
+          "Chuẩn bị áo lớp, đồ chống mưa và nhiều nước; thuê đồ ấm tại Sa Pa nếu hành lý nhẹ, và dành ngày nghỉ sau đó để khám phá chợ bản và thác."
+        ]
+      }
+    },
+    "categories": {
+      "pressRelease": "Thông cáo báo chí",
+      "story": "Câu chuyện"
+    }
+  },
+  "map": {
+    "title": "Bản đồ tương tác",
+    "subtitle": "Khám phá các điểm đến khắp Việt Nam trên bản đồ",
+    "markersNote": "Một số điểm đến chưa có tọa độ — xem trong danh sách bên dưới.",
+    "listTitle": "Tất cả điểm đến",
+    "regionLabel": "Vùng"
+  },
+  "search": {
+    "title": "Tìm kiếm",
+    "placeholder": "Tìm điểm đến, cẩm nang, câu chuyện...",
+    "hint": "Nhập để tìm trong nội dung du lịch Việt Nam",
+    "noResults": "Không tìm thấy kết quả",
+    "destination": "Điểm đến",
+    "guide": "Cẩm nang",
+    "activity": "Trải nghiệm",
+    "itinerary": "Hành trình",
+    "festival": "Lễ hội",
+    "article": "Bài viết",
+    "page": "Trang"
+  },
+  "myTrips": {
+    "title": "Chuyến đi của tôi",
+    "detailTitle": "Vé chuyến đi",
+    "navLabel": "Chuyến đi của tôi",
+    "subtitle": "Các booking đã thanh toán được lưu trên thiết bị này",
+    "listLabel": "Danh sách chuyến đi",
+    "empty": "Chưa có chuyến đi nào — booking đã thanh toán sẽ hiển thị tại đây.",
+    "emptyCta": "Khám phá tour",
+    "deleteAll": "Xóa tất cả chuyến đi",
+    "deleteAllConfirm": "Xóa toàn bộ chuyến đi đã lưu trên thiết bị này?",
+    "paidBadge": "Đã thanh toán",
+    "notFound": "Không tìm thấy chuyến đi này trên thiết bị.",
+    "back": "← Quay lại chuyến đi của tôi"
+  },
+  "support": {
+    "title": "Hỗ trợ & Câu hỏi thường gặp",
+    "subtitle": "Trả lời những câu hỏi du khách thường gặp nhất",
+    "faqs": [
+      {
+        "q": "Tôi có cần visa để đến Việt Nam không?",
+        "a": "Nhiều quốc gia được miễn thị thực trong thời gian ngắn; phần còn lại thường có thể xin e-visa trực tuyến trước khi khởi hành. Quy định thay đổi thường xuyên — hãy kiểm tra cổng e-visa chính thức hoặc Đại sứ quán Việt Nam gần nhất với quốc tịch của bạn trước khi đặt vé."
+      },
+      {
+        "q": "Khi nào là thời điểm tốt nhất để đi?",
+        "a": "Việt Nam trải ba miền với khí hậu khác nhau. Nhìn chung tháng 12 đến tháng 4 khô ráo nhất ở phần lớn đất nước: miền Bắc dễ chịu từ tháng 10 đến tháng 4, miền Trung từ tháng 2 đến tháng 5, miền Nam từ tháng 12 đến tháng 4. Hãy xem dự báo từng vùng cho thời điểm bạn đi."
+      },
+      {
+        "q": "Tiền tệ gì được sử dụng?",
+        "a": "Đồng Việt Nam (VND) là tiền tệ địa phương. Tiền mặt hữu ích cho chợ, đồ ăn vặt và cửa hàng nhỏ; thẻ được chấp nhận rộng rãi ở khách sạn, nhà hàng và cửa hàng tại các thành phố lớn. ATM phổ biến ở thành phố và khu du lịch."
+      },
+      {
+        "q": "Di chuyển như thế nào?",
+        "a": "Chuyến bay nội địa ngắn kết nối các thành phố xa nhanh chóng, tàu hỏa chạy dọc bờ biển, xe khách đường dài giá rẻ. Trong thành phố có taxi, ứng dụng gọi xe và xe buýt. Với quãng đường ngắn, thuê xe máy và đi bộ cũng tiện."
+      },
+      {
+        "q": "Việt Nam có an toàn cho du khách không?",
+        "a": "Việt Nam nhìn chung an toàn cho du khách, tỷ lệ tội phạm bạo lực thấp. Cẩn thận túi xách ở nơi đông người, lưu ý khi qua đường đông xe, giữ hành lý bên mình. Nên mua bảo hiểm du lịch."
+      },
+      {
+        "q": "Điện thoại của tôi có dùng được không?",
+        "a": "SIM/eSIM địa phương có data giá rẻ, mua dễ dàng tại sân bay và cửa hàng tiện lợi. Wi-Fi phổ biến ở khách sạn, quán cà phê, nhà hàng. Mua từ nhà mạng chính thức và mang theo hộ chiếu khi đăng ký SIM."
+      },
+      {
+        "q": "Dùng ổ cắm gì?",
+        "a": "Việt Nam dùng điện 220V, 50Hz. Ổ cắm thường nhận hai chấu phẳng (loại A) hoặc hai chấu tròn (loại C) — hãy mang adapter đa năng nếu phích cắm của bạn khác."
+      },
+      {
+        "q": "Tôi có giao tiếp được không?",
+        "a": "Tiếng Việt là ngôn ngữ chính thức. Tiếng Anh phổ biến ở khu du lịch, khách sạn và các thành phố lớn; ở nơi khác, vài câu giao tiếp cơ bản và ứng dụng dịch sẽ giúp ích nhiều. Biển chỉ dẫn ở các điểm du lịch nổi tiếng thường có tiếng Anh."
+      }
+    ],
+    "contactTitle": "Vẫn còn thắc mắc?",
+    "contactText": "Đội ngũ chúng tôi sẵn lòng giải đáp mọi điều chưa có ở đây.",
+    "contactCta": "Liên hệ chúng tôi"
+  },
+  "privacy": {
+    "title": "Chính sách quyền riêng tư & Điều khoản sử dụng",
+    "subtitle": "Cách chúng tôi xử lý dữ liệu của bạn và các quy tắc sử dụng trang này",
+    "lastUpdated": "Cập nhật lần cuối: 26 tháng 9, 2026",
+    "policy": [
+      {
+        "heading": "Chúng tôi là ai",
+        "paragraphs": [
+          "Trang web này được vận hành bởi Tổ chức Du lịch Việt Nam nhằm cung cấp thông tin du lịch về Việt Nam. Trong chính sách này, \"chúng tôi\" nghĩa là bên vận hành trang web này."
+        ]
+      },
+      {
+        "heading": "Thông tin chúng tôi thu thập",
+        "paragraphs": [
+          "Chúng tôi không yêu cầu tài khoản người dùng, không xử lý thanh toán và không chạy công cụ theo dõi quảng cáo hay phân tích. Chúng tôi chỉ lưu sau đây trên thiết bị của bạn:"
+        ],
+        "bullets": [
+          "Ngôn ngữ bạn chọn, lưu dưới dạng cookie để trang mở bằng tiếng Anh hoặc tiếng Việt.",
+          "Kế hoạch chuyến đi đã lưu, giữ trong bộ nhớ cục bộ của trình duyệt.",
+          "Trang này không thu thập tên, địa chỉ email hay thông tin thanh toán."
+        ]
+      },
+      {
+        "heading": "Cách chúng tôi dùng thông tin của bạn",
+        "paragraphs": [
+          "Ngôn ngữ được dùng để hiển thị trang theo lựa chọn của bạn. Kế hoạch chuyến đi được dùng để khôi phục các điểm đến đã lưu khi bạn quay lại và lấy tên, thông tin của chúng từ dịch vụ nội dung khi bạn mở trang lập kế hoạch. Nội dung kế hoạch không được dùng cho tiếp thị."
+        ]
+      },
+      {
+        "heading": "Dịch vụ bên thứ ba",
+        "paragraphs": [
+          "Để hiển thị nội dung, chúng tôi dựa vào các nhà cung cấp sau:"
+        ],
+        "bullets": [
+          "Sanity — lưu trữ nội dung và hình ảnh.",
+          "OpenStreetMap — cung cấp gạch bản đồ trên bản đồ điểm đến.",
+          "Google Fonts — cung cấp chữ Inter."
+        ]
+      },
+      {
+        "heading": "Quyền của bạn và liên hệ",
+        "paragraphs": [
+          "Bạn có thể xóa cookie và dữ liệu trang bất kỳ lúc nào trong cài đặt trình duyệt, điều này sẽ xóa tùy chọn đã lưu và kế hoạch chuyến đi. Về thắc mắc đối với chính sách này, hãy liên hệ qua trang Liên hệ. Chúng tôi có thể cập nhật chính sách; ngày ở đầu trang cho biết lần thay đổi gần nhất."
+        ]
+      }
+    ],
+    "terms": [
+      {
+        "heading": "Chấp nhận các điều khoản",
+        "paragraphs": [
+          "Khi sử dụng trang web này, bạn đồng ý với các điều khoản này. Nếu không đồng ý, vui lòng không sử dụng trang."
+        ]
+      },
+      {
+        "heading": "Độ chính xác của thông tin",
+        "paragraphs": [
+          "Thông tin du lịch — gồm quy định thị thực, điều kiện nhập cảnh, giờ mở cửa và lịch trình giao thông — thay đổi thường xuyên. Chúng tôi cố gắng giữ nội dung chính xác, nhưng chỉ mang tính tham khảo chung. Hãy luôn kiểm tra yêu cầu thị thực và nhập cảnh với nguồn chính thức của chính phủ trước khi đi, và xác nhận trực tiếp với nhà cung cấp dịch vụ."
+        ]
+      },
+      {
+        "heading": "Liên kết bên ngoài",
+        "paragraphs": [
+          "Trang có liên kết đến các trang web bên ngoài mà chúng tôi không vận hành. Các trang đó chịu điều khoản và thực hành riêng, chúng tôi không chịu trách nhiệm về nội dung của chúng."
+        ]
+      },
+      {
+        "heading": "Sở hữu trí tuệ và thay đổi",
+        "paragraphs": [
+          "Nội dung trên trang này (chữ, thiết kế, hình ảnh) thuộc về chúng tôi hoặc bên cấp phép và không được dùng thương mại mà không có phép. Chúng tôi có thể sửa đổi hoặc ngừng một phần trang hay các điều khoản bất kỳ lúc nào; thay đổi có hiệu lực khi được đăng."
+        ]
+      }
+    ],
+    "policyHeading": "Chính sách quyền riêng tư",
+    "termsHeading": "Điều khoản sử dụng"
+  },
+  "blog": {
+    "title": "Câu chuyện & cảm hứng",
+    "subtitle": "Câu chuyện du lịch và tiếng nói từ khắp Việt Nam",
+    "viewArticle": "Đọc câu chuyện",
+    "viewAll": "Xem tất cả câu chuyện"
+  },
+  "events": {
+    "title": "Lịch sự kiện & lễ hội",
+    "subtitle": "Lọc lễ hội theo tháng. Ngày âm lịch đổi mỗi năm — xem ngày ghi trên từng thẻ.",
+    "monthNames": [
+      "Tháng 1",
+      "Tháng 2",
+      "Tháng 3",
+      "Tháng 4",
+      "Tháng 5",
+      "Tháng 6",
+      "Tháng 7",
+      "Tháng 8",
+      "Tháng 9",
+      "Tháng 10",
+      "Tháng 11",
+      "Tháng 12"
+    ],
+    "tickerTitle": "Sự kiện & lễ hội",
+    "empty": "Không có lễ hội nào trong tháng này.",
+    "viewCalendar": "Xem theo tháng →",
+    "lunarNote": "Ngày âm lịch thay đổi mỗi năm; tháng hiển thị chỉ là xấp xỉ."
+  },
+  "trade": {
+    "title": "Đối tác lữ hành",
+    "subtitle": "Tài nguyên và hợp tác cho công ty lữ hành, đại lý và DMC",
+    "intro": "Chúng tôi hợp tác với các đối tác lữ hành toàn cầu để thiết kế, quảng bá và bán các lộ trình Việt Nam. Dù bạn đang xây gói tour mới hay tìm nội dung điểm đến, đội ngũ chúng tôi hỗ trợ bằng chương trình, báo cáo và tài sản thương hiệu.",
+    "offersTitle": "Cách chúng tôi hợp tác",
+    "offers": [
+      {
+        "heading": "Chương trình marketing & hợp tác",
+        "text": "Chiến dịch chung, đoàn giao thương và quảng bá đồng thương hiệu để đưa thêm du khách đến Việt Nam."
+      },
+      {
+        "heading": "Thống kê & báo cáo thị trường",
+        "text": "Báo cáo khách đến, chi tiêu và xu hướng cung cấp cho đối tác khi yêu cầu — liên hệ đội ngũ chúng tôi để nhận số liệu mới nhất."
+      },
+      {
+        "heading": "Danh bạ công ty lữ hành",
+        "text": "Danh bạ chọn lọc các đơn vị uy tín đang được xây dựng. Liên hệ để được liệt kê khi ra mắt."
+      },
+      {
+        "heading": "Kho media & báo chí",
+        "text": "Logo, hướng dẫn thương hiệu, hình ảnh và thông cáo báo chí cho chuyên gia truyền thông."
+      }
+    ],
+    "pressCta": "Mở kho báo chí",
+    "contactTitle": "Yêu cầu từ đối tác",
+    "contactText": "Cho chúng tôi biết về công ty của bạn và bạn muốn hợp tác như thế nào.",
+    "contactCta": "Liên hệ chúng tôi"
+  },
+  "mice": {
+    "title": "Du lịch MICE & doanh nghiệp",
+    "subtitle": "Hội nghị, incentive, triển lãm và sự kiện doanh nghiệp tại Việt Nam",
+    "intro": "Việt Nam tổ chức sự kiện doanh nghiệp ở mọi quy mô — từ hội nghị khu vực đến chương trình incentive và triển lãm thương mại. Chúng tôi giúp nhà tổ chức kết nối địa điểm, xây dựng chương trình và giải quyết các vấn đề thực tế khi đưa đội ngũ đến Việt Nam.",
+    "servicesTitle": "Cách chúng tôi hỗ trợ nhà tổ chức",
+    "services": [
+      {
+        "heading": "Địa điểm hội nghị & triển lãm",
+        "text": "Các thành phố lớn như Hà Nội, TP. Hồ Chí Minh và Đà Nẵng có trung tâm hội nghị tiêu chuẩn quốc tế, sảnh tiệc khách sạn và nhà triển lãm cho sự kiện nhiều quy mô."
+      },
+      {
+        "heading": "Chương trình incentive",
+        "text": "Tour di sản, nghỉ dưỡng, du thuyền qua đêm và trải nghiệm tập thể để tưởng thưởng và tạo động lực cho nhóm mọi quy mô."
+      },
+      {
+        "heading": "Thông tin du khách doanh nghiệp",
+        "text": "Yêu cầu nhập cảnh, hướng dẫn thị thực doanh nghiệp và thông tin thực tế cho khách công vụ."
+      },
+      {
+        "heading": "Bộ công cụ lập kế hoạch MICE",
+        "text": "Checklist, mẫu kế hoạch và hướng dẫn điểm đến cung cấp cho nhà tổ chức khi yêu cầu — liên hệ đội ngũ chúng tôi."
+      }
+    ],
+    "visaCta": "Đọc hướng dẫn thị thực",
+    "contactTitle": "Lập kế hoạch sự kiện cùng chúng tôi",
+    "contactText": "Cho chúng tôi biết quy mô, thời gian và mục tiêu sự kiện — chúng tôi sẽ chỉ đúng nguồn lực.",
+    "contactCta": "Liên hệ chúng tôi"
+  },
+  "accessibility": {
+    "title": "Tuyên bố khả năng tiếp cận",
+    "subtitle": "Cam kết về trang web hòa nhập cho mọi du khách",
+    "commitment": "Chúng tôi hướng tới trang web này tuân thủ Web Content Accessibility Guidelines (WCAG) 2.1 mức AA của W3C. Khả năng tiếp cận là nỗ lực liên tục — chúng tôi rà soát và cải thiện trang theo thời gian.",
+    "measuresTitle": "Cách chúng tôi xây dựng khả năng tiếp cận",
+    "measures": [
+      "Thẻ semantic (header, nav, main, footer) hỗ trợ điều hướng bằng trình đọc màn hình.",
+      "Điều khiển dùng được bằng bàn phím với trạng thái focus rõ ràng.",
+      "Văn bản thay thế cho hình ảnh nội dung và nhãn ARIA cho nút chỉ có biểu tượng.",
+      "Bố cục responsive và chữ có thể co giãn từ điện thoại nhỏ đến màn hình lớn.",
+      "Màu chữ và nền được chọn để đọc dễ dàng."
+    ],
+    "limitationsTitle": "Hạn chế đã biết",
+    "limitations": [
+      "Bản đồ tương tác dùng widget bên thứ ba — một số thao tác bản đồ dễ hơn với chuột so với bàn phím.",
+      "Một số ảnh từ nguồn nội dung bên ngoài chưa có đầy đủ văn bản thay thế.",
+      "Kiểm thử tự động không phủ mọi công nghệ hỗ trợ — chúng tôi dựa vào phản hồi của bạn."
+    ],
+    "feedbackTitle": "Phản hồi và liên hệ",
+    "feedbackText": "Thấy điều gì khó dùng? Hãy cho chúng tôi biết qua trang liên hệ, chúng tôi sẽ khắc phục."
+  },
+  "sitemapPage": {
+    "title": "Sitemap HTML",
+    "subtitle": "Mọi phần của Vietnam Tourism tại một nơi",
+    "discover": "Khám phá",
+    "partners": "Đối tác",
+    "tools": "Công cụ",
+    "home": "Trang chủ",
+    "overview": "Tổng quan",
+    "map": "Bản đồ"
+  }
+}

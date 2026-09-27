@@ -1,0 +1,1170 @@
+{
+  "booking": {
+    "title": "Book your ticket",
+    "subtitle": "Fill in the form below — we will confirm availability and the final price with you.",
+    "bookNow": "Book ticket",
+    "backToTour": "Back to tour",
+    "contactTitle": "1. Contact information",
+    "fullName": "Full name",
+    "email": "Email",
+    "phone": "Phone number",
+    "notes": "Notes (optional)",
+    "notesPlaceholder": "Special requests, pickup point, preferred departure time…",
+    "dateTitle": "2. Travel date",
+    "travelDateLabel": "Travel date",
+    "spotsLeft": "{count, plural, one {# spot left} other {# spots left}}",
+    "soldOut": "Sold out",
+    "priceMissingNote": "Tour price is unavailable, so this ticket is not saved to My Trips — we will contact you to confirm the final price.",
+    "pricingTitle": "3. Guests & total price",
+    "guests": "Number of guests",
+    "perGuest": "{price} × {count, plural, one {# guest} other {# guests}}",
+    "total": "Total",
+    "difficultyTitle": "4. Difficulty level",
+    "difficulty": "Difficulty",
+    "difficultyPlaceholder": "Select a level",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard",
+    "submit": "Confirm booking",
+    "summaryTitle": "Booking request received",
+    "summaryNote": "We will contact you by email or phone to confirm availability and the final price. No payment has been taken.",
+    "reference": "Reference",
+    "tour": "Tour",
+    "paymentTitle": "Payment method",
+    "methodMomo": "MoMo",
+    "methodBank": "Bank transfer",
+    "payable": "Total payable",
+    "qrHint": "Scan the QR code with your banking or MoMo app",
+    "qrAlt": "Payment QR code",
+    "demoQr": "Demo QR — not connected to a live payment gateway",
+    "statusPending": "Pending payment",
+    "statusSuccess": "Payment successful",
+    "viewMyTrips": "View my trips →",
+    "error": {
+      "requiredName": "Please enter your full name",
+      "nameTooShort": "Name must be at least 2 characters",
+      "emailRequired": "Please enter your email",
+      "emailInvalid": "Enter a valid email address",
+      "phoneRequired": "Please enter your phone number",
+      "phoneInvalid": "Enter a valid phone number",
+      "dateRequired": "Please choose your travel date",
+      "dateOutOfRange": "Trips must start within the next 7 days",
+      "dateFull": "This date has no spots left for your group",
+      "guestsRequired": "Please enter the number of guests",
+      "guestsInvalid": "Number of guests must be between 1 and 99",
+      "difficultyRequired": "Please select a difficulty level"
+    }
+  },
+  "priceRange": {
+    "label": "Reference price"
+  },
+  "pricing": {
+    "label": "Price",
+    "tier": "Group size",
+    "perGuest": "Per guest",
+    "groupTotal": "Group total",
+    "guestsRange": "{min}–{max} guests",
+    "guestsSingle": "{count, plural, one {# guest} other {# guests}}",
+    "guestsAtLeast": "{min}+ guests",
+    "disclaimer": "Prices are indicative per group and may change — final rates are confirmed at booking."
+  },
+  "common": {
+    "home": "Home",
+    "explore": "Explore Vietnam",
+    "planTrip": "Plan Your Trip",
+    "culture": "Culture & Heritage",
+    "deals": "Deals & Packages",
+    "business": "Business & MICE",
+    "trade": "Travel Trade",
+    "news": "News & Stories",
+    "sustainability": "Sustainability",
+    "about": "About Us",
+    "support": "Support",
+    "menu": "Menu",
+    "search": "Search"
+  },
+  "home": {
+    "heroTitle": "Discover Vietnam",
+    "heroSubtitle": "Experience the beauty, culture, and warmth of Vietnam",
+    "searchPlaceholder": "Where do you want to go?",
+    "featuredDestinations": "Featured Destinations",
+    "exploreNow": "Explore Now",
+    "experienceCategories": "Experience Categories",
+    "nature": "Nature & Adventure",
+    "culture": "Culture & Heritage",
+    "food": "Food & Culinary",
+    "beaches": "Beaches & Islands",
+    "wellness": "Wellness & Retreats",
+    "nightlife": "Nightlife & Entertainment",
+    "trendingViewAll": "View all itineraries",
+    "trade": {
+      "title": "Travel Trade & Media",
+      "tradeCta": "Travel Trade Partners",
+      "mediaCta": "Media Center"
+    }
+  },
+  "nav": {
+    "language": "Language",
+    "english": "English",
+    "vietnamese": "Tiếng Việt"
+  },
+  "destinations": {
+    "title": "Destinations",
+    "subtitle": "Discover places to visit across Vietnam",
+    "all": "All",
+    "north": "North",
+    "central": "Central",
+    "south": "South",
+    "empty": "No destinations found for this region.",
+    "viewDetails": "View details",
+    "backToList": "Back to destinations",
+    "region": "Region"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has been moved.",
+    "backHome": "Back to home"
+  },
+  "planTrip": {
+    "title": "Plan Your Trip",
+    "subtitle": "Everything you need to know before traveling to Vietnam",
+    "guides": {
+      "visa": {
+        "title": "Visa & Entry Requirements",
+        "summary": "E-visa, visa exemptions and entry formalities.",
+        "sections": [
+          {
+            "heading": "E-Visa",
+            "body": "Most travelers can apply for a 90-day single or multiple-entry e-visa online. Processing usually takes 3-5 working days. Apply only through the official government portal."
+          },
+          {
+            "heading": "Visa Exemptions",
+            "body": "Citizens of several countries can enter Vietnam visa-free for a limited period (typically 15-45 days). Check the latest exemption list before you travel."
+          },
+          {
+            "heading": "Entry Formalities",
+            "body": "Your passport must be valid for at least 6 months from the date of entry. Prepare a return ticket and proof of accommodation for immigration checks."
+          }
+        ]
+      },
+      "weather": {
+        "title": "Weather & Best Time to Visit",
+        "summary": "Seasonal guide for North, Central and South Vietnam.",
+        "sections": [
+          {
+            "heading": "North (Hanoi, Sapa, Ha Long)",
+            "body": "Cool winters (Dec-Feb, 15-20°C), hot summers (May-Aug). Best time to visit: October-December when skies are clear and cool."
+          },
+          {
+            "heading": "Central (Da Nang, Hoi An, Hue)",
+            "body": "Hot and dry February-May; rainy season September-November with possible typhoons. Best time to visit: February-May."
+          },
+          {
+            "heading": "South (Ho Chi Minh City, Mekong, Phu Quoc)",
+            "body": "Tropical with two seasons: dry December-April, rainy May-November (usually afternoon showers). Best time to visit: December-April."
+          }
+        ]
+      },
+      "getting-around": {
+        "title": "Getting Around",
+        "summary": "Flights, trains, buses and local transport.",
+        "sections": [
+          {
+            "heading": "Domestic Flights",
+            "body": "Quick and affordable for long distances (Hanoi-Ho Chi Minh City ~2 hours). Book early for the best fares on Vietnam Airlines, Vietjet and Bamboo Airways."
+          },
+          {
+            "heading": "Trains",
+            "body": "The Reunification Express runs the length of the country - scenic and comfortable for overnight legs between Hanoi, Hue, Da Nang and Ho Chi Minh City."
+          },
+          {
+            "heading": "Local Transport",
+            "body": "Ride-hailing apps (Grab, Xanh SM), metered taxis, and city buses cover most urban areas. Renting a motorbike requires an international driving permit."
+          }
+        ]
+      },
+      "accommodation": {
+        "title": "Accommodation Guide",
+        "summary": "Hotels, homestays and resorts for every budget.",
+        "sections": [
+          {
+            "heading": "Hotels & Resorts",
+            "body": "From international 5-star chains to boutique hotels. Beach resorts are concentrated in Da Nang, Nha Trang, Phu Quoc and Quy Nhon."
+          },
+          {
+            "heading": "Homestays",
+            "body": "A great way to experience local life, especially in Sapa, Ha Giang and the Mekong Delta. Book family-run homestays for authentic meals and cultural exchange."
+          },
+          {
+            "heading": "Budget Options",
+            "body": "Hostels and guesthouses are widely available in tourist areas at very competitive prices, often with free breakfast and tour booking services."
+          }
+        ]
+      },
+      "health-safety": {
+        "title": "Health & Safety",
+        "summary": "Travel insurance, vaccinations and emergency contacts.",
+        "sections": [
+          {
+            "heading": "Travel Insurance",
+            "body": "Comprehensive travel insurance with medical coverage is strongly recommended. Check that your policy covers adventure activities if you plan trekking or diving."
+          },
+          {
+            "heading": "Vaccinations & Health",
+            "body": "Consult a travel clinic 4-6 weeks before departure. Tap water is not drinkable; bottled water is cheap and everywhere. Use sunscreen and stay hydrated in the heat."
+          },
+          {
+            "heading": "Emergency Contacts",
+            "body": "Police 113, Fire 114, Ambulance 115. Tourist police are available in major cities. Keep copies of important documents separate from originals."
+          }
+        ]
+      },
+      "getting-to-vietnam": {
+        "title": "Getting to Vietnam",
+        "summary": "Airports, arrival logistics, border crossings and what to arrange before you arrive.",
+        "sections": [
+          {
+            "heading": "By air",
+            "body": "International flights reach Noi Bai (Hanoi), Tan Son Nhat (Ho Chi Minh City), Da Nang and Phu Quoc airports, with connections through major Asian hubs. Long-haul travellers typically transit via Singapore, Bangkok, Hong Kong or other regional gateways."
+          },
+          {
+            "heading": "Before you book",
+            "body": "Check visa and entry requirements first — most nationalities need a visa or e-visa, and rules change from time to time. See the visa guide for details, then book flights (flexible tickets are wise during holiday periods)."
+          },
+          {
+            "heading": "By land",
+            "body": "Cambodia, China and Laos share land borders with Vietnam. International travellers can cross only at official checkpoints; confirm current entry rules and arrange your visa before travelling to the border."
+          },
+          {
+            "heading": "Once you land",
+            "body": "Airport buses, taxis and ride-hailing apps serve the major airports. For onward domestic flights, trains or buses, book ahead during holidays and peak season — Tet is the busiest period of the year."
+          }
+        ]
+      },
+      "money-costs": {
+        "title": "Money & Costs",
+        "summary": "Currency, payments, ATMs, budgeting and tipping — the practical money basics.",
+        "sections": [
+          {
+            "heading": "Currency",
+            "body": "The Vietnamese dong (VND) is the official currency. Prices are often quoted in thousands of dong; polymer banknotes are the norm and coins are rarely used in everyday change."
+          },
+          {
+            "heading": "Payments",
+            "body": "Cash is the most flexible option, especially at markets, street stalls and smaller shops. Cards are widely accepted at hotels, mid-range and upmarket restaurants, and larger stores. ATMs are common in cities and towns — tell your bank before travelling to avoid card blocks."
+          },
+          {
+            "heading": "Budgeting",
+            "body": "Costs vary widely by season, city and comfort level, so there is no single daily figure. Accommodation and internal transport fill up and cost more during peak season and holidays — book ahead. Keep some cash for markets, street food and short motorbike taxi rides."
+          },
+          {
+            "heading": "Tipping & prices",
+            "body": "Tipping is appreciated but not obligatory: rounding up a bill or leaving small change is a common gesture, and guides or drivers are often tipped after a good day. Bargaining is normal in markets — keep it friendly, and agree prices in advance for rides where meters are not used."
+          }
+        ]
+      },
+      "etiquette": {
+        "title": "Travel Etiquette & Local Customs",
+        "summary": "A few simple manners that help you get a warmer welcome everywhere you go.",
+        "sections": [
+          {
+            "heading": "Greetings & respect",
+            "body": "A smile and a polite greeting go a long way. Vietnamese people are generally warm with visitors; showing respect to elders and keeping a calm, friendly tone is appreciated in daily interactions."
+          },
+          {
+            "heading": "Dress at religious sites",
+            "body": "When visiting pagodas, temples, churches and mosques, cover your shoulders and knees and avoid loud behaviour. Remove your shoes when asked, at doorways and before shrines."
+          },
+          {
+            "heading": "Photography",
+            "body": "Ask permission before photographing people, especially in rural communities, markets and during ceremonies. Some sites and villages prohibit photos — follow signs and local guidance."
+          },
+          {
+            "heading": "Everyday manners",
+            "body": "Remove your shoes when entering someone's home, and accept drinks or gifts with both hands as a polite gesture. Keep disagreements calm and private — public arguments are considered impolite."
+          }
+        ]
+      },
+      "accessible-travel": {
+        "title": "Accessibility Information",
+        "summary": "Practical notes for travellers with disabilities — honest about what varies and what to arrange in advance.",
+        "sections": [
+          {
+            "heading": "Plan ahead",
+            "body": "Accessibility varies widely between modern hotels, city centres and rural areas. Tell us or your accommodation about your needs in advance — reliable information is easier to arrange before arrival than on the spot."
+          },
+          {
+            "heading": "Getting around",
+            "body": "Pavements in many places are uneven or busy, and older buildings may lack ramps. Taxis and ride-hailing cars are often the easiest way to move between sights; newer hotels and transport hubs are usually better equipped than older ones — ask when you book."
+          },
+          {
+            "heading": "Beaches & nature",
+            "body": "Many natural attractions involve steps, sand or rough paths. Ask about access and terrain before booking tours, and consider guided visits where staff can assist."
+          },
+          {
+            "heading": "Getting help",
+            "body": "Share your requirements through the contact page — we will help match suitable accommodation, transport and activities to your situation."
+          }
+        ]
+      },
+      "sustainable-travel": {
+        "title": "Sustainable & Responsible Travel",
+        "summary": "Small choices that keep Vietnam's landscapes, heritage and communities thriving for future visitors.",
+        "sections": [
+          {
+            "heading": "Reduce plastic",
+            "body": "Carry a reusable water bottle and bag, decline single-use straws and bags where you can, and refill at your hotel instead of buying small bottles every day."
+          },
+          {
+            "heading": "Respect nature & heritage",
+            "body": "Stay on marked trails, take your rubbish with you, and leave stones, shells and artefacts where they belong. Keep a respectful distance from wildlife and never buy products made from endangered species."
+          },
+          {
+            "heading": "Choose responsibly",
+            "body": "Pick licensed tour operators and boat crews who follow safety and environmental rules. In craft villages, buy directly from makers so more of the money stays in the community."
+          },
+          {
+            "heading": "Support communities",
+            "body": "Stay in locally run homestays, eat at family-run places and learn a few words of Vietnamese — small gestures make a real difference. Always ask before photographing people or entering private spaces."
+          }
+        ]
+      }
+    }
+  },
+  "about": {
+    "title": "About Us",
+    "subtitle": "The national tourism organization promoting Vietnam to the world",
+    "missionTitle": "Our Mission",
+    "missionBody": "To position Vietnam as a leading, sustainable and competitive destination, inspiring travelers with our landscapes, heritage and the warmth of our people.",
+    "visionTitle": "Our Vision",
+    "visionBody": "A responsible tourism industry that shares the benefits of travel with local communities while protecting the natural and cultural treasures of Vietnam.",
+    "orgTitle": "Organization Structure",
+    "orgBody": "We work with regional tourism offices, international representatives, and public-private partners across marketing, product development, quality standards and trade engagement.",
+    "valuesTitle": "What We Stand For",
+    "valuesBody": "Sustainability, authenticity, hospitality and excellence - guiding every campaign, partnership and traveler experience we create.",
+    "contact": {
+      "title": "Contact Us",
+      "subtitle": "We'd love to hear from you",
+      "channelsTitle": "How to Reach Us",
+      "channels": [
+        {
+          "label": "General Enquiries",
+          "email": "info@vietnam-tourism.com",
+          "note": "Travel questions, feedback and partnership proposals"
+        },
+        {
+          "label": "Media & Press",
+          "email": "press@vietnam-tourism.com",
+          "note": "Interview requests, stories and media materials"
+        },
+        {
+          "label": "Travel Trade",
+          "email": "trade@vietnam-tourism.com",
+          "note": "Tour operators, agents and cooperative programmes"
+        }
+      ],
+      "hoursTitle": "Office Hours",
+      "hours": "Monday – Friday, 08:00 – 17:00 (GMT+7)",
+      "officesTitle": "Regional Tourism Offices",
+      "offices": [
+        {
+          "city": "Ha Noi",
+          "email": "hanoi@vietnam-tourism.com"
+        },
+        {
+          "city": "Ho Chi Minh City",
+          "email": "hochiminh@vietnam-tourism.com"
+        },
+        {
+          "city": "Da Nang",
+          "email": "danang@vietnam-tourism.com"
+        }
+      ]
+    },
+    "careers": {
+      "title": "Careers",
+      "subtitle": "Join us in promoting Vietnam to the world",
+      "intro": "We are a small team with a big brief: sharing Vietnam's landscapes, heritage and hospitality with travellers everywhere. We look for curious people who care about sustainable tourism and clear communication.",
+      "openingsTitle": "Open Positions",
+      "positions": [
+        {
+          "title": "Digital Marketing Executive",
+          "type": "Full-time",
+          "location": "Ha Noi",
+          "summary": "Run campaign content and performance reporting across our international channels."
+        },
+        {
+          "title": "Destination Content Writer (EN/VI)",
+          "type": "Full-time",
+          "location": "Da Nang (hybrid)",
+          "summary": "Research and write destination guides, itineraries and stories in both languages."
+        },
+        {
+          "title": "Communications Intern",
+          "type": "Internship",
+          "location": "Ho Chi Minh City",
+          "summary": "Support press releases, media monitoring and event coordination."
+        }
+      ],
+      "applyLabel": "Apply by Email",
+      "applyEmail": "hr@vietnam-tourism.com",
+      "applyNote": "Send your CV with the position title in the subject line. We review applications on a rolling basis."
+    },
+    "press": {
+      "title": "Press & Media",
+      "subtitle": "Resources and contacts for journalists",
+      "boilerplateTitle": "About the Organization",
+      "boilerplateBody": "The Vietnam Tourism Organization is the national body responsible for promoting Vietnam as a leading, sustainable and competitive destination. Working with regional offices and public-private partners, it leads marketing, product development, quality standards and trade engagement worldwide.",
+      "factsTitle": "Fact Sheet",
+      "facts": [
+        {
+          "label": "UNESCO World Heritage Sites",
+          "value": "8"
+        },
+        {
+          "label": "Coastline",
+          "value": "3,260+ km"
+        },
+        {
+          "label": "Ethnic groups",
+          "value": "54"
+        },
+        {
+          "label": "Time zone",
+          "value": "GMT+7"
+        }
+      ],
+      "factsDisclaimer": "Figures shown for illustration on this demonstration site.",
+      "mediaContactTitle": "Media Contact",
+      "mediaEmail": "press@vietnam-tourism.com",
+      "mediaNote": "For interview requests, fact checks and high-resolution assets."
+    }
+  },
+  "footer": {
+    "tagline": "Discover the beauty, culture, and warmth of Vietnam",
+    "thingsToDo": "Things to Do",
+    "itineraries": "Itineraries",
+    "festivals": "Festivals",
+    "visaInfo": "Visa Info",
+    "gettingAround": "Getting Around",
+    "accommodation": "Accommodation",
+    "healthSafety": "Health & Safety",
+    "contact": "Contact",
+    "careers": "Careers",
+    "pressKit": "Press Kit",
+    "rights": "All rights reserved.",
+    "destinations": "Destinations",
+    "aboutUs": "About Us",
+    "support": "Support & FAQs",
+    "privacy": "Privacy & Terms",
+    "blog": "Stories & Blog",
+    "events": "Events Calendar",
+    "trade": "Trade Partners",
+    "accessibility": "Accessibility",
+    "sitemapHtml": "Sitemap"
+  },
+  "thingsToDo": {
+    "title": "Things to Do",
+    "subtitle": "Discover experiences across Vietnam",
+    "categories": {
+      "nature": {
+        "title": "Nature & Adventure",
+        "summary": "From terraced mountains in the north to jungle caves of the centre, Vietnam's landscapes reward every kind of explorer.",
+        "activities": [
+          "Trekking the rice terraces of Sapa and Ha Giang",
+          "Exploring Phong Nha–Ke Bang caves",
+          "Cruising Lan Ha and Ha Long bays",
+          "Hiking Fansipan, the Roof of Indochina",
+          "Wildlife watching in Cat Tien National Park"
+        ]
+      },
+      "culture": {
+        "title": "Culture & Heritage",
+        "summary": "Two thousand years of history live in temples, old towns and living traditions.",
+        "activities": [
+          "Wandering Hoi An Ancient Town",
+          "Exploring the Imperial City of Hue",
+          "Visiting UNESCO sites like My Son Sanctuary",
+          "Watching a water puppet show in Hanoi",
+          "Joining a full-moon lantern night in Hoi An"
+        ]
+      },
+      "food": {
+        "title": "Food & Culinary",
+        "summary": "Street food is the soul of Vietnam — one bowl, one roll at a time.",
+        "activities": [
+          "Taking a street-food tour through Hanoi's Old Quarter",
+          "Trying cao lau and banh mi in Hoi An",
+          "Joining a cooking class and market visit",
+          "Slurping pho at a sidewalk stall",
+          "Cruising the Mekong Delta for tropical fruit"
+        ]
+      },
+      "beaches": {
+        "title": "Beaches & Islands",
+        "summary": "Over 3,000 km of coastline, islands and coral reefs.",
+        "activities": [
+          "Relaxing on My Khe Beach, Da Nang",
+          "Island-hopping in Phu Quoc",
+          "Snorkelling around Con Dao",
+          "Kayaking in Nha Trang's bays",
+          "Watching sunset at Lang Co Beach"
+        ]
+      },
+      "wellness": {
+        "title": "Wellness & Retreats",
+        "summary": "From mountain homestays to seaside resorts, slow down and recharge.",
+        "activities": [
+          "Practising tai chi at dawn in Hoi An",
+          "Soaking in hot springs near Da Lat",
+          "Retreating to a beachfront resort in Quy Nhon",
+          "Trying a traditional herbal bath",
+          "Yoga and meditation retreats"
+        ]
+      },
+      "nightlife": {
+        "title": "Nightlife & Entertainment",
+        "summary": "When the sun goes down, Vietnam's cities light up.",
+        "activities": [
+          "Rooftop bars in Ho Chi Minh City",
+          "Bia hoi corners in Hanoi",
+          "Night markets in Da Nang and Hoi An",
+          "Live music venues in Saigon",
+          "Fireworks and shows during festival season"
+        ]
+      }
+    }
+  },
+  "itineraries": {
+    "title": "Suggested Itineraries",
+    "subtitle": "Ready-made routes from 3 to 14 days across Vietnam",
+    "viewDetails": "View itinerary",
+    "backToList": "Back to itineraries",
+    "items": {
+      "classic-north": {
+        "title": "Classic North Vietnam",
+        "duration": "3 days",
+        "regions": "Hanoi · Ha Long Bay · Ninh Binh",
+        "summary": "The essential northern loop: capital energy, bay waters and karst countryside.",
+        "days": [
+          {
+            "day": "Day 1",
+            "title": "Hanoi Arrival",
+            "content": "Check in, explore the Old Quarter and Hoan Kiem Lake, evening water puppet show."
+          },
+          {
+            "day": "Day 2",
+            "title": "Ha Long Bay Cruise",
+            "content": "Overnight junk boat among limestone karsts; kayak and swim at sunrise."
+          },
+          {
+            "day": "Day 3",
+            "title": "Ninh Binh & Departure",
+            "content": "Tam Coc boat ride through rice fields, Bai Dinh pagoda, transfer to airport."
+          }
+        ]
+      },
+      "highlights": {
+        "title": "Vietnam Highlights",
+        "duration": "7 days",
+        "regions": "Hanoi · Ha Long Bay · Hoi An · Ho Chi Minh City",
+        "summary": "Seven days through the country's most beloved sights, north to south.",
+        "days": [
+          {
+            "day": "Day 1",
+            "title": "Hanoi",
+            "content": "Old Quarter walk and Temple of Literature."
+          },
+          {
+            "day": "Day 2",
+            "title": "Hanoi",
+            "content": "Ho Chi Minh Mausoleum area, Train Street, egg coffee."
+          },
+          {
+            "day": "Day 3",
+            "title": "Ha Long Bay",
+            "content": "Overnight cruise with kayaking among the karsts."
+          },
+          {
+            "day": "Day 4",
+            "title": "Hoi An",
+            "content": "Fly to Da Nang, lantern-lit Ancient Town in the evening."
+          },
+          {
+            "day": "Day 5",
+            "title": "Hoi An",
+            "content": "An Bang beach morning, cooking class and market tour."
+          },
+          {
+            "day": "Day 6",
+            "title": "Ho Chi Minh City",
+            "content": "Fly south — War Remnants Museum, Ben Thanh Market."
+          },
+          {
+            "day": "Day 7",
+            "title": "Mekong Delta",
+            "content": "Cai Rang floating market day trip, evening departure."
+          }
+        ]
+      },
+      "full-vietnam": {
+        "title": "Vietnam in 14 Days",
+        "duration": "14 days",
+        "regions": "Hanoi → Sa Pa → Hue → Hoi An → Ho Chi Minh City",
+        "summary": "The complete journey: mountains, heritage towns, big city and the Mekong.",
+        "days": [
+          {
+            "day": "Days 1–3",
+            "title": "Hanoi & Ha Long Bay",
+            "content": "Capital sights, Old Quarter flavours, overnight bay cruise."
+          },
+          {
+            "day": "Days 4–5",
+            "title": "Sa Pa",
+            "content": "Mountain trekking through rice terraces and hill villages."
+          },
+          {
+            "day": "Days 6–7",
+            "title": "Ninh Binh",
+            "content": "Karst countryside, Tam Coc boats and ancient pagodas."
+          },
+          {
+            "day": "Days 8–9",
+            "title": "Hue",
+            "content": "Imperial City, royal tombs and Perfume River."
+          },
+          {
+            "day": "Days 10–11",
+            "title": "Hoi An",
+            "content": "Ancient Town, tailor shops, beach and cooking class."
+          },
+          {
+            "day": "Days 12–13",
+            "title": "Ho Chi Minh City",
+            "content": "War history, skyscrapers and buzzing street life."
+          },
+          {
+            "day": "Day 14",
+            "title": "Mekong Delta & Departure",
+            "content": "Floating market morning, transfer to the airport."
+          }
+        ]
+      }
+    }
+  },
+  "festivals": {
+    "title": "Festivals & Events",
+    "subtitle": "A year-round calendar of celebrations across Vietnam",
+    "items": [
+      {
+        "name": "Tet (Lunar New Year)",
+        "when": "Late Jan – Early Feb",
+        "location": "Nationwide",
+        "description": "The most important celebration of the year — family reunions, feasts, flowers and firecrackers.",
+        "months": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Lim Festival",
+        "when": "12th day of 1st lunar month",
+        "location": "Bac Ninh",
+        "description": "Quan Ho folk singing on boats and hillsides, honouring a centuries-old love duet tradition.",
+        "months": [
+          2,
+          3
+        ]
+      },
+      {
+        "name": "Hung Kings Temple Festival",
+        "when": "10th day of 3rd lunar month",
+        "location": "Phu Tho",
+        "description": "Commemorates Vietnam's legendary founders with processions, offerings and traditional games.",
+        "months": [
+          4,
+          5
+        ]
+      },
+      {
+        "name": "Ooc Pom Bok Festival",
+        "when": "July",
+        "location": "Central Highlands",
+        "description": "The Jrai people's thanksgiving for a new rice crop — gongs, dancing and communal feasts.",
+        "months": [
+          7
+        ]
+      },
+      {
+        "name": "Hue Festival",
+        "when": "June, even-numbered years",
+        "location": "Hue",
+        "description": "Biennial arts festival filling the Imperial City with performances, parades and light shows.",
+        "months": [
+          6
+        ]
+      },
+      {
+        "name": "Hoi An Lantern Festival",
+        "when": "Full moon of every month",
+        "location": "Hoi An",
+        "description": "The Ancient Town turns off electric lights and glows by lantern; lanterns float down the Thu Bon River.",
+        "months": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      },
+      {
+        "name": "Mid-Autumn Festival",
+        "when": "Sep – Oct",
+        "location": "Nationwide",
+        "description": "A children's festival of star lanterns, mooncakes, lion dances and lantern processions.",
+        "months": [
+          9,
+          10
+        ]
+      },
+      {
+        "name": "Loi Nguoc Boat Racing",
+        "when": "October",
+        "location": "Ha Giang",
+        "description": "Traditional longboat races on the Lo River drawing crowds from across the highlands.",
+        "months": [
+          10
+        ]
+      }
+    ]
+  },
+  "culture": {
+    "title": "Culture & Heritage",
+    "subtitle": "Two thousand years of living traditions",
+    "cuisineLink": "Explore food experiences →",
+    "festivalLink": "See the festival calendar →",
+    "sections": {
+      "history": {
+        "heading": "History Overview",
+        "body": "Vietnam's story stretches from the ancient Red River kingdoms through a thousand years of independence, French colonisation and modern reunification. Every era left its mark on the country's architecture, language and character.",
+        "points": [
+          "The Hung Kings and the founding legend of Lac Long Quan and Au Co",
+          "Thang Long — a thousand years as an imperial capital",
+          "Hoi An as a trading port from the 16th–18th centuries",
+          "The reunification of North and South in 1975"
+        ]
+      },
+      "unesco": {
+        "heading": "UNESCO World Heritage Sites",
+        "body": "Vietnam holds a remarkable cluster of World Heritage Sites spanning natural wonders and cultural landmarks.",
+        "points": [
+          "Ha Long Bay — thousands of limestone karsts in emerald water",
+          "Hoi An Ancient Town — a preserved merchant port",
+          "The Imperial City of Hue — the last royal capital",
+          "My Son Sanctuary — Champa temple complex",
+          "Phong Nha–Ke Bang — the world's largest cave network",
+          "Trang An — karst landscape and river caves"
+        ]
+      },
+      "ethnic": {
+        "heading": "Ethnic Minorities & Traditions",
+        "body": "54 ethnic groups call Vietnam home, each with its own language, dress, festivals and craft. The highlands and northern mountains are where these traditions are most vivid.",
+        "points": [
+          "H'mong embroidery and silverwork in Sa Pa and Ha Giang",
+          "Thai stilt houses and bamboo dancing in the northwest",
+          "Jarai and Bahnar gong culture in the Central Highlands",
+          "Colorful brocade markets of Bac Ha and Can Cau"
+        ]
+      },
+      "cuisine": {
+        "heading": "Cuisine & Gastronomy",
+        "body": "Vietnamese cooking balances fresh herbs, broths and dipping sauces with regional signatures — pho in the north, bun bo Hue in the centre, sweet-and-sour dishes in the south.",
+        "points": [
+          "Pho and banh mi as national icons",
+          "Hoi An's cao lau, found nowhere else",
+          "Royal cuisine of Hue — small, intricate dishes",
+          "Mekong Delta tropical fruit and floating markets"
+        ]
+      },
+      "arts": {
+        "heading": "Arts, Crafts & Performing Arts",
+        "body": "From water puppetry born in rice paddies to lacquerware and silk weaving, Vietnam's arts are rooted in village life and courtly refinement.",
+        "points": [
+          "Water puppet theatre — a thousand-year tradition",
+          "Lacquer painting, silk embroidery and bamboo crafts",
+          "Quan Ho folk singing of Bac Ninh",
+          "Classical theatre — tuong and cai luong"
+        ]
+      },
+      "festivals": {
+        "heading": "Festivals Deep-Dive",
+        "body": "Festivals punctuate the lunar calendar — from Tet family reunions to village festivals with processions, games and communal feasts.",
+        "points": [
+          "Tet — the lunar new year, celebrated nationwide",
+          "Mid-Autumn Festival — lanterns and lion dances",
+          "Full-moon lantern nights in Hoi An",
+          "Regional festivals: Lim, Ooc Pom Bok, Hung Kings"
+        ]
+      }
+    }
+  },
+  "deals": {
+    "title": "Deals & Packages",
+    "subtitle": "Curated offers for your Vietnam journey",
+    "disclaimer": "Sample offers shown for illustration — final pricing and availability are confirmed by our partners at the time of booking.",
+    "items": [
+      {
+        "tag": "Promotion",
+        "title": "Early Bird: winter departures",
+        "description": "Plan ahead and save on selected autumn and winter tours across the north and centre of Vietnam.",
+        "terms": "Book by 31 Dec for departures before 31 Mar. Selected tours only."
+      },
+      {
+        "tag": "Tour Package",
+        "title": "Classic North Loop — 6 days / 5 nights",
+        "description": "Hanoi, Ha Long Bay and Ninh Binh in one route with cruises, guided walks and transfers included.",
+        "terms": "Shared group departure. Single supplement optional."
+      },
+      {
+        "tag": "Bundle",
+        "title": "Flight + Hotel: Hanoi & Ho Chi Minh City",
+        "description": "Pair domestic flights with hand-picked 4-star hotels in both cities for a seamless north–south trip.",
+        "terms": "Subject to airline and hotel availability."
+      },
+      {
+        "tag": "Seasonal",
+        "title": "Summer Beach Escape",
+        "description": "Island time in Phu Quoc or beach days in Da Nang and Hoi An, with resort credits on select properties.",
+        "terms": "Valid May–Aug. Resort credit varies by property."
+      }
+    ]
+  },
+  "news": {
+    "title": "News & Stories",
+    "subtitle": "Press releases and travel stories from across Vietnam",
+    "viewArticle": "Read more",
+    "backToList": "Back to news",
+    "items": {
+      "record-arrivals-2026": {
+        "title": "Vietnam welcomes record international arrivals in the first half of 2026",
+        "date": "28 Aug 2026",
+        "category": "Press Release",
+        "excerpt": "Visitor numbers climb as new air routes and a simplified e-visa process make Vietnam easier to reach than ever.",
+        "content": [
+          "International arrivals reached a new high in the first six months of 2026, driven by additional direct flights from Northeast Asia and Europe and continued growth in regional connectivity.",
+          "The national tourism organisation credited a simplified e-visa process and year-round events programming for the uptick, with heritage destinations such as Ha Long Bay, Hoi An and Hue leading demand.",
+          "Authorities said the focus for the rest of the year would be sustainable visitor management at popular sites and support for community-based tourism projects in the highlands."
+        ]
+      },
+      "hanoi-street-food-48h": {
+        "title": "48 hours in Hanoi: a street-food love letter",
+        "date": "15 Aug 2026",
+        "category": "Story",
+        "excerpt": "Two days, one neighbourhood at a time — where to eat pho, bun cha and egg coffee in the capital's Old Quarter.",
+        "content": [
+          "Start early at a sidewalk pho stall where the broth has been simmering since before dawn, then walk it off around Hoan Kiem Lake while the city wakes up.",
+          "Lunch means bun cha over charcoal in the Old Quarter, followed by an egg coffee in a hidden courtyard cafe — sweet, strong and perfectly suited to a humid afternoon.",
+          "Dinner belongs to the grills of Ta Hien street, where plastic stools spill onto the pavement and cold beer flows. Leave room for a late banh mi from a cart near the train tracks."
+        ]
+      },
+      "hue-festival-programme": {
+        "title": "Hue Festival announces its full programme",
+        "date": "02 Aug 2026",
+        "category": "Press Release",
+        "excerpt": "Performances, parades and light shows will fill the Imperial City during the biennial arts festival.",
+        "content": [
+          "The festival's organisers revealed a programme of more than 60 events spanning music, theatre, visual arts and heritage talks, staged across the Imperial City and the Perfume River.",
+          "Highlights include night-time illuminations of the citadel gates, a royal court music revival and an international arts exchange featuring troupes from across Asia and Europe.",
+          "Tickets and detailed schedules will be published on the official festival channels, with many courtyard performances free to attend."
+        ]
+      },
+      "fansipan-sunrise-trek": {
+        "title": "Sunrise trek at Fansipan: a beginner's guide",
+        "date": "20 Jul 2026",
+        "category": "Story",
+        "excerpt": "What it actually takes to reach the Roof of Indochina — training, guides and the trail up from Sa Pa.",
+        "content": [
+          "Fansipan at 3,143 metres is achievable for reasonably fit hikers, but the mountain deserves respect: steep sections, changing weather and altitude all add up.",
+          "Most treks start from Sa Pa with a local guide, camping overnight at one of the high stations before a pre-dawn push to the summit for sunrise above the cloud line.",
+          "Pack layers, rain gear and plenty of water; hire warm gear in Sa Pa if you are travelling light, and allow a rest day afterwards to explore the town's markets and waterfalls."
+        ]
+      }
+    },
+    "categories": {
+      "pressRelease": "Press Release",
+      "story": "Story"
+    }
+  },
+  "map": {
+    "title": "Interactive Map",
+    "subtitle": "Explore destinations across Vietnam on the map",
+    "markersNote": "Some destinations don't have coordinates yet — browse them in the list below.",
+    "listTitle": "All Destinations",
+    "regionLabel": "Region"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search destinations, guides, stories...",
+    "hint": "Type to search across Vietnam travel content",
+    "noResults": "No results found",
+    "destination": "Destination",
+    "guide": "Guide",
+    "activity": "Experience",
+    "itinerary": "Itinerary",
+    "festival": "Festival",
+    "article": "Article",
+    "page": "Page"
+  },
+  "myTrips": {
+    "title": "My Trips",
+    "detailTitle": "Trip ticket",
+    "navLabel": "My trips",
+    "subtitle": "Paid bookings stored on this device",
+    "listLabel": "Your trips",
+    "empty": "No trips yet — your paid bookings will appear here.",
+    "emptyCta": "Explore tours",
+    "deleteAll": "Delete all trips",
+    "deleteAllConfirm": "Delete all saved trips on this device?",
+    "paidBadge": "Paid",
+    "notFound": "This trip was not found on this device.",
+    "back": "← Back to my trips"
+  },
+  "support": {
+    "title": "Support & FAQs",
+    "subtitle": "Answers to the questions travelers ask most",
+    "faqs": [
+      {
+        "q": "Do I need a visa to visit Vietnam?",
+        "a": "Many nationalities can enter Vietnam visa-free for a limited period, and most others can apply online for an e-visa before departure. Requirements change often, so check the official e-visa portal or your nearest Vietnamese embassy for your nationality before booking flights."
+      },
+      {
+        "q": "When is the best time to visit?",
+        "a": "Vietnam spans three regions with different climates. Generally December to April is the driest period across much of the country: the north is pleasant from October to April, the centre from February to May, and the south from December to April. Check the regional forecast for your travel window."
+      },
+      {
+        "q": "What currency do you accept?",
+        "a": "The Vietnamese đồng (VND) is the local currency. Cash is handy for markets, street food and small shops; cards are widely accepted at hotels, restaurants and stores in major cities. ATMs are common in cities and tourist areas."
+      },
+      {
+        "q": "How do I get around?",
+        "a": "Short domestic flights connect distant cities quickly, trains run along the coast, and long-distance buses are budget-friendly. In cities you can use taxis, ride-hailing apps and public buses. For shorter hops, motorbike rentals and walking work well."
+      },
+      {
+        "q": "Is Vietnam safe for travelers?",
+        "a": "Vietnam is generally safe for visitors, with low violent crime. Take normal precautions against pickpocketing in crowded places, be careful crossing busy streets, and keep an eye on your belongings. Travel insurance is recommended."
+      },
+      {
+        "q": "Will my phone work there?",
+        "a": "Local SIM cards and eSIMs with data are affordable and widely available at airports and convenience stores. Wi-Fi is common in hotels, cafes and restaurants. Buy from official carriers and keep your passport handy for SIM registration."
+      },
+      {
+        "q": "What power plugs are used?",
+        "a": "Vietnam runs on 220V, 50Hz power. Sockets commonly accept two flat pins (type A) or two round pins (type C) — bring a universal adapter if your plugs differ."
+      },
+      {
+        "q": "Will I be able to communicate?",
+        "a": "Vietnamese is the official language. English is widely spoken in tourist areas, hotels and larger cities; elsewhere a few basic phrases and a translation app go a long way. Signs at popular destinations often include English."
+      }
+    ],
+    "contactTitle": "Still have questions?",
+    "contactText": "Our team is happy to help with anything not covered here.",
+    "contactCta": "Contact us"
+  },
+  "privacy": {
+    "title": "Privacy Policy & Terms of Use",
+    "subtitle": "How we handle your data and the rules for using this site",
+    "lastUpdated": "Last updated: 26 September 2026",
+    "policy": [
+      {
+        "heading": "Who we are",
+        "paragraphs": [
+          "This website is operated by the Vietnam Tourism Organization to provide travel information about Vietnam. In this policy, \"we\" and \"us\" refer to the operators of this site."
+        ]
+      },
+      {
+        "heading": "Information we collect",
+        "paragraphs": [
+          "We do not require user accounts, do not process payments and do not run advertising trackers or analytics. We only store the following on your device:"
+        ],
+        "bullets": [
+          "Your language preference, saved as a cookie so the site opens in EN or VI.",
+          "Your saved trip plan, kept in your browser's local storage.",
+          "No names, email addresses or payment details are collected by this site."
+        ]
+      },
+      {
+        "heading": "How we use your information",
+        "paragraphs": [
+          "Your language preference is used to show the site in the language you chose. Your trip plan is used to restore your saved destinations when you return and to fetch their names and details from our content service when you open the trip planner. Trip plan contents are not used for marketing."
+        ]
+      },
+      {
+        "heading": "Third-party services",
+        "paragraphs": [
+          "To display content we rely on these providers:"
+        ],
+        "bullets": [
+          "Sanity — hosts our content and images.",
+          "OpenStreetMap — provides the map tiles on the destinations map.",
+          "Google Fonts — serves the Inter typeface."
+        ]
+      },
+      {
+        "heading": "Your rights and contact",
+        "paragraphs": [
+          "You can clear cookies and site data at any time in your browser settings, which removes your saved preferences and trip plan. For questions about this policy, contact us through the Contact page. We may update this policy; the date at the top of this page shows when it last changed."
+        ]
+      }
+    ],
+    "terms": [
+      {
+        "heading": "Acceptance of these terms",
+        "paragraphs": [
+          "By using this website you agree to these terms. If you do not agree, please do not use the site."
+        ]
+      },
+      {
+        "heading": "Accuracy of information",
+        "paragraphs": [
+          "Travel information — including visa rules, entry requirements, opening hours and transport schedules — changes frequently. We work to keep content accurate, but it is provided for general guidance only. Always verify visa and entry requirements with official government sources before you travel, and confirm details directly with service providers."
+        ]
+      },
+      {
+        "heading": "External links",
+        "paragraphs": [
+          "The site links to external websites that we do not operate. Those sites are governed by their own terms and privacy practices, and we are not responsible for their content."
+        ]
+      },
+      {
+        "heading": "Intellectual property and changes",
+        "paragraphs": [
+          "Content on this site (text, design, images) belongs to us or our licensors and may not be used commercially without permission. We may modify or withdraw parts of the site or these terms at any time; changes take effect when posted."
+        ]
+      }
+    ],
+    "policyHeading": "Privacy Policy",
+    "termsHeading": "Terms of Use"
+  },
+  "blog": {
+    "title": "Stories & Inspiration",
+    "subtitle": "Travel stories and local voices from across Vietnam",
+    "viewArticle": "Read story",
+    "viewAll": "View all stories"
+  },
+  "events": {
+    "title": "Events & Festivals Calendar",
+    "subtitle": "Filter festivals by month. Lunar dates shift each year — check the listed date on each card.",
+    "monthNames": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "tickerTitle": "Events & Festivals",
+    "empty": "No festivals listed for this month.",
+    "viewCalendar": "View by month →",
+    "lunarNote": "Lunar-calendar dates vary by year; the month shown is an approximation."
+  },
+  "trade": {
+    "title": "Travel Trade Partners",
+    "subtitle": "Resources and collaboration for tour operators, agents and DMCs",
+    "intro": "We work with travel trade partners worldwide to design, market and sell Vietnam itineraries. Whether you are building a new package or looking for destination content, our team supports you with programs, reports and brand assets.",
+    "offersTitle": "How we work with partners",
+    "offers": [
+      {
+        "heading": "Marketing & co-op programs",
+        "text": "Joint campaigns, trade missions and co-branded promotions to bring more travelers to Vietnam."
+      },
+      {
+        "heading": "Statistics & market reports",
+        "text": "Arrivals, spend and trend reports are available to partners on request — contact our team for the latest figures."
+      },
+      {
+        "heading": "Tour operator directory",
+        "text": "A curated directory of vetted operators is in development. Enquire to be listed when it launches."
+      },
+      {
+        "heading": "Media & press kit",
+        "text": "Logos, brand guidelines, images and press releases for media professionals."
+      }
+    ],
+    "pressCta": "Open the press kit",
+    "contactTitle": "Partner enquiries",
+    "contactText": "Tell us about your company and how you would like to work together.",
+    "contactCta": "Contact us"
+  },
+  "mice": {
+    "title": "Business & MICE Travel",
+    "subtitle": "Conferences, incentives, exhibitions and corporate events in Vietnam",
+    "intro": "Vietnam hosts corporate events of every scale — from regional conferences to incentive trips and trade exhibitions. We help planners connect with venues, build programs and handle the practical details of bringing teams to Vietnam.",
+    "servicesTitle": "How we support planners",
+    "services": [
+      {
+        "heading": "Conference & exhibition venues",
+        "text": "Major cities such as Hanoi, Ho Chi Minh City and Da Nang offer international-standard convention centres, hotel ballrooms and exhibition halls for events of different sizes."
+      },
+      {
+        "heading": "Incentive travel programs",
+        "text": "Heritage tours, resort retreats, cruise overnights and team experiences that reward and motivate groups of all sizes."
+      },
+      {
+        "heading": "Business visitor information",
+        "text": "Entry requirements, business visa guidance and practical information for corporate travelers."
+      },
+      {
+        "heading": "MICE planning toolkit",
+        "text": "Checklists, planning templates and destination guides are available to planners on request — contact our team."
+      }
+    ],
+    "visaCta": "Read the visa guide",
+    "contactTitle": "Plan your event with us",
+    "contactText": "Tell us the size, timing and goals of your event — we will point you to the right resources.",
+    "contactCta": "Contact us"
+  },
+  "accessibility": {
+    "title": "Accessibility Statement",
+    "subtitle": "Our commitment to an inclusive website for every traveler",
+    "commitment": "We aim to align this website with the W3C Web Content Accessibility Guidelines (WCAG) 2.1 Level AA. Accessibility is an ongoing effort — we review and improve the site as it grows.",
+    "measuresTitle": "How we build for accessibility",
+    "measures": [
+      "Semantic HTML landmarks (header, nav, main, footer) for screen reader navigation.",
+      "Keyboard-accessible controls with visible focus states throughout.",
+      "Alternative text on content images and ARIA labels on icon-only buttons.",
+      "Responsive layouts and resizable text that work from small phones to large screens.",
+      "Foreground and background colors chosen for readable contrast."
+    ],
+    "limitationsTitle": "Known limitations",
+    "limitations": [
+      "The interactive map uses a third-party map widget; some map interactions may be easier with a mouse than with a keyboard.",
+      "Some images from external content feeds may not yet have full alternative text.",
+      "Automated testing does not cover every assistive technology — we rely on user feedback to catch real-world issues."
+    ],
+    "feedbackTitle": "Feedback and contact",
+    "feedbackText": "Found something hard to use? Tell us through the contact page and we will work on a fix."
+  },
+  "sitemapPage": {
+    "title": "HTML Sitemap",
+    "subtitle": "Every section of Vietnam Tourism in one place",
+    "discover": "Discover",
+    "partners": "Partners",
+    "tools": "Tools",
+    "home": "Home",
+    "overview": "Overview",
+    "map": "Map"
+  }
+}
