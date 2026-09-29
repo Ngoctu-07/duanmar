@@ -1,87 +1,91 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { BrandWordmark } from "@/components/layout/brand-wordmark";
+import { BrandLogo } from "@/components/layout/brand-logo";
 
-const footerLinks = {
-  explore: [
-    { labelKey: "destinations", href: "/explore/destinations" },
-    { labelKey: "thingsToDo", href: "/explore/things-to-do" },
-    { labelKey: "itineraries", href: "/explore/itineraries" },
-    { labelKey: "festivals", href: "/explore/festivals" },
-    { labelKey: "blog", href: "/blog" },
-    { labelKey: "events", href: "/explore/events" },
-  ],
-  plan: [
-    { labelKey: "visaInfo", href: "/plan-your-trip/visa" },
-    { labelKey: "gettingAround", href: "/plan-your-trip/getting-around" },
-    { labelKey: "accommodation", href: "/plan-your-trip/accommodation" },
-    { labelKey: "healthSafety", href: "/plan-your-trip/health-safety" },
-  ],
-  about: [
-    { labelKey: "aboutUs", href: "/about" },
-    { labelKey: "contact", href: "/about/contact" },
-    { labelKey: "careers", href: "/about/careers" },
-    { labelKey: "pressKit", href: "/about/press" },
-    { labelKey: "trade", href: "/trade" },
-  ],
-};
+const tourLinks = [
+  { key: "domesticTours", href: "/tours/domestic" },
+  { key: "internationalTours", href: "/tours/international" },
+] as const;
+
+const infoLinks = [
+  { labelKey: "howToBook", href: "/support" },
+  { labelKey: "articles", href: "/blog" },
+  { labelKey: "careers", href: "/about/careers" },
+] as const;
+
+// Same order/set as contact.nodes — single source of truth shared with /contact.
+const contactKeys = ["phone", "email", "facebook", "instagram", "tiktok"] as const;
+
+type ContactNode = { label: string; value: string; href: string };
 
 export function Footer() {
   const t = useTranslations("common");
   const tf = useTranslations("footer");
+  const tc = useTranslations("contact");
 
   return (
     <footer className="border-t bg-muted/50 print:hidden">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="font-semibold mb-4">Vietnam Tourism</h3>
-            <p className="text-sm text-muted-foreground">
-              {tf("tagline")}
-            </p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-[minmax(210px,1.5fr)_0_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(64px,0.35fr)] md:gap-x-6">
+          <div className="col-span-2 md:col-span-1 md:col-start-1">
+            <BrandLogo size={88} className="mb-3" />
+            <h3 className="mb-4">
+              <BrandWordmark className="text-4xl md:text-5xl font-bold tracking-tight leading-none" />
+            </h3>
+            <p className="text-sm text-muted-foreground">{tf("tagline")}</p>
           </div>
 
-          <div>
-            <h3 className="font-semibold mb-4">{t("explore")}</h3>
-            <ul className="space-y-2">
-              {footerLinks.explore.map((link) => (
+          <div className="md:col-start-3">
+            <h3 className="text-2xl font-semibold mb-5">{tf("tours")}</h3>
+            <ul className="space-y-3">
+              {tourLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-lg text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {tf(link.labelKey as "destinations")}
+                    {t(link.key)}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div>
-            <h3 className="font-semibold mb-4">{t("planTrip")}</h3>
-            <ul className="space-y-2">
-              {footerLinks.plan.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {tf(link.labelKey as "destinations")}
-                  </Link>
-                </li>
-              ))}
+          <div className="md:col-start-4">
+            <h3 className="text-2xl font-semibold mb-5">{tf("contact")}</h3>
+            <ul className="space-y-3">
+              {contactKeys.map((key) => {
+                const node = (tc.raw(`nodes.${key}`) ??
+                  { label: key, value: "", href: "#" }) as ContactNode;
+                const external = /^https?:\/\//.test(node.href);
+                return (
+                  <li key={key}>
+                    <a
+                      href={node.href}
+                      {...(external
+                        ? { target: "_blank", rel: "noopener noreferrer" }
+                        : {})}
+                      className="text-lg text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {node.label}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
-          <div>
-            <h3 className="font-semibold mb-4">{t("about")}</h3>
-            <ul className="space-y-2">
-              {footerLinks.about.map((link) => (
+          <div className="md:col-start-5">
+            <h3 className="text-2xl font-semibold mb-5">{tf("info")}</h3>
+            <ul className="space-y-3">
+              {infoLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-lg text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {tf(link.labelKey as "destinations")}
+                    {tf(link.labelKey)}
                   </Link>
                 </li>
               ))}
@@ -90,7 +94,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 flex flex-col items-center gap-3 border-t pt-8 text-sm text-muted-foreground sm:flex-row sm:justify-between sm:text-left">
-          <p>&copy; {new Date().getFullYear()} Vietnam Tourism. {tf("rights")}</p>
+          <p>&copy; {new Date().getFullYear()} DuanMar. {tf("rights")}</p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/support"

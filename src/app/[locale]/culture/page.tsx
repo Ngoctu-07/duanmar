@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
 export const metadata: Metadata = {
-  title: "Culture & Heritage | Vietnam Tourism",
+  title: "Culture & Heritage | DuanMar",
   description: "Two thousand years of living traditions",
 };
 

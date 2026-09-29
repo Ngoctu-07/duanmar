@@ -61,6 +61,7 @@ export default async function CheckoutPage({
           tiers={tiers}
           locale={locale}
           capacity={capacity}
+          isSpecialTour={destination.isSpecialTour === true}
         />
       </div>
     </div>

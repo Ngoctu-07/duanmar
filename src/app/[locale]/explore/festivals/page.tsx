@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { Calendar, MapPin } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Festivals & Events | Vietnam Tourism",
+  title: "Festivals & Events | DuanMar",
   description: "A year-round calendar of celebrations across Vietnam",
 };
 

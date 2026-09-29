@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 800px; overflow: hidden;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: linear-gradient(135deg, #18181b 0%, #2a0d12 55%, #9f0618 130%);
+    position: relative;
+  }
+  .glow {
+    position: absolute; border-radius: 50%;
+    background: radial-gradient(circle, rgba(159,6,24,.55) 0%, rgba(159,6,24,0) 70%);
+  }
+  .g1 { width: 720px; height: 720px; right: -180px; top: -220px; }
+  .g2 { width: 520px; height: 520px; left: -160px; bottom: -200px; }
+  .ring {
+    position: absolute; border: 1px solid rgba(255,255,255,.14); border-radius: 50%;
+  }
+  .r1 { width: 420px; height: 420px; right: 90px; top: 70px; }
+  .r2 { width: 300px; height: 300px; right: 150px; top: 130px; }
+  .content { position: relative; z-index: 2; height: 100%; padding: 72px 80px; display: flex; flex-direction: column; }
+  .brand { color: #fff; font-size: 30px; font-weight: 800; letter-spacing: .12em; }
+  .brand span { color: #ff5d6c; }
+  .tag {
+    margin-top: 56px; display: inline-block; align-self: flex-start;
+    background: rgba(159,6,24,.9); color: #fff; font-size: 20px; font-weight: 700;
+    letter-spacing: .28em; padding: 12px 26px; border-radius: 999px; border: 1px solid rgba(255,255,255,.25);
+  }
+  h1 { color: #fff; font-size: 92px; line-height: 1.05; font-weight: 800; margin-top: 28px; }
+  h1 em { font-style: normal; color: #ff6b78; }
+  .sub { color: rgba(255,255,255,.82); font-size: 30px; margin-top: 26px; font-weight: 400; max-width: 720px; }
+  .cta {
+    margin-top: auto; align-self: flex-start;
+    background: #fff; color: #18181b; font-size: 26px; font-weight: 700;
+    padding: 20px 44px; border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+  .cta b { color: #9f0618; }
+  .fine { position: absolute; right: 80px; bottom: 76px; z-index: 2; color: rgba(255,255,255,.55); font-size: 18px; letter-spacing: .06em; }
+</style>
+</head>
+<body>
+  <div class="glow g1"></div><div class="glow g2"></div>
+  <div class="ring r1"></div><div class="ring r2"></div>
+  <div class="content">
+    <div class="brand">Duan<span>Mar</span></div>
+    <div class="tag">ƯU ĐÃI ĐẶC BIỆT</div>
+    <h1>Giảm đến <em>30%</em><br />tour Việt Nam</h1>
+    <div class="sub">Khám phá vịnh Hạ Long, Đà Nẵng, Sài Gòn — ưu đãi giới hạn cho chuyến đi của bạn.</div>
+    <div class="cta">Khám phá ngay <b>→</b></div>
+  </div>
+  <div class="fine">duanmar · Ưu đãi có thời hạn</div>
+</body>
+</html>

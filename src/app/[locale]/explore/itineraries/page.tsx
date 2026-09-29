@@ -7,7 +7,7 @@ import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { ALL_TOUR_PRICING_QUERY } from "@/sanity/queries/tour-pricing";
 
 export const metadata: Metadata = {
-  title: "Suggested Itineraries | Vietnam Tourism",
+  title: "Suggested Itineraries | DuanMar",
   description: "Ready-made routes from 3 to 14 days across Vietnam",
 };
 

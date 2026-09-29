@@ -6,17 +6,26 @@ export const HOMEPAGE_QUERY = defineQuery(`
     title,
     heroTitle,
     heroSubtitle,
-    heroImage { ${imageFragment} }
+    heroImage { ${imageFragment} },
+    aboutUsVideo { asset->{url} },
+    aboutUsVideoStreamUrl,
+    aboutUsVideoPoster { asset->{url, metadata{dimensions{width, height}}} },
+    narrativeStory_en,
+    narrativeStory_vi
   }
 `);
 
 export const FEATURED_DESTINATIONS_QUERY = defineQuery(`
-  *[_type == "destination" && featured == true][0...6]{
+  *[_type == "destination" && isFeatured == true][0...6]{
     _id,
     name,
     slug,
     region,
+    category,
+    country->{ "code": code, "vi": name.vi, "en": name.en },
+    isSpecialTour,
     description,
-    image { ${imageFragment} }
+    image { ${imageFragment} },
+    galleryImages[] { ${imageFragment} }
   }
 `);

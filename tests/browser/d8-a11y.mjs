@@ -1,4 +1,5 @@
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { dismissPromo } from "../helpers/promo.mjs";
 
 const { getBrowser, getPage, closeBrowser } = await import(
   pathToFileURL(
@@ -28,6 +29,7 @@ try {
   const browser = await getBrowser({ headless: true, viewport: { width: 1280, height: 1400 } });
   const page = await getPage(browser);
   await page.goto("http://localhost:3000/vi/booking/checkout?tour=hcm", { waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
 
   const setInput = async (selector, value) => {
     await page.$eval(selector, (el, v) => {
@@ -40,9 +42,12 @@ try {
   await setInput("#booking-full-name", "Nguyen Van A");
   await setInput("#booking-email", "lena@example.com");
   await setInput("#booking-phone", "0912345678");
-  await page.click("#booking-difficulty"); await sleep(300);
-  const opt = await page.evaluateHandle(() => [...document.querySelectorAll('[role="option"], li')].find((el) => el.textContent.includes("Dễ")));
-  if (opt.asElement()) await opt.asElement().click();
+  // Difficulty select only renders on special tours — skip on standard tours.
+  if (await page.$("#booking-difficulty")) {
+    await page.click("#booking-difficulty"); await sleep(300);
+    const opt = await page.evaluateHandle(() => [...document.querySelectorAll('[role="option"], li')].find((el) => el.textContent.includes("Dễ")));
+    if (opt.asElement()) await opt.asElement().click();
+  }
   const td = new Date();
   td.setDate(td.getDate() + 1);
   const isoT = `${td.getFullYear()}-${String(td.getMonth() + 1).padStart(2, "0")}-${String(td.getDate()).padStart(2, "0")}`;

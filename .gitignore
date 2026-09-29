@@ -38,3 +38,6 @@ next-env.d.ts
 AGENTS.md
 CLAUDE.md
 
+
+# Article like-count store (runtime data)
+data/

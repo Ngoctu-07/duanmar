@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
 export const metadata: Metadata = {
-  title: "Events & Festivals Calendar | Vietnam Tourism",
+  title: "Events & Festivals Calendar | DuanMar",
   description: "Filter festivals and events across Vietnam by month",
 };
 

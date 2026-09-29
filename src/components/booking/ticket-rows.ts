@@ -46,7 +46,11 @@ export function buildTicketRows({
     { label: t("email"), value: values.email.trim() },
     { label: t("phone"), value: values.phone.trim() },
     { label: t("guests"), value: String(guestCount) },
-    { label: t("difficulty"), value: t(values.difficulty) },
+    // No row when the tour never asked for a difficulty (standard tours +
+    // legacy records saved with an empty value).
+    ...(values.difficulty
+      ? [{ label: t("difficulty"), value: t(values.difficulty) }]
+      : []),
     ...(values.notes.trim()
       ? [{ label: t("notes"), value: values.notes.trim() }]
       : []),

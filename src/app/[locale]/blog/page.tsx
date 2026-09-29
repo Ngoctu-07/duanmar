@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { NewsItemCard } from "@/components/news/news-item-card";
 import { getStories } from "@/lib/news-content-provider";
+import { getArticleLikeCounts } from "@/lib/article-likes-db";
+import { FeedArticleBlock } from "@/components/blog/feed-article-block";
 
 export const metadata: Metadata = {
-  title: "Stories & Inspiration | Vietnam Tourism",
+  title: "Stories & Inspiration | DuanMar",
   description: "Travel stories and local voices from across Vietnam",
 };
 
@@ -12,9 +13,15 @@ interface PageProps {
   params: Promise<{ locale: string }>;
 }
 
+/**
+ * Social-style continuous feed (plan 260929-2254): vertical article
+ * stream — oversized title → full-width image → single-column body →
+ * heart reaction bar — with dividers between blocks. No ordinals.
+ */
 export default async function BlogPage({ params }: PageProps) {
   const { locale } = await params;
-  const [t, stories] = await Promise.all([getTranslations("blog"), getStories(locale)]);
+  const [t, articles] = await Promise.all([getTranslations("blog"), getStories(locale)]);
+  const likeCounts = getArticleLikeCounts(articles.map((item) => item.slug));
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -23,19 +30,17 @@ export default async function BlogPage({ params }: PageProps) {
         <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
       </div>
 
-      {stories.length === 0 ? (
+      {articles.length === 0 ? (
         <p className="mx-auto max-w-3xl text-center text-muted-foreground">
           {t("subtitle")}
         </p>
       ) : (
-        <div className="mx-auto max-w-3xl space-y-6">
-          {stories.map((story) => (
-            <NewsItemCard
-              key={story.slug}
-              item={story}
-              href={`/news/${story.slug}`}
-              ctaLabel={t("viewArticle")}
-              showCategory={false}
+        <div className="mx-auto max-w-4xl">
+          {articles.map((item) => (
+            <FeedArticleBlock
+              key={item.slug}
+              item={item}
+              initialLikeCount={likeCounts.get(item.slug) ?? 0}
             />
           ))}
         </div>

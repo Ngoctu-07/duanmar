@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Sora } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -7,8 +7,14 @@ const inter = Inter({
   variable: "--font-sans",
 });
 
+const sora = Sora({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-brand",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Vietnam Tourism",
+  title: "DuanMar",
   description: "Discover Vietnam - Your Premier Travel Destination",
 };
 
@@ -18,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html className={inter.variable}>
+    <html className={`${inter.variable} ${sora.variable}`}>
       <body className="antialiased">{children}</body>
     </html>
   );

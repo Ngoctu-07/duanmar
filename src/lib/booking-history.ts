@@ -1,4 +1,5 @@
 import type { PriceCurrency } from "@/lib/pricing";
+import type { PaymentMethod } from "@/lib/payment";
 
 /**
  * One paid booking as stored in localStorage (no auth/backend in this app).
@@ -16,12 +17,15 @@ export interface TripBooking {
   phone: string;
   notes: string;
   guests: number;
-  difficulty: string;
+  /** Absent for standard tours; present only when the tour is `isSpecialTour`. */
+  difficulty?: string;
   pricePerGuest: number | null;
   total: number | null;
   currency: PriceCurrency;
   locale: string;
   paidAt: string;
+  /** Optional (absent on pre-260929 records) — method used at payment. */
+  paymentMethod?: PaymentMethod;
 }
 
 export const BOOKINGS_STORAGE_KEY = "vn-my-trips:v1";
@@ -42,7 +46,12 @@ function isTripBooking(value: unknown): value is TripBooking {
     isString("email") &&
     isString("phone") &&
     isString("notes") &&
-    isString("difficulty") &&
+    // Optional (absent on standard tours) but must still be a string when present.
+    (record.difficulty === undefined || isString("difficulty")) &&
+    // Optional (absent on pre-260929 records) — enum-checked when present.
+    (record.paymentMethod === undefined ||
+      record.paymentMethod === "momo" ||
+      record.paymentMethod === "bank") &&
     isString("locale") &&
     isString("paidAt") &&
     (record.currency === "VND" || record.currency === "USD") &&

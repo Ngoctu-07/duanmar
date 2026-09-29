@@ -7,10 +7,14 @@ export const DESTINATIONS_QUERY = defineQuery(`
     name,
     slug,
     region,
+    category,
+    country->{ "code": code, "vi": name.vi, "en": name.en },
+    isSpecialTour,
     description,
     lat,
     lng,
-    image { ${imageFragment} }
+    image { ${imageFragment} },
+    galleryImages[] { ${imageFragment} }
   }
 `);
 
@@ -20,10 +24,31 @@ export const DESTINATION_BY_SLUG_QUERY = defineQuery(`
     name,
     slug,
     region,
+    category,
+    country->{ "code": code, "vi": name.vi, "en": name.en },
+    isSpecialTour,
     description,
     lat,
     lng,
-    image { ${imageFragment} }
+    image { ${imageFragment} },
+    galleryImages[] { ${imageFragment} }
+  }
+`);
+
+export const DESTINATIONS_BY_CATEGORY_QUERY = defineQuery(`
+  *[_type == "destination" && category == $category] | order(name asc) {
+    _id,
+    name,
+    slug,
+    region,
+    category,
+    country->{ "code": code, "vi": name.vi, "en": name.en },
+    isSpecialTour,
+    description,
+    lat,
+    lng,
+    image { ${imageFragment} },
+    galleryImages[] { ${imageFragment} }
   }
 `);
 

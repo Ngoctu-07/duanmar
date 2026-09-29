@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { DESTINATIONS_QUERY } from "@/sanity/queries/destinations";
 import {
@@ -9,7 +10,7 @@ import {
 } from "@/components/explore/destinations-map";
 
 export const metadata: Metadata = {
-  title: "Interactive Map | Vietnam Tourism",
+  title: "Interactive Map | DuanMar",
   description: "Explore destinations across Vietnam on the map",
 };
 
@@ -70,9 +71,12 @@ export default async function MapPage({
               href={`/explore/destinations/${item.slug}`}
               className="group rounded-xl border p-5 transition-colors hover:bg-muted"
             >
-              <h3 className="font-semibold group-hover:text-primary transition-colors">
-                {item.name}
-              </h3>
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="min-w-0 font-semibold group-hover:text-primary transition-colors">
+                  {item.name}
+                </h3>
+                <TourRatingBadge slug={item.slug} />
+              </div>
               {REGION_KEYS.includes(item.region as (typeof REGION_KEYS)[number]) && (
                 <p className="mt-1 text-xs text-muted-foreground">
                   {td(item.region as "north" | "central" | "south")}

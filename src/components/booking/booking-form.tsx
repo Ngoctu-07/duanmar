@@ -35,6 +35,8 @@ interface BookingFormProps {
   tourName: string;
   tiers: PriceTier[];
   locale: string;
+  /** CMS special-tour flag — gates Section 4 (Challenge Level) end to end. */
+  isSpecialTour?: boolean;
   /** CMS capacity (`null` = none configured); device bookings merge in after mount. */
   capacity?: TourCapacity | null;
 }
@@ -44,6 +46,7 @@ export function BookingForm({
   tourName,
   tiers,
   locale,
+  isSpecialTour,
   capacity,
 }: BookingFormProps) {
   const t = useTranslations("booking");
@@ -107,7 +110,11 @@ export function BookingForm({
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const found = validateBooking(values, activeCapacity);
+    const found = validateBooking(
+      values,
+      activeCapacity,
+      isSpecialTour === true
+    );
     setErrors(found);
     if (Object.keys(found).length === 0) setConfirmed(true);
   };
@@ -123,6 +130,7 @@ export function BookingForm({
         total={total}
         locale={locale}
         currency={currency}
+        isSpecialTour={isSpecialTour === true}
       />
     );
   }
@@ -148,7 +156,13 @@ export function BookingForm({
         locale={locale}
         currency={currency}
       />
-      <BookingDifficultySection values={values} errors={errors} onChange={change} />
+      {isSpecialTour === true && (
+        <BookingDifficultySection
+          values={values}
+          errors={errors}
+          onChange={change}
+        />
+      )}
 
       <Button type="submit" className="h-9 w-full">
         {t("submit")}

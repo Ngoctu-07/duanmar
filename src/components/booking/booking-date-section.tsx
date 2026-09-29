@@ -35,7 +35,7 @@ export function BookingDateSection({
     >
       <h2
         id="booking-date-heading"
-        className="text-sm font-semibold uppercase tracking-widest text-destructive"
+        className="text-sm font-semibold uppercase tracking-widest text-primary"
       >
         {t("dateTitle")}
       </h2>

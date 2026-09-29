@@ -39,6 +39,7 @@
     "demoQr": "QR demo — chưa kết nối cổng thanh toán thật",
     "statusPending": "Đang chờ thanh toán",
     "statusSuccess": "Thanh toán thành công",
+    "toastSuccess": "Cảm ơn quý khách đã đặt tour. Chúng tôi sẽ liên hệ trong vòng 5 phút.",
     "viewMyTrips": "Xem các chuyến đi của tôi →",
     "error": {
       "requiredName": "Vui lòng nhập họ và tên",
@@ -81,7 +82,10 @@
     "about": "Về chúng tôi",
     "support": "Hỗ trợ",
     "menu": "Menu",
-    "search": "Tìm kiếm"
+    "search": "Tìm kiếm",
+    "domesticTours": "Tour trong nước",
+    "internationalTours": "Tour nước ngoài",
+    "blog": "Blog"
   },
   "home": {
     "heroTitle": "Khám phá Việt Nam",
@@ -89,18 +93,11 @@
     "searchPlaceholder": "Bạn muốn đi đâu?",
     "featuredDestinations": "Điểm đến nổi bật",
     "exploreNow": "Khám phá ngay",
-    "experienceCategories": "Loại hình trải nghiệm",
-    "nature": "Thiên nhiên & Phiêu lưu",
-    "culture": "Văn hóa & Di sản",
-    "food": "Ẩm thực & Ẩm thực",
-    "beaches": "Biển & Đảo",
-    "wellness": "Sức khỏe & Thư giãn",
-    "nightlife": "Giải trí & Đêm",
-    "trendingViewAll": "Xem tất cả lộ trình",
-    "trade": {
-      "title": "Đối tác & Truyền thông",
-      "tradeCta": "Đối tác lữ hành",
-      "mediaCta": "Trung tâm báo chí"
+    "aboutSection": {
+      "title": "Về chúng tôi",
+      "cta": "Liên hệ",
+      "videoAria": "Video giới thiệu về chúng tôi",
+      "videoFallback": "Video giới thiệu sắp có"
     }
   },
   "nav": {
@@ -115,10 +112,36 @@
     "north": "Miền Bắc",
     "central": "Miền Trung",
     "south": "Miền Nam",
+    "vietnam": "Việt Nam",
     "empty": "Không tìm thấy điểm đến nào cho khu vực này.",
     "viewDetails": "Xem chi tiết",
     "backToList": "Quay lại danh sách điểm đến",
-    "region": "Khu vực"
+    "region": "Khu vực",
+    "special": "Tour đặc biệt",
+    "reviews": {
+      "ratingAria": "{avg}/5 từ {count} đánh giá",
+      "title": "Đánh giá của khách hàng",
+      "count": "{count} đánh giá",
+      "empty": "Chưa có đánh giá — hãy là người đầu tiên chia sẻ.",
+      "writeReview": "Viết đánh giá",
+      "writeReviewHint": "Chỉ khách đã đặt tour này mới có thể viết đánh giá.",
+      "ratingLabel": "Điểm đánh giá",
+      "commentPlaceholder": "Chia sẻ trải nghiệm của bạn...",
+      "submit": "Gửi đánh giá",
+      "submitting": "Đang gửi...",
+      "submitSuccess": "Cảm ơn! Đánh giá của bạn đã được lưu.",
+      "imagesHint": "Tối đa 3 ảnh (không bắt buộc)",
+      "errorRequired": "Vui lòng chọn điểm và viết nhận xét.",
+      "errorStorage": "Không thể lưu — bộ nhớ trình duyệt đầy hoặc không khả dụng.",
+      "menuLabel": "Thao tác đánh giá",
+      "menuEdit": "Chỉnh sửa",
+      "menuDelete": "Xóa",
+      "deleteConfirm": "Xóa đánh giá này? Thao tác này không thể hoàn tác.",
+      "editWindowClosed": "Chỉ có thể chỉnh sửa đánh giá trong vòng 3 giờ sau khi đăng.",
+      "lightboxClose": "Đóng",
+      "lightboxTitle": "Trình xem ảnh",
+      "lightboxImageAlt": "Ảnh của {author}"
+    }
   },
   "notFound": {
     "title": "Không tìm thấy trang",
@@ -331,6 +354,38 @@
       }
     }
   },
+  "contact": {
+    "title": "Liên hệ với chúng tôi",
+    "subtitle": "Câu hỏi về tour, đặt chỗ hay hợp tác? Liên hệ theo cách bạn thích — chúng tôi phản hồi trong vòng một ngày làm việc.",
+    "formHeading": "Form liên hệ",
+    "nodes": {
+      "phone": { "label": "Điện thoại", "value": "+84 28 3822 0000", "href": "tel:+842838220000" },
+      "email": { "label": "Email", "value": "info@vietnam-tourism.com", "href": "mailto:info@vietnam-tourism.com" },
+      "facebook": { "label": "Facebook", "value": "facebook.com/vietnamtourism", "href": "https://www.facebook.com/vietnamtourism" },
+      "instagram": { "label": "Instagram", "value": "instagram.com/vietnamtourism", "href": "https://www.instagram.com/vietnamtourism" },
+      "tiktok": { "label": "TikTok", "value": "tiktok.com/@vietnamtourism", "href": "https://www.tiktok.com/@vietnamtourism" }
+    },
+    "form": {
+      "nameLabel": "Họ và tên",
+      "emailLabel": "Email",
+      "phoneLabel": "Số điện thoại",
+      "messageLabel": "Nội dung",
+      "submit": "Gửi tin nhắn",
+      "submitting": "Đang gửi...",
+      "success": "Cảm ơn! Tin nhắn đã được gửi — chúng tôi sẽ phản hồi sớm.",
+      "failure": "Đã xảy ra lỗi. Vui lòng thử lại.",
+      "required": "Trường này là bắt buộc",
+      "nameInvalid": "Vui lòng nhập họ và tên (ít nhất 2 ký tự)",
+      "emailInvalid": "Vui lòng nhập địa chỉ email hợp lệ",
+      "phoneInvalid": "Vui lòng nhập số điện thoại hợp lệ",
+      "messageInvalid": "Vui lòng nhập nội dung (tối đa 5000 ký tự)"
+    },
+    "info": {
+      "hoursTitle": "Văn phòng",
+      "hours": "Thứ Hai – Thứ Bảy, 8:00 – 17:30 (GMT+7)",
+      "responseNote": "Chúng tôi thường phản hồi trong vòng một ngày làm việc."
+    }
+  },
   "about": {
     "title": "Về chúng tôi",
     "subtitle": "Tổ chức du lịch quốc gia quảng bá Việt Nam ra thế giới",
@@ -461,7 +516,11 @@
     "events": "Lịch sự kiện",
     "trade": "Đối tác lữ hành",
     "accessibility": "Khả năng tiếp cận",
-    "sitemapHtml": "Sitemap"
+    "sitemapHtml": "Sitemap",
+    "tours": "Tour du lịch",
+    "info": "Thông tin",
+    "howToBook": "Cách đặt tour",
+    "articles": "Bài viết"
   },
   "thingsToDo": {
     "title": "Trải nghiệm",
@@ -850,57 +909,9 @@
     "title": "Tin tức & Câu chuyện",
     "subtitle": "Thông cáo báo chí và câu chuyện du lịch khắp Việt Nam",
     "viewArticle": "Đọc tiếp",
-    "backToList": "Quay lại tin tức",
-    "items": {
-      "record-arrivals-2026": {
-        "title": "Việt Nam đón kỷ lục khách quốc tế nửa đầu 2026",
-        "date": "28/08/2026",
-        "category": "Thông cáo báo chí",
-        "excerpt": "Số lượt khách tăng mạnh nhờ đường bay mới và quy trình e-visa tinh gọn, đưa Việt Nam đến gần hơn bao giờ hết.",
-        "content": [
-          "Lượt khách quốc tế đạt mức cao mới trong sáu tháng đầu năm 2026, nhờ các đường bay thẳng tăng cường từ Đông Bắc Á và châu Âu cùng tăng trưởng kết nối trong khu vực.",
-          "Tổ chức du lịch quốc gia cho rằng quy trình e-visa đơn giản hóa và chuỗi sự kiện quanh năm là động lực chính, với các điểm di sản như Hạ Long, Hội An và Huế dẫn đầu nhu cầu.",
-          "Cơ quan chức năng cho biết phần còn lại của năm sẽ tập trung quản lý du lịch bền vững tại các điểm đông khách và hỗ trợ dự án du lịch cộng đồng ở vùng cao."
-        ]
-      },
-      "hanoi-street-food-48h": {
-        "title": "48 giờ ở Hà Nội: bức thư tình gửi ẩm thực đường phố",
-        "date": "15/08/2026",
-        "category": "Câu chuyện",
-        "excerpt": "Hai ngày, mỗi khu phố một nhịp — chỗ ăn phở, bún chả và cà phê trứng ở Phố Cổ.",
-        "content": [
-          "Bắt đầu sớm tại quán phở vỉa hè nơi nước dùng đã ninh từ trước bình minh, rồi đi bộ quanh hồ Hoàn Kiếm trong lúc thành phố thức dậy.",
-          "Bữa trưa là bún chả nướng than giữa Phố Cổ, theo sau là cà phê trứng trong khuôn viên cafe khuất — ngọt, đậm và hợp với buổi chiều nắng nóng.",
-          "Bữa tối thuộc về các quán nướng phố Tạ Hiện, nơi ghế nhựa tràn ra vỉa hè và bia lạnh tuôn chảy. Dành chỗ cho bánh mì khuya từ xe hàng gần đường ray."
-        ]
-      },
-      "hue-festival-programme": {
-        "title": "Festival Huế công bố chương trình đầy đủ",
-        "date": "02/08/2026",
-        "category": "Thông cáo báo chí",
-        "excerpt": "Biểu diễn, diễu hành và trình diễn ánh sáng phủ kín Kinh thành trong lễ hội nghệ thuật hai năm một lần.",
-        "content": [
-          "Ban tổ chức công bố hơn 60 sự kiện trải âm nhạc, sân khấu, mỹ thuật và tọa đàm di sản, tại Kinh thành và dọc sông Hương.",
-          "Điểm nhấn gồm chiếu sáng đêm cổng hoàng thành, tái hiện nhạc cung đình và giao lưu nghệ thuật quốc tế với các đoàn từ châu Á và châu Âu.",
-          "Vé và lịch chi tiết sẽ được công bố trên các kênh chính thức, nhiều tiết mục sân trong miễn phí tham dự."
-        ]
-      },
-      "fansipan-sunrise-trek": {
-        "title": "Chinh phục Fansipan đón bình minh: cẩm nang cho người mới",
-        "date": "20/07/2026",
-        "category": "Câu chuyện",
-        "excerpt": "Cần gì để chạm đỉnh Nóc nhà Đông Dương — thể lực, hướng dẫn viên và cung đường lên từ Sa Pa.",
-        "content": [
-          "Fansipan cao 3.143 m trong tầm với của người đi bộ khỏe mạnh, nhưng ngọn núi đòi hỏi sự tôn trọng: đoạn dốc, thời tiết thay đổi và độ cao cộng dồn.",
-          "Hầu hết tour khởi hành từ Sa Pa có hướng dẫn viên địa phương, cắm trại qua đêm ở trạm cao rồi xuất phát trước rạng đông để đón bình minh trên tầng mây.",
-          "Chuẩn bị áo lớp, đồ chống mưa và nhiều nước; thuê đồ ấm tại Sa Pa nếu hành lý nhẹ, và dành ngày nghỉ sau đó để khám phá chợ bản và thác."
-        ]
-      }
-    },
-    "categories": {
-      "pressRelease": "Thông cáo báo chí",
-      "story": "Câu chuyện"
-    }
+    "backToList": "Quay lại tin tức"
+    
+    
   },
   "map": {
     "title": "Bản đồ tương tác",
@@ -935,6 +946,16 @@
     "paidBadge": "Đã thanh toán",
     "notFound": "Không tìm thấy chuyến đi này trên thiết bị.",
     "back": "← Quay lại chuyến đi của tôi"
+  },
+  "assistant": {
+    "open": "Mở trợ lý tour",
+    "close": "Đóng trợ lý",
+    "title": "Trợ lý Tour",
+    "greeting": "Xin chào! Mình là trợ lý DuanMar. Hỏi mình về điểm đến, giá tour hoặc câu chuyện du lịch — câu trả lời lấy từ CMS của trang.",
+    "placeholder": "Hỏi về điểm đến, giá, câu chuyện...",
+    "send": "Gửi",
+    "error": "Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.",
+    "loading": "Trợ lý đang trả lời..."
   },
   "support": {
     "title": "Hỗ trợ & Câu hỏi thường gặp",
@@ -1052,11 +1073,27 @@
     "policyHeading": "Chính sách quyền riêng tư",
     "termsHeading": "Điều khoản sử dụng"
   },
+  "tours": {
+    "domestic": {
+      "title": "Tour trong nước",
+      "subtitle": "Khám phá Việt Nam từ bắc đến nam",
+      "body": "Khám phá hệ thống điểm đến trên khắp Việt Nam — từ miền núi phía Bắc và Vịnh Hạ Long, đến duyên hải Trung Bộ và Đồng bằng sông Cửu Long.",
+      "cta": "Khám phá điểm đến"
+    },
+    "international": {
+      "title": "Tour nước ngoài",
+      "subtitle": "Hành trình ngoài Việt Nam — sắp ra mắt",
+      "body": "Chúng tôi đang chuẩn bị danh sách tour nước ngoài chọn lọc. Hãy quay lại sớm để khám phá các hành trình ngoài Việt Nam."
+    },
+    "empty": "Chưa có điểm đến nào trong danh mục này."
+  },
   "blog": {
     "title": "Câu chuyện & cảm hứng",
     "subtitle": "Câu chuyện du lịch và tiếng nói từ khắp Việt Nam",
     "viewArticle": "Đọc câu chuyện",
-    "viewAll": "Xem tất cả câu chuyện"
+    "viewAll": "Xem tất cả câu chuyện",
+    "like": "Thích bài viết",
+    "liked": "Đã thích"
   },
   "events": {
     "title": "Lịch sự kiện & lễ hội",
@@ -1075,7 +1112,6 @@
       "Tháng 11",
       "Tháng 12"
     ],
-    "tickerTitle": "Sự kiện & lễ hội",
     "empty": "Không có lễ hội nào trong tháng này.",
     "viewCalendar": "Xem theo tháng →",
     "lunarNote": "Ngày âm lịch thay đổi mỗi năm; tháng hiển thị chỉ là xấp xỉ."
@@ -1159,12 +1195,17 @@
   },
   "sitemapPage": {
     "title": "Sitemap HTML",
-    "subtitle": "Mọi phần của Vietnam Tourism tại một nơi",
+    "subtitle": "Mọi phần của DuanMar tại một nơi",
     "discover": "Khám phá",
     "partners": "Đối tác",
     "tools": "Công cụ",
     "home": "Trang chủ",
     "overview": "Tổng quan",
     "map": "Bản đồ"
+  },
+  "promo": {
+    "title": "Ưu đãi đặc biệt dành cho bạn",
+    "imageAlt": "Thông tin ưu đãi đặc biệt",
+    "close": "Đóng"
   }
 }

@@ -1,5 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { dismissPromo } from "../helpers/promo.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -27,6 +28,7 @@ try {
 
   // --- G6 desktop header
   await page.goto("http://localhost:3000/vi", { waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
   const links = await page.$$eval("header a", (els) => els.map((el) => el.getAttribute("href")));
   check("G6 no /trip-planner link in header", !links.some((h) => h && h.includes("trip-planner")), JSON.stringify(links));
   check("G6 search icon kept", Boolean(await page.$('header a[aria-label="Tìm kiếm"]')));
@@ -54,6 +56,7 @@ try {
   // --- G8 sitemap section
   await page.setViewport({ width: 1280, height: 900 });
   await page.goto("http://localhost:3000/vi/sitemap", { waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
   const sitemapText = await page.$eval("body", (el) => el.textContent);
   const sitemapHtml = await page.content();
   check("G8 sitemap has no trip-planner entry", !sitemapText.includes("trip-planner") && !sitemapHtml.includes("/trip-planner"), "");
@@ -61,6 +64,7 @@ try {
 
   // --- 404 page behaviour
   await page.goto("http://localhost:3000/vi/trip-planner", { waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
   const body = await page.$eval("body", (el) => el.textContent);
   check("G4 /vi/trip-planner renders 404", (await page.$('main')) !== null && body.length > 0, `len=${body.length}`);
   check("G4 404 not a crash", !body.includes("Application error"), body.slice(0, 80));

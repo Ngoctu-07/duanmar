@@ -57,7 +57,12 @@ export function HeroSection({ hero }: HeroProps) {
           </form>
 
           <div className="flex flex-wrap justify-center gap-4">
-            <Button size="lg" nativeButton={false} render={<Link href="/explore" />}>
+            <Button
+              size="lg"
+              nativeButton={false}
+              render={<Link href="/explore" />}
+              className="px-8 py-4 text-lg"
+            >
               {t("exploreNow")}
             </Button>
           </div>

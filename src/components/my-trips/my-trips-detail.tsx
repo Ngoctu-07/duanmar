@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { getBooking, type TripBooking } from "@/lib/booking-history";
 import { buildTicketRows } from "@/components/booking/ticket-rows";
 import type { BookingValues } from "@/components/booking/booking-validation";
+import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
 
 interface MyTripsDetailProps {
   reference: string;
@@ -51,7 +52,7 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
     notes: booking.notes,
     travelDate: booking.travelDate,
     guests: String(booking.guests),
-    difficulty: booking.difficulty,
+    difficulty: booking.difficulty ?? "",
   };
 
   const rows = buildTicketRows({
@@ -73,7 +74,7 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
       <div className="flex flex-wrap items-center gap-2">
         <h2
           id="trip-detail-heading"
-          className="text-sm font-semibold uppercase tracking-widest text-destructive"
+          className="text-sm font-semibold uppercase tracking-widest text-primary"
         >
           {t("detailTitle")}
         </h2>
@@ -82,7 +83,10 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
         </span>
       </div>
 
-      <p className="mt-3 text-lg font-semibold">{booking.tourName}</p>
+      <div className="mt-3 flex items-start justify-between gap-3">
+        <p className="min-w-0 text-lg font-semibold">{booking.tourName}</p>
+        <TourRatingBadge slug={booking.slug} />
+      </div>
 
       <dl className="mt-4 divide-y divide-border text-sm">
         {rows.map((row) => (
@@ -93,7 +97,7 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
             <dt className="text-muted-foreground">{row.label}</dt>
             <dd
               className={`text-right tabular-nums ${
-                row.strong ? "font-semibold text-destructive" : "font-medium"
+                row.strong ? "font-semibold text-primary" : "font-medium"
               }`}
             >
               {row.value}

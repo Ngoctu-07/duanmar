@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
 export const metadata: Metadata = {
-  title: "About Us | Vietnam Tourism",
+  title: "About Us | DuanMar",
   description: "The national tourism organization promoting Vietnam to the world",
 };
 

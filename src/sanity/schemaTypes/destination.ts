@@ -22,6 +22,8 @@ export default defineType({
       name: "region",
       title: "Region",
       type: "string",
+      description:
+        "Deprecated — legacy North/Central/South filter (listing/map/search). Frontend card/detail display uses Country.",
       options: {
         list: [
           { title: "North", value: "north" },
@@ -32,16 +34,58 @@ export default defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: "isSpecialTour",
+      title: "Special Tour",
+      type: "boolean",
+      description:
+        "Turn on to flag this tour as a special tour. Also shows the Challenge Level (Cấp độ thử thách) step in the booking form.",
+      initialValue: false,
+    }),
+    defineField({
+      name: "category",
+      title: "Category",
+      type: "string",
+      description: "Where the tour runs. Trong nước = domestic, Nước ngoài = international.",
+      options: {
+        list: [
+          { title: "Trong nước (Domestic)", value: "domestic" },
+          { title: "Nước ngoài (International)", value: "international" },
+        ],
+      },
+      initialValue: "domestic",
+      validation: (rule) =>
+        rule
+          .required()
+          .custom(
+            (value) =>
+              value === "domestic" ||
+              value === "international" ||
+              'Must be "domestic" or "international"'
+          ),
+    }),
+    defineField({
+      name: "country",
+      title: "Country",
+      type: "reference",
+      to: [{ type: "country" }],
+      description:
+        "Quốc gia / Country. International tour → pick the country (e.g. Hàn Quốc / Korea). Domestic tour → Việt Nam (Vietnam).",
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
       name: "description",
       title: "Description",
       type: "text",
       rows: 3,
     }),
     defineField({
-      name: "image",
-      title: "Image",
-      type: "image",
-      options: { hotspot: true },
+      name: "galleryImages",
+      title: "Gallery Images",
+      type: "array",
+      description:
+        "At least 3 images. The first one (galleryImages[0]) is the cover thumbnail on every listing card; all of them feed the tour detail hero carousel.",
+      of: [{ type: "image", options: { hotspot: true } }],
+      validation: (rule) => rule.min(3).required(),
     }),
     defineField({
       name: "lat",
@@ -58,13 +102,15 @@ export default defineType({
       validation: (rule) => rule.min(-180).max(180),
     }),
     defineField({
-      name: "featured",
+      name: "isFeatured",
       title: "Featured",
       type: "boolean",
+      description:
+        "Show this tour in the Homepage Featured Destinations section.",
       initialValue: false,
     }),
   ],
   preview: {
-    select: { title: "name", subtitle: "region", media: "image" },
+    select: { title: "name", subtitle: "region", media: "galleryImages" },
   },
 });

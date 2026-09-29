@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
 export const metadata: Metadata = {
-  title: "Accessibility Statement | Vietnam Tourism",
+  title: "Accessibility Statement | DuanMar",
   description: "Our commitment to an inclusive website for every traveler",
 };
 
@@ -47,7 +47,7 @@ export default async function AccessibilityPage() {
           <h2 className="mb-2 text-xl font-semibold">{t("feedbackTitle")}</h2>
           <p className="mb-4 text-sm text-muted-foreground">{t("feedbackText")}</p>
           <Link
-            href="/about/contact"
+            href="/contact"
             className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             {ts("contactCta")}

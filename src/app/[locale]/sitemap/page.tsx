@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { getNewsList } from "@/lib/news-content-provider";
 
 export const metadata: Metadata = {
-  title: "HTML Sitemap | Vietnam Tourism",
-  description: "Every section of Vietnam Tourism in one place",
+  title: "HTML Sitemap | DuanMar",
+  description: "Every section of DuanMar in one place",
 };
 
 interface SiteLink {
@@ -16,8 +17,13 @@ interface TitledItem {
   title: string;
 }
 
-export default async function HtmlSitemapPage() {
-  const [t, tc, tf, tm, tp, ttd, tit, tn] = await Promise.all([
+export default async function HtmlSitemapPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const [t, tc, tf, tm, tp, ttd, tit] = await Promise.all([
     getTranslations("sitemapPage"),
     getTranslations("common"),
     getTranslations("footer"),
@@ -25,11 +31,10 @@ export default async function HtmlSitemapPage() {
     getTranslations("planTrip"),
     getTranslations("thingsToDo"),
     getTranslations("itineraries"),
-    getTranslations("news"),
   ]);
   const categories = tRaw<TitledItem>(ttd, "categories");
   const itineraries = tRaw<TitledItem>(tit, "items");
-  const newsItems = tRaw<TitledItem>(tn, "items");
+  const newsList = await getNewsList(locale);
   const allGuides = tRaw<TitledItem>(tp, "guides");
 
   const groups: { heading: string; links: SiteLink[] }[] = [
@@ -66,11 +71,12 @@ export default async function HtmlSitemapPage() {
     {
       heading: t("discover"),
       links: [
+        { href: "/tours/domestic", label: tc("domesticTours") },
+        { href: "/tours/international", label: tc("internationalTours") },
         { href: "/culture", label: tc("culture") },
         { href: "/deals", label: tc("deals") },
-        { href: "/news", label: tc("news") },
-        ...Object.entries(newsItems).map(([slug, item]) => ({
-          href: `/news/${slug}`,
+        ...newsList.map((item) => ({
+          href: `/blog/${item.slug}`,
           label: item.title,
         })),
         { href: "/blog", label: tf("blog") },
@@ -87,7 +93,7 @@ export default async function HtmlSitemapPage() {
       heading: tc("about"),
       links: [
         { href: "/about", label: tf("aboutUs") },
-        { href: "/about/contact", label: tf("contact") },
+        { href: "/contact", label: tf("contact") },
         { href: "/about/careers", label: tf("careers") },
         { href: "/about/press", label: tf("pressKit") },
         { href: "/support", label: tf("support") },

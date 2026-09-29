@@ -1,5 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { dismissPromo } from "../helpers/promo.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -48,27 +49,34 @@ try {
 
   // --- F10-adjacent: header icon + empty state
   await page.goto("http://localhost:3000/vi", { waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
   const headerIcon = await page.$('a[href="/vi/my-trips"], button[aria-label="Chuyến đi của tôi"]');
   check("header My Trips entry exists", Boolean(headerIcon));
 
   await page.goto("http://localhost:3000/vi/my-trips", { waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
   await page.evaluate(() => window.localStorage.clear());
   await page.reload({ waitUntil: "networkidle2" });
+  await dismissPromo(page);
   const emptyText = await page.$eval("body", (el) => el.textContent);
   check("empty state before any booking", emptyText.includes("Chưa có chuyến đi nào"), "");
   await page.screenshot({ path: `${OUT}/f11-mytrips-empty.png`, fullPage: true });
 
   // --- F5: rolling 7-day calendar window
   await page.goto("http://localhost:3000/vi/booking/checkout?tour=hcm", { waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
   const cal = await page.$("#booking-travel-date");
   check("calendar renders", Boolean(cal));
 
+  // Disabled state falls back to `data-disabled` — when today is the last day
+  // of a month, startMonth=minDate anchors the view to NEXT month and past/today
+  // cells render as hidden outside cells (data-disabled, no button at all).
   const dayInfo = async (iso) =>
     page.$eval(`td[data-day="${iso}"]`, (td) => {
       const btn = td.querySelector("button");
       return {
         exists: true,
-        disabled: btn ? btn.disabled : null,
+        disabled: btn ? btn.disabled : td.getAttribute("data-disabled") === "true",
         color: btn ? getComputedStyle(btn).color : null,
         selected: td.hasAttribute("data-selected"),
       };
@@ -105,11 +113,14 @@ try {
   await fill("#booking-full-name", "Nguyen Van A");
   await fill("#booking-email", "lena@example.com");
   await fill("#booking-phone", "0912345678");
-  await page.click("#booking-difficulty");
-  await sleep(300);
-  const opt = await page.evaluateHandle(() => [...document.querySelectorAll('[role="option"], li')].find((el) => el.textContent.includes("Dễ")));
-  if (opt.asElement()) await opt.asElement().click();
-  await sleep(200);
+  // Difficulty select only renders on special tours — skip on standard tours.
+  if (await page.$("#booking-difficulty")) {
+    await page.click("#booking-difficulty");
+    await sleep(300);
+    const opt = await page.evaluateHandle(() => [...document.querySelectorAll('[role="option"], li')].find((el) => el.textContent.includes("Dễ")));
+    if (opt.asElement()) await opt.asElement().click();
+    await sleep(200);
+  }
   await page.click('button[type="submit"]');
   await sleep(300);
   const dateError = await page.$("#booking-travel-date-error");
@@ -139,7 +150,7 @@ try {
     const dd = dt?.parentElement?.querySelector("dd");
     return dd ? dd.className : "";
   });
-  check("F7 travel date prominent (destructive bold)", dateRowStyle.includes("font-semibold") && dateRowStyle.includes("text-destructive"), dateRowStyle);
+  check("F7 travel date prominent (primary bold)", dateRowStyle.includes("font-semibold") && dateRowStyle.includes("text-primary"), dateRowStyle);
   check("F7 other rows intact (reference/tour/total)", rows.some((r) => r.value?.startsWith("VN-")) && rows.some((r) => r.value === "HCM") && rows.some((r) => r.label === "Tổng cộng"));
   const reference = rows.find((r) => r.label === "Mã yêu cầu")?.value;
   check("F7 reference captured", Boolean(reference), String(reference));
@@ -170,6 +181,7 @@ try {
 
   // --- F9: master list → detail matches checkout ticket
   await page.goto("http://localhost:3000/vi/my-trips", { waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
   const cardText = await page.$eval("main ul li a, ul li a", (el) => el.textContent.trim()).catch(() => "");
   check("F9 list card shows tour + date", cardText.includes("HCM"), cardText);
   check("F9 list date human readable", /2[0-9]\/0[0-9]\/2026/.test(cardText) || cardText.includes("2026"), cardText);
@@ -192,10 +204,12 @@ try {
 
   // --- F10 EN locale smoke
   await page.goto("http://localhost:3000/en/my-trips", { waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
   const enText = await page.$eval("h1", (el) => el.textContent);
   check("F10 EN my-trips localized", enText.trim() === "My Trips", enText);
   // --- F12: delete-all control clears device PII (review m13, user-approved)
   await page.goto("http://localhost:3000/vi/my-trips", { waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
   const buttonTexts = await page.$$eval("button", (els) => els.map((e) => e.textContent.trim()));
   check("F12 delete-all button present", buttonTexts.includes("Xóa tất cả chuyến đi"), JSON.stringify(buttonTexts));
   const deleteHandle = await page.evaluateHandle(() =>

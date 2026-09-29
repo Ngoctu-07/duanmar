@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { BookTicketButton } from "@/components/booking/book-ticket-button";
+import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
+import { TourAttributeBadges } from "@/components/explore/tour-attribute-badges";
+import { DestinationHeroCarousel } from "@/components/explore/destination-hero-carousel";
+import { CustomerReviews } from "@/components/reviews/customer-reviews";
 import { PriceBlock } from "@/components/pricing/price-block";
 import { mapPricingTiers } from "@/lib/pricing";
+import { pickGalleryImages } from "@/lib/destination-gallery";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import {
   DESTINATION_BY_SLUG_QUERY,
@@ -36,7 +40,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const destination = await getDestination(slug);
   if (!destination) return {};
   return {
-    title: `${destination.name} | Vietnam Tourism`,
+    title: `${destination.name} | DuanMar`,
     description: destination.description?.slice(0, 160),
   };
 }
@@ -54,9 +58,16 @@ export default async function DestinationDetailPage({ params }: PageProps) {
   if (!destination) notFound();
 
   const tiers = mapPricingTiers(pricingDoc, locale);
+  const heroSlides = pickGalleryImages(destination)
+    .map((image) =>
+      image.asset?.url
+        ? { src: image.asset.url, alt: image.alt || destination.name }
+        : null
+    )
+    .filter((slide): slide is { src: string; alt: string } => slide !== null);
 
   return (
-    <div className="container mx-auto px-4 py-16">
+    <div className="container mx-auto px-4 py-8">
       <Link
         href="/explore/destinations"
         className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -64,27 +75,25 @@ export default async function DestinationDetailPage({ params }: PageProps) {
         ← {t("backToList")}
       </Link>
 
-      {destination.image?.asset?.url && (
-        <div className="relative aspect-video mt-6 rounded-xl overflow-hidden">
-          <Image
-            src={destination.image.asset.url}
-            alt={destination.image.alt || destination.name}
-            fill
-            sizes="(max-width: 1024px) 100vw, 960px"
-            className="object-cover"
-            priority
-          />
-        </div>
-      )}
+      {heroSlides.length > 0 && <DestinationHeroCarousel slides={heroSlides} />}
 
       <div className="mt-8 max-w-3xl">
         <div className="mb-3 flex items-center gap-3">
           <span className="rounded-full border px-3 py-1 text-xs font-medium capitalize">
-            {t(destination.region as "north" | "central" | "south")}
+            {destination.country?.[locale as "vi" | "en"] ??
+              (destination.category === "domestic"
+                ? t("vietnam")
+                : t(destination.region as "north" | "central" | "south"))}
           </span>
+          <TourAttributeBadges
+            isSpecialTour={destination.isSpecialTour}
+          />
           <BookTicketButton slug={destination.slug.current} />
         </div>
-        <h1 className="text-4xl font-bold mb-4">{destination.name}</h1>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <h1 className="min-w-0 text-4xl font-bold">{destination.name}</h1>
+          <TourRatingBadge slug={slug} />
+        </div>
         {destination.description && (
           <p className="text-lg text-muted-foreground whitespace-pre-line">
             {destination.description}
@@ -92,6 +101,8 @@ export default async function DestinationDetailPage({ params }: PageProps) {
         )}
 
         <PriceBlock tiers={tiers} locale={locale} />
+
+        <CustomerReviews tourSlug={slug} locale={locale} />
       </div>
     </div>
   );

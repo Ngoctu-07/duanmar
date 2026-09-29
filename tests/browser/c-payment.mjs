@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { expectedBreakdown, fetchTourPricing } from "../helpers/cms-expectations.mjs";
+import { dismissPromo } from "../helpers/promo.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -44,6 +45,7 @@ try {
   };
 
   await page.goto("http://localhost:3000/vi/booking/checkout?tour=hcm", { waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
 
   // --- D6: tiered pricing live on the checkout form — totals derived from the
   // published CMS doc (freshness contract; plan 260927-1645)
@@ -69,13 +71,16 @@ try {
   await setInput("#booking-full-name", "Nguyen Van A");
   await setInput("#booking-email", "lena@example.com");
   await setInput("#booking-phone", "0912345678");
-  await page.click("#booking-difficulty");
-  await sleep(300);
-  const option = await page.evaluateHandle(() =>
-    [...document.querySelectorAll('[role="option"], li')].find((el) => el.textContent.includes("Dễ"))
-  );
-  if (option.asElement()) await option.asElement().click();
-  await sleep(200);
+  // Difficulty select only renders on special tours — skip on standard tours.
+  if (await page.$("#booking-difficulty")) {
+    await page.click("#booking-difficulty");
+    await sleep(300);
+    const option = await page.evaluateHandle(() =>
+      [...document.querySelectorAll('[role="option"], li')].find((el) => el.textContent.includes("Dễ"))
+    );
+    if (option.asElement()) await option.asElement().click();
+    await sleep(200);
+  }
   const t1 = new Date();
   t1.setDate(t1.getDate() + 1);
   const iso1 = `${t1.getFullYear()}-${String(t1.getMonth() + 1).padStart(2, "0")}-${String(t1.getDate()).padStart(2, "0")}`;

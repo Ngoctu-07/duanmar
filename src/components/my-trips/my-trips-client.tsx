@@ -11,6 +11,7 @@ import {
   type TripBooking,
 } from "@/lib/booking-history";
 import { formatTravelDate } from "@/lib/date-window";
+import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
 
 interface MyTripsClientProps {
   locale: string;
@@ -74,13 +75,16 @@ export function MyTripsClient({ locale }: MyTripsClientProps) {
           <li key={booking.reference}>
             <Link
               href={`/my-trips/${booking.reference}`}
-              className="flex items-center justify-between gap-4 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/40"
+              className="flex items-center justify-between gap-4 rounded-xl border bg-card p-5 transition-colors hover:bg-muted/40"
             >
-              <div>
-                <p className="font-semibold">{booking.tourName}</p>
-                <p className="text-sm text-muted-foreground">
-                  {formatTravelDate(booking.travelDate, locale)}
-                </p>
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="min-w-0">
+                  <p className="font-semibold">{booking.tourName}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatTravelDate(booking.travelDate, locale)}
+                  </p>
+                </div>
+                <TourRatingBadge slug={booking.slug} />
               </div>
               <span aria-hidden="true" className="text-muted-foreground">
                 →

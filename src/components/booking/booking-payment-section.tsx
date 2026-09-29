@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { PaymentSuccessToast } from "@/components/booking/payment-success-toast";
 import { formatPrice, type PriceCurrency } from "@/lib/pricing";
 import {
   PAYMENT_METHODS,
@@ -14,14 +15,15 @@ interface BookingPaymentSectionProps {
   locale: string;
   currency: PriceCurrency;
   reference: string;
-  /** Fired once per successful payment — parent persists the ticket. */
-  onPaid?: () => void;
+  /** Fired once per successful payment with the method used — parent persists the ticket and dispatches the confirmation email. */
+  onPaid?: (method: PaymentMethod) => void;
 }
 
 type PaymentStatus = "pending" | "success";
 
 /** Mock webhook latency: pending resolves to success after this delay. */
 const VERIFY_DELAY_MS = 3000;
+const TOAST_DISMISS_MS = 5000;
 
 export function BookingPaymentSection({
   total,
@@ -35,6 +37,8 @@ export function BookingPaymentSection({
   const [status, setStatus] = useState<PaymentStatus>("pending");
   const [verifyToken, setVerifyToken] = useState(0);
   const [qr, setQr] = useState<{ payload: string; url: string } | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const toastTimerRef = useRef<number | undefined>(undefined);
 
   // Keep the latest callback without restarting the mock-webhook timer
   const onPaidRef = useRef(onPaid);
@@ -61,20 +65,29 @@ export function BookingPaymentSection({
   }, [payload]);
 
   useEffect(() => {
-    if (!payload) return;
+    if (!payload || !method) return;
+    const paidMethod = method;
     const timer = setTimeout(() => {
       setStatus("success");
-      onPaidRef.current?.();
+      onPaidRef.current?.(paidMethod);
+      setShowToast(true);
+      toastTimerRef.current = window.setTimeout(
+        () => setShowToast(false),
+        TOAST_DISMISS_MS
+      );
     }, VERIFY_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [payload, verifyToken]);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(toastTimerRef.current);
+    };
+  }, [payload, method, verifyToken]);
 
   // No authored price → nothing to charge and nothing to persist; say so
   // instead of showing a confirmation that quietly saves no ticket (P4: no
   // data → don't invent a price).
   if (total === null) {
     return (
-      <p className="mt-5 rounded-xl border bg-muted/40 p-4 text-sm text-muted-foreground">
+      <p className="mt-5 rounded-xl border bg-muted/40 p-5 text-sm text-muted-foreground">
         {t("priceMissingNote")}
       </p>
     );
@@ -86,6 +99,8 @@ export function BookingPaymentSection({
   const selectMethod = (next: PaymentMethod) => {
     setMethod(next);
     setStatus("pending");
+    setShowToast(false);
+    clearTimeout(toastTimerRef.current);
     setVerifyToken((token) => token + 1);
   };
 
@@ -96,7 +111,7 @@ export function BookingPaymentSection({
     >
       <h2
         id="booking-payment-heading"
-        className="text-sm font-semibold uppercase tracking-widest text-destructive"
+        className="text-sm font-semibold uppercase tracking-widest text-primary"
       >
         {t("paymentTitle")}
       </h2>
@@ -151,7 +166,7 @@ export function BookingPaymentSection({
 
             <div className="flex-1 text-center sm:text-left">
               <p className="text-sm text-muted-foreground">{t("payable")}</p>
-              <p className="text-xl font-semibold tabular-nums text-destructive">
+              <p className="text-xl font-semibold tabular-nums text-primary">
                 {formatPrice(total, locale, currency)}
               </p>
               <p
@@ -178,6 +193,8 @@ export function BookingPaymentSection({
           </div>
         </div>
       )}
+
+      <PaymentSuccessToast show={showToast} />
     </section>
   );
 }

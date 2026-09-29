@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
 export const metadata: Metadata = {
-  title: "Support & FAQs | Vietnam Tourism",
+  title: "Support & FAQs | DuanMar",
   description:
     "Visa, weather, money, transport and safety questions from travelers to Vietnam",
 };
@@ -43,7 +43,7 @@ export default async function SupportPage() {
 
       <div className="mx-auto max-w-3xl space-y-4">
         {faqs.map((faq, index) => (
-          <details key={index} className="group rounded-xl border p-4">
+          <details key={index} className="group rounded-xl border p-5">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium [&::-webkit-details-marker]:hidden">
               {faq.q}
               <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
@@ -59,7 +59,7 @@ export default async function SupportPage() {
         <h2 className="text-xl font-semibold mb-2">{t("contactTitle")}</h2>
         <p className="text-sm text-muted-foreground mb-4">{t("contactText")}</p>
         <Link
-          href="/about/contact"
+          href="/contact"
           className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
         >
           {t("contactCta")}

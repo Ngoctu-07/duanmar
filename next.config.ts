@@ -5,6 +5,17 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  redirects: async () => [
+    // /news retired in favor of unified /blog routes (plan 260929-2254).
+    { source: "/news", destination: "/blog", permanent: true },
+    { source: "/news/:slug", destination: "/blog/:slug", permanent: true },
+    { source: "/:locale/news", destination: "/:locale/blog", permanent: true },
+    {
+      source: "/:locale/news/:slug",
+      destination: "/:locale/blog/:slug",
+      permanent: true,
+    },
+  ],
   headers: async () => [
     {
       source: "/(.*)",

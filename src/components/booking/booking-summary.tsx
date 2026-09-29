@@ -3,6 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { saveBooking } from "@/lib/booking-history";
+import type { PaymentMethod } from "@/lib/payment";
 import type { PriceCurrency, PriceTier } from "@/lib/pricing";
 import { BookingPaymentSection } from "./booking-payment-section";
 import { buildTicketRows } from "./ticket-rows";
@@ -17,6 +18,8 @@ interface BookingSummaryProps {
   total: number | null;
   locale: string;
   currency: PriceCurrency;
+  /** Whether the tour requires a Challenge Level pick (persisted only then). */
+  isSpecialTour?: boolean;
 }
 
 /**
@@ -33,6 +36,7 @@ export function BookingSummary({
   total,
   locale,
   currency,
+  isSpecialTour,
 }: BookingSummaryProps) {
   const t = useTranslations("booking");
   const [reference] = useState(() =>
@@ -50,7 +54,8 @@ export function BookingSummary({
     currency,
   });
 
-  const handlePaid = () => {
+  const handlePaid = (paymentMethod: PaymentMethod) => {
+    const paidAt = new Date().toISOString();
     saveBooking({
       reference,
       slug,
@@ -61,13 +66,39 @@ export function BookingSummary({
       phone: values.phone.trim(),
       notes: values.notes.trim(),
       guests: guestCount,
-      difficulty: values.difficulty,
+      // Standard tours carry no difficulty key at all in the stored record.
+      ...(isSpecialTour === true && { difficulty: values.difficulty }),
       pricePerGuest: tier?.pricePerGuest ?? null,
       total,
       currency,
       locale,
-      paidAt: new Date().toISOString(),
+      paidAt,
+      paymentMethod,
     });
+
+    // Fire-and-forget: the delayed confirmation email is enqueued server-side
+    // (2 min). Email failure must never block the payment UX (plan 260929-2229).
+    if (total !== null) {
+      void fetch("/api/booking-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reference,
+          slug,
+          tourName,
+          fullName: values.fullName.trim(),
+          email: values.email.trim(),
+          phone: values.phone.trim(),
+          travelDate: values.travelDate,
+          guests: guestCount,
+          total,
+          currency,
+          paymentMethod,
+          notes: values.notes.trim(),
+          locale,
+        }),
+      }).catch(() => undefined);
+    }
   };
 
   return (
@@ -76,10 +107,10 @@ export function BookingSummary({
       className="rounded-xl border bg-card p-5"
     >
       <div className="flex items-center gap-2">
-        <CheckCircle2 className="h-5 w-5 text-destructive" aria-hidden="true" />
+        <CheckCircle2 className="h-5 w-5 text-primary" aria-hidden="true" />
         <h2
           id="booking-summary-heading"
-          className="text-sm font-semibold uppercase tracking-widest text-destructive"
+          className="text-sm font-semibold uppercase tracking-widest text-primary"
         >
           {t("summaryTitle")}
         </h2>
@@ -95,7 +126,7 @@ export function BookingSummary({
             <dt className="text-muted-foreground">{row.label}</dt>
             <dd
               className={`text-right tabular-nums ${
-                row.strong ? "font-semibold text-destructive" : "font-medium"
+                row.strong ? "font-semibold text-primary" : "font-medium"
               }`}
             >
               {row.value}

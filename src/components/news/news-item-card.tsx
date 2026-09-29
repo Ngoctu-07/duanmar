@@ -15,7 +15,7 @@ export function NewsItemCard({ item, href, ctaLabel, showCategory = true }: News
       className="group block rounded-xl border p-6 transition-colors hover:bg-muted"
     >
       <div className="mb-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-        {showCategory && (
+        {showCategory && item.category && (
           <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-medium text-primary">
             {item.category}
           </span>

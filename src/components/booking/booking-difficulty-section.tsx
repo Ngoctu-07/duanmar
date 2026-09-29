@@ -29,7 +29,7 @@ export function BookingDifficultySection({
     >
       <h2
         id="booking-difficulty-heading"
-        className="text-sm font-semibold uppercase tracking-widest text-destructive"
+        className="text-sm font-semibold uppercase tracking-widest text-primary"
       >
         {t("difficultyTitle")}
       </h2>

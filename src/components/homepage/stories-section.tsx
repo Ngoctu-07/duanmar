@@ -31,7 +31,7 @@ export async function StoriesSection() {
           <NewsItemCard
             key={story.slug}
             item={story}
-            href={`/news/${story.slug}`}
+            href={`/blog/${story.slug}`}
             ctaLabel={t("viewArticle")}
             showCategory={false}
           />

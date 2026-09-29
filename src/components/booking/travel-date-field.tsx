@@ -22,10 +22,10 @@ import {
 import { Field, describedBy } from "./booking-field";
 import { isValidGuests } from "./booking-validation";
 
-/** Theme the calendar with the app's accent (destructive red) instead of rdp blue. */
+/** Theme the calendar with the app's brand accent (primary crimson) instead of rdp blue. */
 const RDP_THEME: CSSProperties = {
-  "--rdp-accent-color": "var(--color-destructive)",
-  "--rdp-accent-background-color": "var(--color-destructive)",
+  "--rdp-accent-color": "var(--color-primary)",
+  "--rdp-accent-background-color": "var(--color-primary)",
   "--rdp-disabled-opacity": "0.6",
 } as CSSProperties;
 
@@ -57,7 +57,7 @@ function CapacityDayButton(props: DayButtonProps) {
       {badge && (
         <span
           className={`block max-w-full text-center text-[9px] font-medium leading-[1.1] ${
-            badge.soldOut ? "text-destructive" : "text-muted-foreground"
+            badge.soldOut ? "text-primary" : "text-muted-foreground"
           }`}
           data-testid="capacity-badge"
         >
@@ -164,11 +164,11 @@ export function TravelDateField({
               }}
               classNames={{
                 day_button:
-                  "flex flex-col items-center justify-center gap-0.5 rounded-full text-sm text-inherit transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-destructive disabled:cursor-not-allowed",
+                  "flex flex-col items-center justify-center gap-0.5 rounded-full text-sm text-inherit transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-not-allowed",
                 selected:
-                  "rounded-full bg-destructive font-semibold text-destructive-foreground",
+                  "rounded-full bg-primary font-semibold text-primary-foreground",
                 disabled: "text-muted-foreground",
-                today: "font-medium text-destructive",
+                today: "font-medium text-primary",
                 outside: "text-muted-foreground",
                 caption_label: "text-sm font-semibold",
                 month_caption: "flex h-9 items-center justify-center",

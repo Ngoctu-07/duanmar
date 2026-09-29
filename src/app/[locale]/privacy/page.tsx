@@ -3,9 +3,9 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy & Terms of Use | Vietnam Tourism",
+  title: "Privacy Policy & Terms of Use | DuanMar",
   description:
-    "How the Vietnam Tourism website handles your data and the rules for using this site",
+    "How the DuanMar website handles your data and the rules for using this site",
 };
 
 interface Section {
@@ -71,7 +71,7 @@ export default async function PrivacyPage() {
         <h2 className="mb-2 text-xl font-semibold">{ts("contactTitle")}</h2>
         <p className="mb-4 text-sm text-muted-foreground">{ts("contactText")}</p>
         <Link
-          href="/about/contact"
+          href="/contact"
           className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           {ts("contactCta")}

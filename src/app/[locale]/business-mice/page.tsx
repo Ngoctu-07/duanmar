@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
 export const metadata: Metadata = {
-  title: "Business & MICE Travel | Vietnam Tourism",
+  title: "Business & MICE Travel | DuanMar",
   description:
     "Conferences, incentives, exhibitions and corporate events in Vietnam",
 };
@@ -57,7 +57,7 @@ export default async function BusinessMicePage() {
           </h2>
           <p className="mb-4 text-sm text-muted-foreground">{t("contactText")}</p>
           <Link
-            href="/about/contact"
+            href="/contact"
             className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             {t("contactCta")}

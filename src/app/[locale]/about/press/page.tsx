@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Mail } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Press & Media | Vietnam Tourism",
+  title: "Press & Media | DuanMar",
   description: "Resources and contacts for journalists",
 };
 
@@ -44,7 +44,7 @@ export default async function PressPage() {
           <h2 className="text-xl font-semibold mb-4">{press.factsTitle}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {press.facts.map((fact) => (
-              <div key={fact.label} className="rounded-xl border p-4 text-center">
+              <div key={fact.label} className="rounded-xl border p-5 text-center">
                 <div className="text-2xl font-bold text-primary">{fact.value}</div>
                 <div className="mt-1 text-xs text-muted-foreground">{fact.label}</div>
               </div>

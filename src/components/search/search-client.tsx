@@ -3,6 +3,13 @@
 import { useMemo, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Search } from "lucide-react";
+import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
+
+/** Destination entries link to `/explore/destinations/<slug>`; others carry no slug. */
+const destinationSlug = (entry: SearchEntry): string | undefined =>
+  entry.type === "destination"
+    ? entry.href.split("/").filter(Boolean).pop()
+    : undefined;
 
 export interface SearchEntry {
   title: string;
@@ -84,14 +91,17 @@ export function SearchClient({ entries, labels, initialQuery = "" }: SearchClien
             <li key={`${result.href}::${result.title}`}>
               <Link
                 href={result.href}
-                className="block rounded-xl border p-4 transition-colors hover:bg-muted"
+                className="block rounded-xl border p-5 transition-colors hover:bg-muted"
               >
                 <div className="mb-1 flex items-center gap-2">
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                     {labels.types[result.type] ?? labels.types.page}
                   </span>
                 </div>
-                <div className="font-medium">{result.title}</div>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 font-medium">{result.title}</div>
+                  <TourRatingBadge slug={destinationSlug(result)} />
+                </div>
                 <div className="line-clamp-1 text-sm text-muted-foreground">
                   {result.desc}
                 </div>

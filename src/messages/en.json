@@ -39,6 +39,7 @@
     "demoQr": "Demo QR — not connected to a live payment gateway",
     "statusPending": "Pending payment",
     "statusSuccess": "Payment successful",
+    "toastSuccess": "Thank you for your booking. We will contact you within 5 minutes.",
     "viewMyTrips": "View my trips →",
     "error": {
       "requiredName": "Please enter your full name",
@@ -81,7 +82,10 @@
     "about": "About Us",
     "support": "Support",
     "menu": "Menu",
-    "search": "Search"
+    "search": "Search",
+    "domesticTours": "Domestic Tours",
+    "internationalTours": "International Tours",
+    "blog": "Blog"
   },
   "home": {
     "heroTitle": "Discover Vietnam",
@@ -89,18 +93,11 @@
     "searchPlaceholder": "Where do you want to go?",
     "featuredDestinations": "Featured Destinations",
     "exploreNow": "Explore Now",
-    "experienceCategories": "Experience Categories",
-    "nature": "Nature & Adventure",
-    "culture": "Culture & Heritage",
-    "food": "Food & Culinary",
-    "beaches": "Beaches & Islands",
-    "wellness": "Wellness & Retreats",
-    "nightlife": "Nightlife & Entertainment",
-    "trendingViewAll": "View all itineraries",
-    "trade": {
-      "title": "Travel Trade & Media",
-      "tradeCta": "Travel Trade Partners",
-      "mediaCta": "Media Center"
+    "aboutSection": {
+      "title": "About Us",
+      "cta": "Contact Us",
+      "videoAria": "About us promo video",
+      "videoFallback": "Video preview coming soon"
     }
   },
   "nav": {
@@ -115,10 +112,36 @@
     "north": "North",
     "central": "Central",
     "south": "South",
+    "vietnam": "Vietnam",
     "empty": "No destinations found for this region.",
     "viewDetails": "View details",
     "backToList": "Back to destinations",
-    "region": "Region"
+    "region": "Region",
+    "special": "Special tour",
+    "reviews": {
+      "ratingAria": "{avg} out of 5 from {count} reviews",
+      "title": "Customer Reviews",
+      "count": "{count} reviews",
+      "empty": "No reviews yet — be the first to share your experience.",
+      "writeReview": "Write a Review",
+      "writeReviewHint": "Only customers who booked this tour can write a review.",
+      "ratingLabel": "Rating",
+      "commentPlaceholder": "Share details of your experience...",
+      "submit": "Submit review",
+      "submitting": "Submitting...",
+      "submitSuccess": "Thanks! Your review has been saved.",
+      "imagesHint": "Up to 3 images (optional)",
+      "errorRequired": "Please choose a rating and write a comment.",
+      "errorStorage": "Could not save — browser storage is full or unavailable.",
+      "menuLabel": "Review actions",
+      "menuEdit": "Edit",
+      "menuDelete": "Delete",
+      "deleteConfirm": "Delete this review? This cannot be undone.",
+      "editWindowClosed": "Reviews can only be edited within 3 hours of posting.",
+      "lightboxClose": "Close",
+      "lightboxTitle": "Photo viewer",
+      "lightboxImageAlt": "Photo by {author}"
+    }
   },
   "notFound": {
     "title": "Page not found",
@@ -331,6 +354,38 @@
       }
     }
   },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Questions about a trip, a booking or a partnership? Reach us however you prefer — we reply within one business day.",
+    "formHeading": "Contact Form",
+    "nodes": {
+      "phone": { "label": "Phone", "value": "+84 28 3822 0000", "href": "tel:+842838220000" },
+      "email": { "label": "Email", "value": "info@vietnam-tourism.com", "href": "mailto:info@vietnam-tourism.com" },
+      "facebook": { "label": "Facebook", "value": "facebook.com/vietnamtourism", "href": "https://www.facebook.com/vietnamtourism" },
+      "instagram": { "label": "Instagram", "value": "instagram.com/vietnamtourism", "href": "https://www.instagram.com/vietnamtourism" },
+      "tiktok": { "label": "TikTok", "value": "tiktok.com/@vietnamtourism", "href": "https://www.tiktok.com/@vietnamtourism" }
+    },
+    "form": {
+      "nameLabel": "Full Name",
+      "emailLabel": "Email",
+      "phoneLabel": "Phone",
+      "messageLabel": "Message",
+      "submit": "Send Message",
+      "submitting": "Sending...",
+      "success": "Thanks! Your message has been sent — we'll get back to you soon.",
+      "failure": "Something went wrong. Please try again.",
+      "required": "This field is required",
+      "nameInvalid": "Please enter your full name (at least 2 characters)",
+      "emailInvalid": "Please enter a valid email address",
+      "phoneInvalid": "Please enter a valid phone number",
+      "messageInvalid": "Please enter a message (max 5000 characters)"
+    },
+    "info": {
+      "hoursTitle": "Our Office",
+      "hours": "Monday – Saturday, 8:00 – 17:30 (GMT+7)",
+      "responseNote": "We typically respond within one business day."
+    }
+  },
   "about": {
     "title": "About Us",
     "subtitle": "The national tourism organization promoting Vietnam to the world",
@@ -461,7 +516,11 @@
     "events": "Events Calendar",
     "trade": "Trade Partners",
     "accessibility": "Accessibility",
-    "sitemapHtml": "Sitemap"
+    "sitemapHtml": "Sitemap",
+    "tours": "Tours",
+    "info": "Information",
+    "howToBook": "How to Book",
+    "articles": "Articles"
   },
   "thingsToDo": {
     "title": "Things to Do",
@@ -850,57 +909,9 @@
     "title": "News & Stories",
     "subtitle": "Press releases and travel stories from across Vietnam",
     "viewArticle": "Read more",
-    "backToList": "Back to news",
-    "items": {
-      "record-arrivals-2026": {
-        "title": "Vietnam welcomes record international arrivals in the first half of 2026",
-        "date": "28 Aug 2026",
-        "category": "Press Release",
-        "excerpt": "Visitor numbers climb as new air routes and a simplified e-visa process make Vietnam easier to reach than ever.",
-        "content": [
-          "International arrivals reached a new high in the first six months of 2026, driven by additional direct flights from Northeast Asia and Europe and continued growth in regional connectivity.",
-          "The national tourism organisation credited a simplified e-visa process and year-round events programming for the uptick, with heritage destinations such as Ha Long Bay, Hoi An and Hue leading demand.",
-          "Authorities said the focus for the rest of the year would be sustainable visitor management at popular sites and support for community-based tourism projects in the highlands."
-        ]
-      },
-      "hanoi-street-food-48h": {
-        "title": "48 hours in Hanoi: a street-food love letter",
-        "date": "15 Aug 2026",
-        "category": "Story",
-        "excerpt": "Two days, one neighbourhood at a time — where to eat pho, bun cha and egg coffee in the capital's Old Quarter.",
-        "content": [
-          "Start early at a sidewalk pho stall where the broth has been simmering since before dawn, then walk it off around Hoan Kiem Lake while the city wakes up.",
-          "Lunch means bun cha over charcoal in the Old Quarter, followed by an egg coffee in a hidden courtyard cafe — sweet, strong and perfectly suited to a humid afternoon.",
-          "Dinner belongs to the grills of Ta Hien street, where plastic stools spill onto the pavement and cold beer flows. Leave room for a late banh mi from a cart near the train tracks."
-        ]
-      },
-      "hue-festival-programme": {
-        "title": "Hue Festival announces its full programme",
-        "date": "02 Aug 2026",
-        "category": "Press Release",
-        "excerpt": "Performances, parades and light shows will fill the Imperial City during the biennial arts festival.",
-        "content": [
-          "The festival's organisers revealed a programme of more than 60 events spanning music, theatre, visual arts and heritage talks, staged across the Imperial City and the Perfume River.",
-          "Highlights include night-time illuminations of the citadel gates, a royal court music revival and an international arts exchange featuring troupes from across Asia and Europe.",
-          "Tickets and detailed schedules will be published on the official festival channels, with many courtyard performances free to attend."
-        ]
-      },
-      "fansipan-sunrise-trek": {
-        "title": "Sunrise trek at Fansipan: a beginner's guide",
-        "date": "20 Jul 2026",
-        "category": "Story",
-        "excerpt": "What it actually takes to reach the Roof of Indochina — training, guides and the trail up from Sa Pa.",
-        "content": [
-          "Fansipan at 3,143 metres is achievable for reasonably fit hikers, but the mountain deserves respect: steep sections, changing weather and altitude all add up.",
-          "Most treks start from Sa Pa with a local guide, camping overnight at one of the high stations before a pre-dawn push to the summit for sunrise above the cloud line.",
-          "Pack layers, rain gear and plenty of water; hire warm gear in Sa Pa if you are travelling light, and allow a rest day afterwards to explore the town's markets and waterfalls."
-        ]
-      }
-    },
-    "categories": {
-      "pressRelease": "Press Release",
-      "story": "Story"
-    }
+    "backToList": "Back to news"
+    
+    
   },
   "map": {
     "title": "Interactive Map",
@@ -935,6 +946,16 @@
     "paidBadge": "Paid",
     "notFound": "This trip was not found on this device.",
     "back": "← Back to my trips"
+  },
+  "assistant": {
+    "open": "Open tour assistant",
+    "close": "Close assistant",
+    "title": "Tour Assistant",
+    "greeting": "Hi! I'm the DuanMar tour assistant. Ask about destinations, tour prices, or travel stories - answers are grounded in our own CMS.",
+    "placeholder": "Ask about destinations, prices, stories...",
+    "send": "Send",
+    "error": "Sorry, something went wrong. Please try again.",
+    "loading": "Assistant is typing..."
   },
   "support": {
     "title": "Support & FAQs",
@@ -1052,11 +1073,27 @@
     "policyHeading": "Privacy Policy",
     "termsHeading": "Terms of Use"
   },
+  "tours": {
+    "domestic": {
+      "title": "Domestic Tours",
+      "subtitle": "Explore Vietnam from north to south",
+      "body": "Browse our full range of destinations across Vietnam — from the northern mountains and Ha Long Bay to the central coast and the Mekong Delta.",
+      "cta": "Explore destinations"
+    },
+    "international": {
+      "title": "International Tours",
+      "subtitle": "Journeys beyond Vietnam — coming soon",
+      "body": "We are preparing a curated selection of international tours. Check back soon for departures beyond Vietnam."
+    },
+    "empty": "No destinations in this category yet."
+  },
   "blog": {
     "title": "Stories & Inspiration",
     "subtitle": "Travel stories and local voices from across Vietnam",
     "viewArticle": "Read story",
-    "viewAll": "View all stories"
+    "viewAll": "View all stories",
+    "like": "Like this article",
+    "liked": "Liked"
   },
   "events": {
     "title": "Events & Festivals Calendar",
@@ -1075,7 +1112,6 @@
       "November",
       "December"
     ],
-    "tickerTitle": "Events & Festivals",
     "empty": "No festivals listed for this month.",
     "viewCalendar": "View by month →",
     "lunarNote": "Lunar-calendar dates vary by year; the month shown is an approximation."
@@ -1159,12 +1195,17 @@
   },
   "sitemapPage": {
     "title": "HTML Sitemap",
-    "subtitle": "Every section of Vietnam Tourism in one place",
+    "subtitle": "Every section of DuanMar in one place",
     "discover": "Discover",
     "partners": "Partners",
     "tools": "Tools",
     "home": "Home",
     "overview": "Overview",
     "map": "Map"
+  },
+  "promo": {
+    "title": "Special offer for you",
+    "imageAlt": "Special promotional offer",
+    "close": "Close"
   }
 }

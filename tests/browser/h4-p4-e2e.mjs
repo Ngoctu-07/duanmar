@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { fetchTourPricing, remainingOn } from "../helpers/cms-expectations.mjs";
+import { dismissPromo } from "../helpers/promo.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -45,6 +46,7 @@ try {
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
 
   const response = await page.goto(CHECKOUT_URL, { waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
   check("H4 checkout 200", response?.status() === 200, `status=${response?.status()}`);
 
   await page.waitForSelector('td[data-day]', { timeout: 20000 });
@@ -97,31 +99,54 @@ try {
     (await dayDisabled(page, tomorrow)) === expectBlocked(tomorrow, 1),
     `remaining=${remaining(tomorrow)} booked=${JSON.stringify(bookedByDate)}`
   );
+  // +7/+8 can fall in the next month's grid (e.g. today >= 24th of the month),
+  // so navigate to the month that actually contains the target day first.
+  const gridHas = async (iso) => (await page.$$(`td[data-day="${iso}"]`)).length > 0;
+  const gridMonth = async () => {
+    const first = await page
+      .$eval("td[data-day]", (td) => td.getAttribute("data-day"))
+      .catch(() => null);
+    return first ? first.slice(0, 7) : null;
+  };
+  const goToMonthWith = async (iso) => {
+    for (let i = 0; i < 4 && !(await gridHas(iso)); i += 1) {
+      const cur = await gridMonth();
+      if (!cur) break;
+      await page.click(cur > iso.slice(0, 7) ? ".rdp-button_previous" : ".rdp-button_next");
+      await sleep(400);
+    }
+  };
+
+  await goToMonthWith(day7);
   check(
     "H4 +7 follows published maxCapacity − device bookings",
     (await dayDisabled(page, day7)) === expectBlocked(day7, 1),
     `remaining=${remaining(day7)}`
   );
-  // +8 lives in the next month grid — navigate there before asserting
-  await page.click(".rdp-button_next");
-  await sleep(400);
+  await goToMonthWith(day8);
   check("H4 window: +8 disabled", (await dayDisabled(page, day8)) === true);
   check("H4 +8 still shows its day number (visible, just disabled)",
     (await page.$$(`td[data-day="${day8}"]`)).length === 1);
-  await page.click(".rdp-button_previous");
-  await sleep(400);
 
-  // Extreme guest count: blocked exactly when 99 exceeds CMS remaining
+  // Extreme guest count: blocked exactly when 99 exceeds CMS remaining.
+  // tomorrow lives on the current month grid, +7 possibly on the next one —
+  // assert each day in the month that displays it.
   await page.$eval("#booking-guests", (el, v) => {
     Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(el, v);
     el.dispatchEvent(new Event("input", { bubbles: true }));
   }, "99");
   await sleep(300);
+  await goToMonthWith(day7);
   check(
-    "H4 guestCount=99 follows published maxCapacity − device bookings",
-    (await dayDisabled(page, tomorrow)) === expectBlocked(tomorrow, 99) &&
-      (await dayDisabled(page, day7)) === expectBlocked(day7, 99),
-    `remaining(tomorrow)=${remaining(tomorrow)} remaining(+7)=${remaining(day7)}`
+    "H4 guestCount=99 follows published maxCapacity − device bookings (+7)",
+    (await dayDisabled(page, day7)) === expectBlocked(day7, 99),
+    `remaining(+7)=${remaining(day7)}`
+  );
+  await goToMonthWith(tomorrow);
+  check(
+    "H4 guestCount=99 follows published maxCapacity − device bookings (tomorrow)",
+    (await dayDisabled(page, tomorrow)) === expectBlocked(tomorrow, 99),
+    `remaining(tomorrow)=${remaining(tomorrow)}`
   );
   const badges99 = await badgeCount();
   if (capacity === null) {
@@ -196,6 +221,7 @@ try {
       { iso: pickDay }
     );
     await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
+    await dismissPromo(page);
     await page.waitForSelector("td[data-day]", { timeout: 20000 });
     bookedByDate = await readBookedByDate();
     const expected = Math.max(0, before - 1);

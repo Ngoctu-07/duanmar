@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Mail } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Careers | Vietnam Tourism",
+  title: "Careers | DuanMar",
   description: "Join us in promoting Vietnam to the world",
 };
 

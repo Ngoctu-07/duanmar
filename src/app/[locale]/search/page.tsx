@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { getMessages, getTranslations } from "next-intl/server";
+import { toPlainText } from "next-sanity";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { DESTINATIONS_QUERY } from "@/sanity/queries/destinations";
+import { getNewsList, type NewsItem } from "@/lib/news-content-provider";
 import {
   SearchClient,
   type SearchEntry,
@@ -9,7 +11,7 @@ import {
 } from "@/components/search/search-client";
 
 export const metadata: Metadata = {
-  title: "Search | Vietnam Tourism",
+  title: "Search | DuanMar",
   description: "Search destinations, guides and stories",
 };
 
@@ -26,12 +28,6 @@ interface SearchMessages {
   };
   culture: { sections: Record<string, { heading: string; body: string }> };
   deals: { items: { title: string; description: string; tag: string }[] };
-  news: {
-    items: Record<
-      string,
-      { title: string; excerpt: string; content: string[] }
-    >;
-  };
   about: Record<"contact" | "careers" | "press", { title: string; subtitle: string }>;
 }
 
@@ -55,7 +51,8 @@ const collect = (
 
 function buildEntries(
   messages: SearchMessages,
-  destinations: DestinationRow[]
+  destinations: DestinationRow[],
+  articles: NewsItem[]
 ): SearchEntry[] {
   const entries: SearchEntry[] = [];
 
@@ -102,18 +99,19 @@ function buildEntries(
   for (const deal of messages.deals?.items ?? []) {
     collect(entries, "page", "/deals", deal.title, deal.description, deal.tag);
   }
-  for (const [slug, article] of Object.entries(messages.news?.items ?? {})) {
+  for (const article of articles) {
     collect(
       entries,
       "article",
-      `/news/${slug}`,
+      `/blog/${article.slug}`,
       article.title,
       article.excerpt,
-      (article.content ?? []).join(" ")
+      toPlainText(article.content ?? [])
     );
   }
   for (const [slug, page] of Object.entries(messages.about ?? {})) {
-    collect(entries, "page", `/about/${slug}`, page.title, page.subtitle);
+    const href = slug === "contact" ? "/contact" : `/about/${slug}`;
+    collect(entries, "page", href, page.title, page.subtitle);
   }
   for (const destination of destinations) {
     collect(
@@ -131,22 +129,25 @@ function buildEntries(
 
 export default async function SearchPage({
   searchParams,
+  params,
 }: {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ q?: string }>;
 }) {
-  const [{ q }, messages, destinations, t] = await Promise.all([
-    searchParams,
+  const [{ q }, { locale }] = await Promise.all([searchParams, params]);
+  const [messages, destinations, articles, t] = await Promise.all([
     getMessages(),
     fetchPublished(DESTINATIONS_QUERY, { region: "" }, {
       tags: ["sanity:destination:list"],
     }),
+    getNewsList(locale),
     getTranslations("search"),
   ]);
 
   const entries = buildEntries(
     messages as unknown as SearchMessages,
-    (destinations ?? []) as DestinationRow[]
+    (destinations ?? []) as DestinationRow[],
+    articles
   );
 
   const labels: SearchLabels = {

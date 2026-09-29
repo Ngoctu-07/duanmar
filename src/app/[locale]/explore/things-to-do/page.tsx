@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
 export const metadata: Metadata = {
-  title: "Things to Do | Vietnam Tourism",
+  title: "Things to Do | DuanMar",
   description: "Discover experiences across Vietnam",
 };
 

@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const result = await getItinerary(slug);
   if (!result) return {};
   return {
-    title: `${result.data.title} | Vietnam Tourism`,
+    title: `${result.data.title} | DuanMar`,
     description: result.data.summary,
   };
 }

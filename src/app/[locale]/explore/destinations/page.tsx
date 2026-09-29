@@ -13,7 +13,7 @@ import {
 import { ALL_TOUR_PRICING_QUERY } from "@/sanity/queries/tour-pricing";
 
 export const metadata: Metadata = {
-  title: "Destinations | Vietnam Tourism",
+  title: "Destinations | DuanMar",
   description: "Discover places to visit across Vietnam",
 };
 
