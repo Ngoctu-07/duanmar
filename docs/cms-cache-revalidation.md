@@ -12,8 +12,10 @@ Cách dữ liệu CMS (giá tour, destination, homepage, tin tức) tới UI **k
 3. **Webhook invalidation** — Sanity gọi `POST /api/revalidate` khi publish → verify HMAC
    → `revalidateTag("sanity", "max")` + `revalidatePath("/", "layout")`.
    Fallback nếu webhook lỗi: mọi cache entry tự hết hạn sau 300 s (`unstable_cache
-   revalidate: 300`) + trang chi tiết destination (SSG) còn `export const revalidate = 300`
-   → dữ liệu tối đa ~5 phút tự làm mới, không bao giờ đóng băng tới lần redeploy.
+   revalidate: 300`) → dữ liệu tối đa ~5 phút tự làm mới, không bao giờ đóng băng
+   tới lần redeploy. **Không có route-level ISR** — trang `[locale]` đọc `headers()`
+   qua next-intl (không `setRequestLocale`) nên mọi route là dynamic; khai
+   `export const revalidate` sẽ ném `DYNAMIC_SERVER_USAGE` 500 (xem changelog 2026-09-30).
 
 ## Cấu hình (1 lần)
 

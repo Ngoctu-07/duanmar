@@ -11,14 +11,8 @@ import { PriceBlock } from "@/components/pricing/price-block";
 import { mapPricingTiers } from "@/lib/pricing";
 import { pickGalleryImages } from "@/lib/destination-gallery";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
-import {
-  DESTINATION_BY_SLUG_QUERY,
-  DESTINATION_SLUGS_QUERY,
-} from "@/sanity/queries/destinations";
+import { DESTINATION_BY_SLUG_QUERY } from "@/sanity/queries/destinations";
 import { TOUR_PRICING_BY_SLUG_QUERY } from "@/sanity/queries/tour-pricing";
-
-/** ISR safety net: regenerate at most every 5 min if the revalidate webhook misses. */
-export const revalidate = 300;
 
 interface PageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -28,11 +22,6 @@ async function getDestination(slug: string) {
   return fetchPublished(DESTINATION_BY_SLUG_QUERY, { slug }, {
     tags: [`sanity:destination:${slug}`],
   });
-}
-
-export async function generateStaticParams() {
-  const slugs = await fetchPublished(DESTINATION_SLUGS_QUERY);
-  return (slugs ?? []).map((entry: { slug: string }) => ({ slug: entry.slug }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

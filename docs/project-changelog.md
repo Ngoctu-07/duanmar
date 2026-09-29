@@ -505,3 +505,13 @@
   - Verified: lint **0** (0 warning) · `npm test` **23/23** · `npm run build` 0 (route `/api/assistant` trong manifest) · schema 0 errors · suite **26/27** (fail duy nhất `revalidate-webhook` env pre-existing)
   - Docs: NEW `docs/ai-assistant.md` · `.env.example` +`GEMINI_API_KEY`/`ASSISTANT_MODEL` · Key thật đã cấu hình (`.env.local`, gitignored; 2026-09-30): live Gemini xác minh end-to-end (15/15 browser checks chế độ live, model `gemini-3.5-flash-lite` — 2.5-flash retired, 3.7/3.8 503 tại thời điểm cấp key) · Docs impact: minor
 - **[Test] `f-ui` F5 robust ở ranh giới cuối tháng** — fix latent date-boundary: khi "hôm nay" = ngày cuối tháng thì `startMonth={minDate}` (ngày mai = tháng sau) làm ô past/today trong tháng hiện tại render thành outside-cell **không có `<button>`** (`disabled:null`) → `dayInfo` fallback đọc `data-disabled` thay vì `btn.disabled` · KHÔNG liên quan code assistant — tự lộ sau khi clock sang 2026-09-30 00:00
+
+## 2026-09-30
+
+### Fixed
+- **[P0] Vercel 500 `DYNAMIC_SERVER_USAGE` trên `/en/explore/destinations/[slug]`**
+  - Root cause: route khai `export const revalidate = 300` + `generateStaticParams` (khai báo SSG/ISR) trong khi render tree bắt buộc request scope — `[locale]/layout.tsx` gọi `getMessages()`/`getLocale()` và next-intl đọc header `X-NEXT-INTL-LOCALE` qua `headers()` vì **không nơi nào gọi `setRequestLocale`** → on-demand static compute (path không prerender được, vì `generateStaticParams` chỉ trả `{slug}`, thiếu `locale`) ném `DynamicServerError` → 500 cả build lẫn runtime; toàn bộ route khác trong app vốn là `ƒ Dynamic` nên không lộ
+  - Fix (`src/app/[locale]/explore/destinations/[slug]/page.tsx`): bỏ `export const revalidate`, bỏ `generateStaticParams` + import `DESTINATION_SLUGS_QUERY` → route về `ƒ Dynamic` như 38 route còn lại · freshness vẫn giữ nhờ tầng data: `fetchPublished` `unstable_cache(revalidate: 300)` + tag `sanity:destination:<slug>`/`sanity:pricing:<slug>` + webhook `/api/revalidate` (`revalidateTag("sanity","max")`)
+  - Alternative (chưa làm): `setRequestLocale` ở `[locale]/layout.tsx` + `generateStaticParams` trả `{locale, slug}` để bật lại SSG thật — đổi hành vi caching toàn site, cần plan riêng
+  - Verified: `npm run build` 0 (manifest: route `ƒ`) · smoke `next start`: `/en|hcm` **200**, `/vi|hcm` **200**, `/en/explore/destinations/nope` **404**, listing **200**, 0 log error · lint **0** · `npm test` **23/23**
+  - Docs impact: minor (changelog này + `docs/cms-cache-revalidation.md`)
