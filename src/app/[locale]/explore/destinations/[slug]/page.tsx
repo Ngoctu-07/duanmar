@@ -8,6 +8,11 @@ import { TourAttributeBadges } from "@/components/explore/tour-attribute-badges"
 import { DestinationHeroCarousel } from "@/components/explore/destination-hero-carousel";
 import { CustomerReviews } from "@/components/reviews/customer-reviews";
 import { PriceBlock } from "@/components/pricing/price-block";
+import {
+  ItineraryAccordion,
+  type ItineraryDay,
+} from "@/components/explore/itinerary-accordion";
+import { cn } from "@/lib/utils";
 import { mapPricingTiers } from "@/lib/pricing";
 import { pickGalleryImages } from "@/lib/destination-gallery";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
@@ -47,6 +52,8 @@ export default async function DestinationDetailPage({ params }: PageProps) {
   if (!destination) notFound();
 
   const tiers = mapPricingTiers(pricingDoc, locale);
+  const itineraryDays: ItineraryDay[] = destination.itinerary ?? [];
+  const hasItinerary = itineraryDays.length > 0;
   const heroSlides = pickGalleryImages(destination)
     .map((image) =>
       image.asset?.url
@@ -66,31 +73,43 @@ export default async function DestinationDetailPage({ params }: PageProps) {
 
       {heroSlides.length > 0 && <DestinationHeroCarousel slides={heroSlides} />}
 
-      <div className="mt-8 max-w-3xl">
-        <div className="mb-3 flex items-center gap-3">
-          <span className="rounded-full border px-3 py-1 text-xs font-medium capitalize">
-            {destination.country?.[locale as "vi" | "en"] ??
-              (destination.category === "domestic"
-                ? t("vietnam")
-                : t(destination.region as "north" | "central" | "south"))}
-          </span>
-          <TourAttributeBadges
-            isSpecialTour={destination.isSpecialTour}
-          />
-          <BookTicketButton slug={destination.slug.current} />
+      <div
+        className={cn(
+          "mt-8 grid grid-cols-1 gap-8",
+          hasItinerary ? "lg:grid-cols-2 lg:gap-10" : "max-w-3xl"
+        )}
+      >
+        {/* Overview: identity, description, price and reviews. */}
+        <div>
+          <div className="mb-3 flex items-center gap-3">
+            <span className="rounded-full border px-3 py-1 text-xs font-medium capitalize">
+              {destination.country?.[locale as "vi" | "en"] ??
+                (destination.category === "domestic"
+                  ? t("vietnam")
+                  : t(destination.region as "north" | "central" | "south"))}
+            </span>
+            <TourAttributeBadges isSpecialTour={destination.isSpecialTour} />
+            <BookTicketButton slug={destination.slug.current} />
+          </div>
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <h1 className="min-w-0 text-4xl font-bold">{destination.name}</h1>
+            <TourRatingBadge slug={slug} />
+          </div>
+          {destination.description && (
+            <p className="text-lg text-muted-foreground whitespace-pre-line">
+              {destination.description}
+            </p>
+          )}
+
+          <PriceBlock tiers={tiers} locale={locale} />
         </div>
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <h1 className="min-w-0 text-4xl font-bold">{destination.name}</h1>
-          <TourRatingBadge slug={slug} />
-        </div>
-        {destination.description && (
-          <p className="text-lg text-muted-foreground whitespace-pre-line">
-            {destination.description}
-          </p>
+
+        {/* Right column: day-by-day itinerary (hidden until CMS days exist). */}
+        {hasItinerary && (
+          <ItineraryAccordion title={t("itinerary.title")} days={itineraryDays} />
         )}
 
-        <PriceBlock tiers={tiers} locale={locale} />
-
+        {/* Own grid item so a long review list never pushes the itinerary off-screen on mobile. */}
         <CustomerReviews tourSlug={slug} locale={locale} />
       </div>
     </div>

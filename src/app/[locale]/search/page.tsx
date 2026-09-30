@@ -3,6 +3,8 @@ import { getMessages, getTranslations } from "next-intl/server";
 import { toPlainText } from "next-sanity";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { DESTINATIONS_QUERY } from "@/sanity/queries/destinations";
+import { PROMOTIONS_QUERY } from "@/sanity/queries/promotions";
+import { filterLivePromotions, pickPromotionText, type PromotionRecord } from "@/lib/promotions";
 import { getNewsList, type NewsItem } from "@/lib/news-content-provider";
 import {
   SearchClient,
@@ -27,7 +29,6 @@ interface SearchMessages {
     items: { name: string; description: string; when: string; location: string }[];
   };
   culture: { sections: Record<string, { heading: string; body: string }> };
-  deals: { items: { title: string; description: string; tag: string }[] };
   about: Record<"contact" | "careers" | "press", { title: string; subtitle: string }>;
 }
 
@@ -52,7 +53,9 @@ const collect = (
 function buildEntries(
   messages: SearchMessages,
   destinations: DestinationRow[],
-  articles: NewsItem[]
+  articles: NewsItem[],
+  promotions: PromotionRecord[],
+  locale: string
 ): SearchEntry[] {
   const entries: SearchEntry[] = [];
 
@@ -96,8 +99,9 @@ function buildEntries(
   for (const section of Object.values(messages.culture?.sections ?? {})) {
     collect(entries, "page", "/culture", section.heading, section.body);
   }
-  for (const deal of messages.deals?.items ?? []) {
-    collect(entries, "page", "/deals", deal.title, deal.description, deal.tag);
+  for (const promo of filterLivePromotions(promotions)) {
+    const text = pickPromotionText(promo, locale);
+    collect(entries, "page", "/deals", text.title, text.description ?? "", text.badgeTag ?? "");
   }
   for (const article of articles) {
     collect(
@@ -135,19 +139,22 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const [{ q }, { locale }] = await Promise.all([searchParams, params]);
-  const [messages, destinations, articles, t] = await Promise.all([
+  const [messages, destinations, articles, promotions, t] = await Promise.all([
     getMessages(),
     fetchPublished(DESTINATIONS_QUERY, { region: "" }, {
       tags: ["sanity:destination:list"],
     }),
     getNewsList(locale),
+    fetchPublished(PROMOTIONS_QUERY, {}, { tags: ["sanity:promotion:list"] }),
     getTranslations("search"),
   ]);
 
   const entries = buildEntries(
     messages as unknown as SearchMessages,
     (destinations ?? []) as DestinationRow[],
-    articles
+    articles,
+    (promotions ?? []) as PromotionRecord[],
+    locale
   );
 
   const labels: SearchLabels = {

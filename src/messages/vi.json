@@ -118,6 +118,9 @@
     "backToList": "Quay lại danh sách điểm đến",
     "region": "Khu vực",
     "special": "Tour đặc biệt",
+    "itinerary": {
+      "title": "Lịch trình"
+    },
     "reviews": {
       "ratingAria": "{avg}/5 từ {count} đánh giá",
       "title": "Đánh giá của khách hàng",
@@ -878,32 +881,10 @@
     "title": "Ưu đãi & Gói tour",
     "subtitle": "Ưu đãi tuyển chọn cho hành trình Việt Nam",
     "disclaimer": "Ưu đãi mang tính minh họa — giá và tình trạng cuối cùng được đối tác xác nhận tại thời điểm đặt.",
-    "items": [
-      {
-        "tag": "Khuyến mãi",
-        "title": "Ưu đãi đặt sớm: tour mùa đông",
-        "description": "Đặt sớm và tiết kiệm cho các tour mùa thu – đông chọn lọc ở miền Bắc và miền Trung.",
-        "terms": "Đặt trước 31/12 cho khởi hành đến 31/03. Chỉ áp dụng tour chọn lọc."
-      },
-      {
-        "tag": "Gói tour",
-        "title": "Vòng Bắc Bộ kinh điển — 6 ngày 5 đêm",
-        "description": "Hà Nội, Vịnh Hạ Long và Ninh Bình trong một lịch trình kèm du thuyền, tham quan có hướng dẫn và xe đưa đón.",
-        "terms": "Khởi hành nhóm ghép. Phụ thu phòng đơn tùy chọn."
-      },
-      {
-        "tag": "Combo",
-        "title": "Vé máy bay + khách sạn: Hà Nội & TP. Hồ Chí Minh",
-        "description": "Kết hợp chuyến bay nội địa với khách sạn 4 sao tuyển chọn tại hai thành phố cho hành trình bắc – nam liền mạch.",
-        "terms": "Tùy tình trạng hãng hàng không và khách sạn."
-      },
-      {
-        "tag": "Theo mùa",
-        "title": "Nghỉ dưỡng biển mùa hè",
-        "description": "Đảo ngọc Phú Quốc hoặc biển Đà Nẵng – Hội An, kèm tín dụng nghỉ dưỡng tại một số khách sạn.",
-        "terms": "Áp dụng tháng 5–8. Tín dụng tùy cơ sở."
-      }
-    ]
+    "endsInDays": "{count, plural, other {còn # ngày}}",
+    "lastDay": "Hôm nay là ngày cuối",
+    "empty": "Hiện chưa có ưu đãi đang diễn ra — bạn quay lại sau nhé.",
+    "viewTour": "Xem tour"
   },
   "news": {
     "title": "Tin tức & Câu chuyện",
@@ -1085,6 +1066,15 @@
       "subtitle": "Hành trình ngoài Việt Nam — sắp ra mắt",
       "body": "Chúng tôi đang chuẩn bị danh sách tour nước ngoài chọn lọc. Hãy quay lại sớm để khám phá các hành trình ngoài Việt Nam."
     },
+    "all": {
+      "title": "Tất cả tour",
+      "subtitle": "Khám phá toàn bộ điểm đến của chúng tôi"
+    },
+    "search": {
+      "title": "Kết quả tìm kiếm",
+      "summary": "Tour phù hợp với “{query}”"
+    },
+    "noSearchResults": "Không có tour phù hợp với tìm kiếm của bạn.",
     "empty": "Chưa có điểm đến nào trong danh mục này."
   },
   "blog": {

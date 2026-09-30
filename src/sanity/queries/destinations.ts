@@ -28,6 +28,11 @@ export const DESTINATION_BY_SLUG_QUERY = defineQuery(`
     country->{ "code": code, "vi": name.vi, "en": name.en },
     isSpecialTour,
     description,
+    itinerary[] {
+      dayTitle,
+      meals,
+      details
+    },
     lat,
     lng,
     image { ${imageFragment} },

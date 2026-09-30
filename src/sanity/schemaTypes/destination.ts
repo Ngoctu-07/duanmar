@@ -1,4 +1,4 @@
-import { defineType, defineField } from "sanity";
+import { defineArrayMember, defineField, defineType } from "sanity";
 
 export default defineType({
   name: "destination",
@@ -77,6 +77,61 @@ export default defineType({
       title: "Description",
       type: "text",
       rows: 3,
+    }),
+    defineField({
+      name: "itinerary",
+      title: "Itinerary",
+      type: "array",
+      description:
+        "Day-by-day program shown in the right column of the tour detail page. Listed in order; leave empty to hide the block (page falls back to a single column). Mono-lingual like Description — write it in the tour's language.",
+      of: [
+        defineArrayMember({
+          name: "day",
+          title: "Day",
+          type: "object",
+          fields: [
+            defineField({
+              name: "dayTitle",
+              title: "Day title",
+              type: "string",
+              description: 'Full row heading, e.g. "Ngày 1: Tp. Hồ Chí Minh → Sài Gòn..."',
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: "meals",
+              title: "Meals",
+              type: "string",
+              description: 'Shown under the title, e.g. "Ăn sáng, trưa, tối". Leave empty when none.',
+            }),
+            defineField({
+              name: "details",
+              title: "Details",
+              type: "array",
+              description:
+                "Main activities for the day — revealed when the row is expanded. Paragraphs and lists only: headings are disabled so a day can never inject a stray H1 into the page outline.",
+              of: [
+                {
+                  type: "block",
+                  styles: [{ title: "Normal", value: "normal" }],
+                  lists: [
+                    { title: "Bullet", value: "bullet" },
+                    { title: "Numbered", value: "number" },
+                  ],
+                  marks: {
+                    decorators: [
+                      { title: "Strong", value: "strong" },
+                      { title: "Emphasis", value: "em" },
+                    ],
+                  },
+                },
+              ],
+            }),
+          ],
+          preview: {
+            select: { title: "dayTitle", subtitle: "meals" },
+          },
+        }),
+      ],
     }),
     defineField({
       name: "galleryImages",

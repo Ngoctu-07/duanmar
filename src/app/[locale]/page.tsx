@@ -2,7 +2,6 @@ import { HeroSection } from "@/components/homepage/hero-section";
 import { QuickAccessIcons } from "@/components/homepage/quick-access-icons";
 import { FeaturedDestinations } from "@/components/homepage/featured-destinations";
 import { AboutUsSection } from "@/components/homepage/about-us-section";
-import { NewsletterCTA } from "@/components/homepage/newsletter-cta";
 import { StoriesSection } from "@/components/homepage/stories-section";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { HOMEPAGE_QUERY, FEATURED_DESTINATIONS_QUERY } from "@/sanity/queries/homepage";
@@ -41,7 +40,6 @@ export default async function HomePage() {
         storyVi={homepageData?.narrativeStory_vi ?? null}
       />
       <StoriesSection />
-      <NewsletterCTA />
     </>
   );
 }

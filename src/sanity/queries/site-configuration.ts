@@ -6,6 +6,7 @@ export const SITE_CONFIGURATION_QUERY = defineQuery(`
     enableEntryPopup,
     entryPopupImage { ${imageFragment} },
     popupImage_vi { ${imageFragment} },
-    popupImage_en { ${imageFragment} }
+    popupImage_en { ${imageFragment} },
+    socialLinks[]{ _key, platform, displayText, targetUrl }
   }
 `);

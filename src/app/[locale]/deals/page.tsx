@@ -1,21 +1,29 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { PromotionCard } from "@/components/deals/promotion-card";
+import { filterLivePromotions, toPromotionCard, type PromotionRecord } from "@/lib/promotions";
+import { fetchPublished } from "@/sanity/lib/fetch-published";
+import { PROMOTIONS_QUERY } from "@/sanity/queries/promotions";
 
 export const metadata: Metadata = {
   title: "Deals & Packages | DuanMar",
   description: "Curated offers for your Vietnam journey",
 };
 
-interface DealItem {
-  tag: string;
-  title: string;
-  description: string;
-  terms: string;
+interface PageProps {
+  params: Promise<{ locale: string }>;
 }
 
-export default async function DealsPage() {
-  const t = await getTranslations("deals");
-  const items = t.raw("items") as DealItem[];
+export default async function DealsPage({ params }: PageProps) {
+  const { locale } = await params;
+  const [promotions, t] = await Promise.all([
+    fetchPublished(PROMOTIONS_QUERY, {}, { tags: ["sanity:promotion:list"] }),
+    getTranslations("deals"),
+  ]);
+
+  const cards = filterLivePromotions((promotions ?? []) as PromotionRecord[]).map((promo) =>
+    toPromotionCard(promo, locale)
+  );
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -24,18 +32,24 @@ export default async function DealsPage() {
         <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        {items.map((deal) => (
-          <article key={deal.title} className="flex flex-col rounded-xl border p-6">
-            <span className="mb-3 w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              {deal.tag}
-            </span>
-            <h2 className="text-xl font-semibold mb-2">{deal.title}</h2>
-            <p className="text-sm text-muted-foreground mb-4">{deal.description}</p>
-            <p className="mt-auto text-xs text-muted-foreground">{deal.terms}</p>
-          </article>
-        ))}
-      </div>
+      {cards.length === 0 ? (
+        <p className="mx-auto max-w-4xl rounded-xl border border-dashed p-10 text-center text-muted-foreground">
+          {t("empty")}
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {cards.map((card) => (
+            <PromotionCard
+              key={card.id}
+              card={card}
+              countdownLabel={
+                card.daysLeft === 0 ? t("lastDay") : t("endsInDays", { count: card.daysLeft })
+              }
+              viewTourLabel={t("viewTour")}
+            />
+          ))}
+        </div>
+      )}
 
       <p className="mt-8 max-w-4xl mx-auto text-center text-xs text-muted-foreground">
         {t("disclaimer")}

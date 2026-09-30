@@ -4,7 +4,7 @@ import { dismissPromo } from "../helpers/promo.mjs";
 
 /**
  * Plan 260929-2151 — homepage DOM pruning.
- * The 4 removed sections must stay gone (headings absent from rendered
+ * The 5 removed sections must stay gone (headings absent from rendered
  * text in both locales); Featured + About remain; Stories & Inspiration
  * renders only when live CMS articles exist (data-driven).
  */
@@ -19,10 +19,22 @@ const { getBrowser, getPage, closeBrowser } = await import(
   ).href
 );
 
-/** Headings of the 4 permanently pruned sections (historical copy, no longer in messages). */
+/** Headings of the 5 permanently pruned sections (historical copy, no longer rendered). */
 const FORBIDDEN = {
-  vi: ["Loại hình trải nghiệm", "Hành trình gợi ý", "Sự kiện & lễ hội", "Đối tác & Truyền thông"],
-  en: ["Experience Categories", "Suggested Itineraries", "Events & Festivals", "Travel Trade & Media"],
+  vi: [
+    "Loại hình trải nghiệm",
+    "Hành trình gợi ý",
+    "Sự kiện & lễ hội",
+    "Đối tác & Truyền thông",
+    "Stay Updated",
+  ],
+  en: [
+    "Experience Categories",
+    "Suggested Itineraries",
+    "Events & Festivals",
+    "Travel Trade & Media",
+    "Stay Updated",
+  ],
 };
 
 function envValue(key) {

@@ -118,6 +118,9 @@
     "backToList": "Back to destinations",
     "region": "Region",
     "special": "Special tour",
+    "itinerary": {
+      "title": "Itinerary"
+    },
     "reviews": {
       "ratingAria": "{avg} out of 5 from {count} reviews",
       "title": "Customer Reviews",
@@ -878,32 +881,10 @@
     "title": "Deals & Packages",
     "subtitle": "Curated offers for your Vietnam journey",
     "disclaimer": "Sample offers shown for illustration — final pricing and availability are confirmed by our partners at the time of booking.",
-    "items": [
-      {
-        "tag": "Promotion",
-        "title": "Early Bird: winter departures",
-        "description": "Plan ahead and save on selected autumn and winter tours across the north and centre of Vietnam.",
-        "terms": "Book by 31 Dec for departures before 31 Mar. Selected tours only."
-      },
-      {
-        "tag": "Tour Package",
-        "title": "Classic North Loop — 6 days / 5 nights",
-        "description": "Hanoi, Ha Long Bay and Ninh Binh in one route with cruises, guided walks and transfers included.",
-        "terms": "Shared group departure. Single supplement optional."
-      },
-      {
-        "tag": "Bundle",
-        "title": "Flight + Hotel: Hanoi & Ho Chi Minh City",
-        "description": "Pair domestic flights with hand-picked 4-star hotels in both cities for a seamless north–south trip.",
-        "terms": "Subject to airline and hotel availability."
-      },
-      {
-        "tag": "Seasonal",
-        "title": "Summer Beach Escape",
-        "description": "Island time in Phu Quoc or beach days in Da Nang and Hoi An, with resort credits on select properties.",
-        "terms": "Valid May–Aug. Resort credit varies by property."
-      }
-    ]
+    "endsInDays": "{count, plural, one {# day left} other {# days left}}",
+    "lastDay": "Last day today",
+    "empty": "No active promotions right now — please check back soon.",
+    "viewTour": "View tour"
   },
   "news": {
     "title": "News & Stories",
@@ -1085,6 +1066,15 @@
       "subtitle": "Journeys beyond Vietnam — coming soon",
       "body": "We are preparing a curated selection of international tours. Check back soon for departures beyond Vietnam."
     },
+    "all": {
+      "title": "All Tours",
+      "subtitle": "Explore our full range of destinations"
+    },
+    "search": {
+      "title": "Search Results",
+      "summary": "Tours matching “{query}”"
+    },
+    "noSearchResults": "No tours match your search.",
     "empty": "No destinations in this category yet."
   },
   "blog": {
