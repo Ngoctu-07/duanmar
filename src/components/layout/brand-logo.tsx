@@ -6,14 +6,21 @@ export function BrandLogo({
   size = 36,
   className,
   priority = false,
+  variant = "default",
 }: {
   size?: number;
   className?: string;
   priority?: boolean;
+  /** `knockout` = transparent white-stroke rendition for the red footer. */
+  variant?: "default" | "knockout";
 }) {
   return (
     <Image
-      src="/images/logo-duanmar.png"
+      src={
+        variant === "knockout"
+          ? "/images/logo-duanmar-white.png"
+          : "/images/logo-duanmar.png"
+      }
       alt="DuanMar"
       width={size}
       height={size}
