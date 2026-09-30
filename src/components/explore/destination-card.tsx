@@ -78,8 +78,9 @@ export function DestinationCard({
         </p>
         <PriceRangeRow priceRange={priceRange} className="mb-4" />
         {/* Visual action button (now non-interactive — the card overlay link
-            above handles routing); scaled ~1.5× per plan 260929-2207. */}
-        <span className="inline-flex items-center justify-center rounded-md border border-input bg-background px-6 py-3 text-base font-medium transition-colors">
+            above handles routing); CTA downscaled to 83.33% per plan
+            260930-1705 (rollback of the 1.5× scale from 260929-2207). */}
+        <span className="inline-flex items-center justify-center rounded-md border border-input bg-background px-5 py-2.5 text-sm font-medium transition-colors">
           {actionLabel}
         </span>
       </CardContent>

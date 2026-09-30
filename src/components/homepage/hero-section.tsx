@@ -1,7 +1,9 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
+import { buildToursHref } from "@/lib/tour-search";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import Image from "next/image";
@@ -16,7 +18,14 @@ interface HeroProps {
 
 export function HeroSection({ hero }: HeroProps) {
   const t = useTranslations("home");
-  const locale = useLocale();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Submit (button click or Enter) → tour listing filtered by the typed query.
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    router.push(buildToursHref(searchQuery));
+  };
 
   return (
     <section className="relative h-[600px] bg-gradient-to-br from-primary/10 via-background to-secondary/10">
@@ -41,31 +50,24 @@ export function HeroSection({ hero }: HeroProps) {
             {hero?.heroSubtitle || t("heroSubtitle")}
           </p>
 
-          <form
-            action={`/${locale}/search`}
-            method="GET"
-            className="relative max-w-xl mx-auto"
-          >
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              name="q"
-              placeholder={t("searchPlaceholder")}
-              aria-label={t("searchPlaceholder")}
-              className="w-full h-12 pl-10 pr-4 rounded-lg border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+          <form onSubmit={handleSubmit} className="max-w-xl mx-auto space-y-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-5 w-5 stroke-[1.5] -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder={t("searchPlaceholder")}
+                aria-label={t("searchPlaceholder")}
+                className="w-full h-12 pl-10 pr-4 rounded-lg border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Button type="submit" size="lg" className="px-7 py-3.5 text-sm">
+                {t("exploreNow")}
+              </Button>
+            </div>
           </form>
-
-          <div className="flex flex-wrap justify-center gap-4">
-            <Button
-              size="lg"
-              nativeButton={false}
-              render={<Link href="/explore" />}
-              className="px-8 py-4 text-lg"
-            >
-              {t("exploreNow")}
-            </Button>
-          </div>
         </div>
       </div>
     </section>

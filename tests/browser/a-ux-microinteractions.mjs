@@ -133,7 +133,7 @@ try {
     }
   }
 
-  // ---------- 3. CTA scale (~150%) ----------
+  // ---------- 3. CTA scale (downscaled to 83.33% of the 1.5× upscale) ----------
   for (const locale of ["vi", "en"]) {
     await page.goto(`${BASE}/${locale}`, { waitUntil: "networkidle2", timeout: 60000 });
     await dismissPromo(page);
@@ -148,9 +148,14 @@ try {
       };
       return { hero: style(hero), contact: style(contact) };
     });
-    const big = (s) => s && parseInt(s.pt) >= 16 && parseInt(s.fs) >= 18;
-    check(`C1 /${locale} hero Explore Now scaled (py≥16, fs≥18)`, big(cta.hero), JSON.stringify(cta.hero));
-    check(`C2 /${locale} Contact CTA scaled (py≥16, fs≥18)`, big(cta.contact), JSON.stringify(cta.contact));
+    // 83.33% of px-8 (32px) → 26.67px and text-lg (18px) → 15px; landed on the
+    // nearest Tailwind steps (px-7 = 28px, text-sm = 14px). Horizontal padding
+    // is the structural signal here — `pt` is inert because both CTAs sit on a
+    // fixed h-10/h-9 button.
+    const at83 = (s) =>
+      s && parseInt(s.pl) >= 24 && parseInt(s.pl) <= 30 && parseInt(s.fs) >= 14 && parseInt(s.fs) <= 16;
+    check(`C1 /${locale} hero Explore Now downscaled 83.33% (px 24–30, fs 14–16)`, at83(cta.hero), JSON.stringify(cta.hero));
+    check(`C2 /${locale} Contact CTA downscaled 83.33% (px 24–30, fs 14–16)`, at83(cta.contact), JSON.stringify(cta.contact));
     if (locale === "vi") {
       await page.screenshot({ path: `${OUT}/a-cta-hero.png`, clip: { x: 0, y: 0, width: 1280, height: 700 } });
     }

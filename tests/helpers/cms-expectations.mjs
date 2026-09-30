@@ -19,26 +19,56 @@ function envValue(key) {
   return line ? line.slice(key.length + 1).trim() : undefined;
 }
 
+/** Raw GROQ over the configured dataset (env-driven, same precedence as the UI). */
+async function sanityQuery(query, params = {}) {
+  const projectId = envValue("NEXT_PUBLIC_SANITY_PROJECT_ID");
+  const dataset = envValue("NEXT_PUBLIC_SANITY_DATASET") || "production";
+  if (!projectId) {
+    throw new Error("NEXT_PUBLIC_SANITY_PROJECT_ID missing (process env / .env.local)");
+  }
+  const search = `?query=${encodeURIComponent(query)}` + Object.entries(params)
+    .map(([key, value]) => `&${encodeURIComponent(`$${key}`)}=${encodeURIComponent(JSON.stringify(value))}`)
+    .join("");
+  const url = `https://${projectId}.api.sanity.io/v2026-09-25/data/query/${dataset}${search}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+  if (!res.ok) throw new Error(`Sanity query failed: ${res.status}`);
+  const json = await res.json();
+  return json.result ?? null;
+}
+
 /**
  * Published tourPricing doc (tiers + global maxCapacity) for a tour slug.
  * No per-date ledger lives in the CMS anymore — booked guests come from the
  * device's confirmed bookings (see remainingOn).
  */
 export async function fetchTourPricing(tourSlug = "hcm") {
-  const projectId = envValue("NEXT_PUBLIC_SANITY_PROJECT_ID");
-  const dataset = envValue("NEXT_PUBLIC_SANITY_DATASET") || "production";
-  if (!projectId) {
-    throw new Error("NEXT_PUBLIC_SANITY_PROJECT_ID missing (process env / .env.local)");
-  }
-  const query =
-    '*[_type == "tourPricing" && tourSlug == $slug] | order(_updatedAt desc, _id asc)[0]{tiers, maxCapacity}';
-  const url =
-    `https://${projectId}.api.sanity.io/v2026-09-25/data/query/${dataset}` +
-    `?query=${encodeURIComponent(query)}&${encodeURIComponent("$slug")}=${encodeURIComponent(JSON.stringify(tourSlug))}`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
-  if (!res.ok) throw new Error(`Sanity query failed: ${res.status}`);
-  const json = await res.json();
-  return json.result ?? null;
+  return sanityQuery(
+    '*[_type == "tourPricing" && tourSlug == $slug] | order(_updatedAt desc, _id asc)[0]{tiers, maxCapacity}',
+    { slug: tourSlug }
+  );
+}
+
+/**
+ * Deterministically resolves a tour slug that BOTH (a) has a published
+ * tourPricing doc with at least one tier and (b) maps to a published
+ * destination page. Intersection uses exact string equality — no trim — so it
+ * mirrors the app's exact-slug pricing lookup and rejects malformed slugs
+ * (e.g. a trailing-space tourSlug that the detail page can never render).
+ *
+ * Never hardcode a slug: CMS reseeds silently invalidate hardcoded fixtures.
+ * Returns `{ slug, doc }` or `null` when no tour satisfies both conditions.
+ */
+export async function resolveTourPricingFixture() {
+  const [pricing, destinations] = await Promise.all([
+    sanityQuery('*[_type == "tourPricing" && count(tiers) > 0] | order(_updatedAt desc, _id asc){tourSlug, tiers, maxCapacity}'),
+    sanityQuery('*[_type == "destination" && defined(slug.current)]{ "slug": slug.current }'),
+  ]);
+  const pages = new Set((destinations ?? []).map((d) => d?.slug).filter((s) => typeof s === "string"));
+  const candidates = (pricing ?? [])
+    .filter((doc) => typeof doc?.tourSlug === "string" && pages.has(doc.tourSlug))
+    .sort((a, b) => a.tourSlug.localeCompare(b.tourSlug));
+  const first = candidates[0];
+  return first ? { slug: first.tourSlug, doc: first } : null;
 }
 
 /** vi-VN integer + currency mark, matching the UI's normalized rendering. */

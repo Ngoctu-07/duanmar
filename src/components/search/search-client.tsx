@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Search } from "lucide-react";
 import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
+import { normalizeSearchText } from "@/lib/search-normalize";
 
 /** Destination entries link to `/explore/destinations/<slug>`; others carry no slug. */
 const destinationSlug = (entry: SearchEntry): string | undefined =>
@@ -27,12 +28,8 @@ export interface SearchLabels {
   types: Record<string, string>;
 }
 
-const normalize = (value: string): string =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[đĐ]/g, (c) => (c === "đ" ? "d" : "D"))
-    .toLowerCase();
+/** Accent/case folding lives in `src/lib/search-normalize.ts` (shared with tour search). */
+const normalize = normalizeSearchText;
 
 interface SearchClientProps {
   entries: SearchEntry[];
@@ -65,7 +62,7 @@ export function SearchClient({ entries, labels, initialQuery = "" }: SearchClien
   return (
     <div className="max-w-3xl mx-auto">
       <div className="relative mb-8">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 h-5 w-5 stroke-[1.5] -translate-y-1/2 text-muted-foreground" />
         <input
           type="search"
           autoFocus

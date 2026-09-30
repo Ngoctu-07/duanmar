@@ -70,10 +70,10 @@ export async function PriceBlock({ tiers, locale }: PriceBlockProps) {
                   <th scope="row" className="py-2.5 pr-4 text-left font-semibold">
                     {label}
                   </th>
-                  <td className="py-2.5 pl-4 text-right font-semibold tabular-nums text-primary">
+                  <td className="py-2.5 pl-4 text-right text-[1.4rem] font-semibold tabular-nums text-primary">
                     {formatPrice(tier.pricePerGuest, locale, currency)}
                   </td>
-                  <td className="py-2.5 pl-4 text-right tabular-nums text-muted-foreground">
+                  <td className="py-2.5 pl-4 text-right text-[1.4rem] font-semibold tabular-nums text-muted-foreground">
                     {formatPrice(tier.groupTotal, locale, currency)}
                   </td>
                 </tr>

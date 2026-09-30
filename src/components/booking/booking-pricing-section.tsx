@@ -69,7 +69,7 @@ export function BookingPricingSection({
             </p>
             <p className="mt-1 flex items-baseline justify-between gap-3">
               <span className="text-sm font-medium">{t("total")}</span>
-              <span className="text-lg font-semibold tabular-nums text-primary">
+              <span className="text-[1.8rem] font-semibold tabular-nums text-primary">
                 {formatPrice(total, locale, currency)}
               </span>
             </p>

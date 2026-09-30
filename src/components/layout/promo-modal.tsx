@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import {
   Dialog,
@@ -17,22 +17,42 @@ type PromoModalProps = {
   enableEntryPopup?: boolean
 }
 
+// Set once the dialog has been shown for the CURRENT document. A full document load
+// re-evaluates this module (reset → Option A: initial load / hard refresh can show);
+// soft navigations and locale-segment remounts share the module — a fresh instance
+// therefore cannot re-open the dialog mid-document, even when navType is still "reload"
+// (the flag alone only gates subsequent DOCUMENT loads).
+let popupShownThisDocument = false
+
 function PromoModal({ imageSrc, width = 1200, height = 800, enableEntryPopup }: PromoModalProps) {
   const t = useTranslations("promo")
-  const locale = useLocale()
   const [open, setOpen] = React.useState(false)
+  const showable = enableEntryPopup !== false && !!imageSrc
 
-  // Opens post-hydration on mount AND re-triggers whenever the EN/VI toggle
-  // changes the locale (plan 260929-1617): same instance → effect re-runs;
-  // segment remount → fresh instance runs it anyway. imageSrc/width/height
-  // arrive with the re-executed [locale] layout in the same soft navigation.
+  // Opens exactly once per document-load decision (plan 260930-1740): only on a TRUE
+  // initial session load (PerformanceNavigationTiming type "navigate" with no prior
+  // hasSeenPopup flag) or a hard browser refresh ("reload"). Empty deps = never re-runs
+  // on client-side route/locale transitions; the module marker blocks mid-document
+  // remounts (locale segment change recreates the subtree); sessionStorage.hasSeenPopup
+  // blocks later DOCUMENT loads in the same tab. Replaces the [locale] re-trigger of
+  // plan 260929-1617.
   React.useEffect(() => {
+    if (!showable || popupShownThisDocument) return
+    const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined
+    const navType = navEntry?.type
+    if (navType && navType !== "navigate" && navType !== "reload") return
+    let seen = null
+    try { seen = sessionStorage.getItem("hasSeenPopup") } catch { /* private-mode read → fail-open */ }
+    if (navType !== "reload" && seen === "true") return
     // eslint-disable-next-line react-hooks/set-state-in-effect -- dialog must open post-hydration to avoid SSR mismatch
     setOpen(true)
-  }, [locale])
+    popupShownThisDocument = true
+    try { sessionStorage.setItem("hasSeenPopup", "true") } catch { /* private-mode write → fail-open */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- props are final at mount (server-fetched site config)
+  }, [])
 
   // Graceful degradation (AC3): disabled or no CMS asset → render nothing.
-  if (enableEntryPopup === false || !imageSrc) return null
+  if (!showable) return null
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

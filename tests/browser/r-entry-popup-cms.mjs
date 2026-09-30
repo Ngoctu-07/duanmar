@@ -107,6 +107,34 @@ try {
       `node=${!!promo} count=${promoCount}`
     );
 
+    // R2 hygiene (plan 260930-1740): a stale reused tab may inherit hasSeenPopup=true
+    // via browser.js ws-session reconnect → suppresses the first load. Clear + reload
+    // (reload branch) restores a true first-show proof. Clean path: zero behavior change.
+    const flaggedAtStart = await page.evaluate(
+      () => sessionStorage.getItem("hasSeenPopup") === "true"
+    );
+    if (!promo && flaggedAtStart) {
+      await page.evaluate(() => sessionStorage.removeItem("hasSeenPopup"));
+      await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
+      promo = await page
+        .waitForSelector('[data-slot="promo-modal"]', { timeout: 10000 })
+        .catch(() => null);
+      const retriedCount = await page.$$eval('[data-slot="promo-modal"]', (n) => n.length);
+      check(
+        "R2 hygiene: cleared inherited hasSeenPopup + reload restores first-show",
+        !!promo && retriedCount === 1,
+        `node=${!!promo} count=${retriedCount}`
+      );
+    }
+
+    // R17 sessionStorage flag written exactly when the modal first shows.
+    const flagAfterShow = await page.evaluate(() => sessionStorage.getItem("hasSeenPopup"));
+    check(
+      'R17 sessionStorage hasSeenPopup === "true" after first show',
+      flagAfterShow === "true",
+      `flag=${flagAfterShow}`
+    );
+
     const imgSrc = promo
       ? await page.evaluate(() => {
           const img = document.querySelector('[data-slot="promo-modal"] img');
@@ -228,7 +256,7 @@ try {
       .catch(() => false);
     check("R7 page interactive after dismiss", navOk, `path=${await page.evaluate(() => location.pathname)}`);
 
-    // ---------- R15/R16 locale-switch re-trigger (plan 260929-1617) ----------
+    // ---------- R15/R16 locale-toggle suppression + hard reload (plan 260930-1740) ----------
     const clickHeaderLocale = (locale) =>
       page.evaluate((lc) => {
         const btn = [...document.querySelectorAll("header button")].find(
@@ -242,71 +270,129 @@ try {
     const readModalState = () =>
       page.evaluate(() => {
         const img = document.querySelector('[data-slot="promo-modal"] img');
+        const nav = performance.getEntriesByType("navigation")[0];
         return {
           path: location.pathname,
           count: document.querySelectorAll('[data-slot="promo-modal"]').length,
           src: img ? decodeURIComponent(img.getAttribute("src") || "") : null,
           alt: img ? img.getAttribute("alt") : null,
           marker: window.__promoI18nNoReload ?? null,
+          navType: nav ? nav.type : null,
+          flag: sessionStorage.getItem("hasSeenPopup"),
         };
       });
 
     const clickedEn = await clickHeaderLocale("en");
-    await page.waitForFunction(
-      () => document.querySelectorAll('[data-slot="promo-modal"]').length === 1,
-      { timeout: 8000 }
-    ).catch(() => {});
+    await page.waitForFunction(() => location.pathname.startsWith("/en/"), { timeout: 8000 }).catch(() => {});
+    // Reuse the historical 8s reopen window: a bug (re-open) resolves this fast, count 1 → FAIL.
+    await page
+      .waitForFunction(
+        () => document.querySelectorAll('[data-slot="promo-modal"]').length === 1,
+        { timeout: 8000 }
+      )
+      .catch(() => {});
     const enState = await readModalState();
-    const enExpected = enAsset?.asset?.url ?? null;
     check(
-      "R15 EN toggle re-opens modal on /en (single instance, EN asset chain, no full reload)",
+      "R15 EN soft toggle does NOT reopen modal (path /en, soft nav: marker 1, navType navigate, flag set)",
       clickedEn &&
         enState.path.startsWith("/en/") &&
-        enState.count === 1 &&
+        enState.count === 0 &&
+        enState.marker === 1 &&
+        enState.navType === "navigate" &&
+        enState.flag === "true",
+      JSON.stringify({ clickedEn, ...enState })
+    );
+
+    const enExpected = enAsset?.asset?.url ?? null;
+    await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
+    await page
+      .waitForFunction(
+        () => document.querySelectorAll('[data-slot="promo-modal"]').length === 1,
+        { timeout: 10000 }
+      )
+      .catch(() => {});
+    const reState = await readModalState();
+    check(
+      "R16 hard reload DOES reopen modal on /en (navType reload, EN asset chain D2, marker reset, flag set)",
+      reState.path.startsWith("/en/") &&
+        reState.count === 1 &&
         !!enExpected &&
-        enState.src !== null &&
-        enState.src.includes(enExpected) &&
-        enState.alt === msg.en.promo.imageAlt &&
-        enState.marker === 1,
-      JSON.stringify({ clickedEn, ...enState, enExpected })
+        reState.src !== null &&
+        reState.src.includes(enExpected) &&
+        reState.alt === msg.en.promo.imageAlt &&
+        reState.navType === "reload" &&
+        reState.marker === null &&
+        reState.flag === "true",
+      JSON.stringify({ ...reState, enExpected })
     );
     await page.screenshot({ path: `${OUT}/r-entry-popup-03-locale-en.png` });
 
-    await page.click('[data-slot="promo-modal-close"]').catch(async () => {
-      await page.keyboard.press("Escape").catch(() => {});
-    });
-    await page.waitForFunction(
-      () => !document.querySelector('[data-slot="promo-modal"]'),
-      { timeout: 5000 }
-    ).catch(() => {});
+    // Modal present here → safe to dismiss. Guard the click: a failed R16 must not
+    // fall into puppeteer's 30s wait on an absent selector (check() failures don't halt).
+    if (reState.count === 1) {
+      await page.click('[data-slot="promo-modal-close"]').catch(async () => {
+        await page.keyboard.press("Escape").catch(() => {});
+      });
+      const goneAfterReload = await page
+        .waitForFunction(
+          () =>
+            !document.querySelector('[data-slot="promo-modal"]') &&
+            !document.querySelector('[data-slot="dialog-overlay"]'),
+          { timeout: 5000 }
+        )
+        .then(() => true)
+        .catch(() => false);
+      check("R16b close chip dismisses reopened modal + overlay", goneAfterReload, `gone=${goneAfterReload}`);
+    } else {
+      check("R16b close chip dismisses reopened modal + overlay", false, "skipped: modal absent after R16");
+    }
 
+    // R19: on a RELOAD-loaded document the flag gate is intentionally bypassed
+    // (navType stays "reload" for the document's lifetime) — the module marker must
+    // still block a locale-segment REMOUNT from re-opening the dialog mid-document.
     const clickedVi = await clickHeaderLocale("vi");
-    await page.waitForFunction(
-      () => document.querySelectorAll('[data-slot="promo-modal"]').length === 1,
-      { timeout: 8000 }
-    ).catch(() => {});
-    const viState = await readModalState();
+    await page.waitForFunction(() => location.pathname.startsWith("/vi/"), { timeout: 8000 }).catch(() => {});
+    await page
+      .waitForFunction(
+        () => document.querySelectorAll('[data-slot="promo-modal"]').length === 1,
+        { timeout: 8000 }
+      )
+      .catch(() => {});
+    const remountState = await readModalState();
     check(
-      "R16 VI toggle re-opens modal back on /vi (single instance, VI asset chain, no full reload)",
+      "R19 locale remount on reload doc does NOT reopen (navType reload stays, path /vi, flag set)",
       clickedVi &&
-        viState.path.startsWith("/vi/") &&
-        viState.count === 1 &&
-        !!assetUrl &&
-        viState.src !== null &&
-        viState.src.includes(assetUrl) &&
-        viState.alt === msg.vi.promo.imageAlt &&
-        viState.marker === 1,
-      JSON.stringify({ clickedVi, ...viState, assetUrl })
+        remountState.path.startsWith("/vi/") &&
+        remountState.count === 0 &&
+        remountState.navType === "reload" &&
+        remountState.flag === "true",
+      JSON.stringify({ clickedVi, ...remountState })
     );
 
-    // Leave the page clean before R11.
-    await page.click('[data-slot="promo-modal-close"]').catch(async () => {
-      await page.keyboard.press("Escape").catch(() => {});
-    });
-    await page.waitForFunction(
-      () => !document.querySelector('[data-slot="promo-modal"]'),
-      { timeout: 5000 }
-    ).catch(() => {});
+    // R18: same-tab second full document load (navType "navigate") suppressed by the flag.
+    await page.goto(`${BASE}/en`, { waitUntil: "networkidle2", timeout: 60000 });
+    const secondNavType = await page.evaluate(
+      () => performance.getEntriesByType("navigation")[0]?.type ?? null
+    );
+    await page
+      .waitForFunction(
+        () => document.querySelectorAll('[data-slot="promo-modal"]').length === 1,
+        { timeout: 8000 }
+      )
+      .catch(() => {});
+    const second = await page.evaluate(() => ({
+      count: document.querySelectorAll('[data-slot="promo-modal"]').length,
+      flag: sessionStorage.getItem("hasSeenPopup"),
+      marker: window.__promoI18nNoReload ?? null,
+    }));
+    check(
+      "R18 second full load same tab (navType navigate) suppressed by hasSeenPopup flag",
+      secondNavType === "navigate" &&
+        second.marker === null &&
+        second.count === 0 &&
+        second.flag === "true",
+      JSON.stringify({ secondNavType, ...second })
+    );
   } else {
     // ---------- disabled/absent branch ----------
     await page.waitForSelector('[data-slot="promo-modal"]', { timeout: 3000 }).catch(() => null);

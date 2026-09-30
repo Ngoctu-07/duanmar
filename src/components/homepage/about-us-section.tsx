@@ -37,7 +37,7 @@ export async function AboutUsSection({
             <Button
               nativeButton={false}
               render={<Link href="/contact" />}
-              className="mt-6 px-8 py-4 text-lg"
+              className="mt-6 px-7 py-3.5 text-sm"
             >
               {t("aboutSection.cta")}
             </Button>

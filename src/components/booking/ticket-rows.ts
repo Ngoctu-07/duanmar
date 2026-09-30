@@ -7,6 +7,7 @@ export interface TicketRow {
   label: string;
   value: string;
   strong?: boolean;
+  price?: boolean;
 }
 
 interface TicketRowsInput {
@@ -60,6 +61,7 @@ export function buildTicketRows({
             label: t("total"),
             value: formatPrice(total, locale, currency),
             strong: true,
+            price: true,
           },
         ]
       : []),

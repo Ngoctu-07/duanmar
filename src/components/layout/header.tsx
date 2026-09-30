@@ -71,7 +71,7 @@ export function Header() {
               aria-label={t("search")}
               className="hidden md:inline-flex"
             >
-              <Search className="h-5 w-5" />
+              <Search className="size-6 stroke-[1.5]" />
             </Button>
           </HoverTooltip>
           <HoverTooltip label={mt("navLabel")}>
@@ -83,7 +83,7 @@ export function Header() {
               aria-label={mt("navLabel")}
               className="hidden md:inline-flex"
             >
-              <Luggage className="h-5 w-5" />
+              <Luggage className="size-6 stroke-[1.5]" />
             </Button>
           </HoverTooltip>
           <LocaleSwitcher />
@@ -94,7 +94,7 @@ export function Header() {
                 <Button variant="ghost" size="icon" className="md:hidden" />
               }
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="size-6 stroke-[1.5]" />
               <span className="sr-only">{t("menu")}</span>
             </SheetTrigger>
             <SheetContent side="right">
@@ -103,14 +103,14 @@ export function Header() {
                 href="/search"
                 className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                <Search className="h-4 w-4" />
+                <Search className="h-5 w-5 stroke-[1.5]" />
                 {t("search")}
               </Link>
               <Link
                 href="/my-trips"
                 className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                <Luggage className="h-4 w-4" />
+                <Luggage className="h-5 w-5 stroke-[1.5]" />
                 {mt("navLabel")}
               </Link>
               <nav className="flex flex-col space-y-4">

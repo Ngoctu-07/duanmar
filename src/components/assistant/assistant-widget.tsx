@@ -207,10 +207,10 @@ export function AssistantWidget() {
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         size="icon"
-        className="rounded-full shadow-soft"
+        className="size-12 rounded-full shadow-soft"
         onClick={() => setOpen((value) => !value)}
       >
-        <MessageSquare className="h-5 w-5" aria-hidden />
+        <MessageSquare className="size-6 stroke-[1.5]" aria-hidden />
       </Button>
     </div>
   );

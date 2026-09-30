@@ -166,7 +166,7 @@ export function BookingPaymentSection({
 
             <div className="flex-1 text-center sm:text-left">
               <p className="text-sm text-muted-foreground">{t("payable")}</p>
-              <p className="text-xl font-semibold tabular-nums text-primary">
+              <p className="text-[2rem] font-semibold tabular-nums text-primary">
                 {formatPrice(total, locale, currency)}
               </p>
               <p

@@ -97,7 +97,11 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
             <dt className="text-muted-foreground">{row.label}</dt>
             <dd
               className={`text-right tabular-nums ${
-                row.strong ? "font-semibold text-primary" : "font-medium"
+                row.price
+                  ? "text-[1.4rem] font-semibold text-primary"
+                  : row.strong
+                    ? "font-semibold text-primary"
+                    : "font-medium"
               }`}
             >
               {row.value}
