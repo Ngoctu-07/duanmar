@@ -523,7 +523,12 @@
     "tours": "Tour du lịch",
     "info": "Thông tin",
     "howToBook": "Cách đặt tour",
-    "articles": "Bài viết"
+    "articles": "Bài viết",
+    "policies": "Chính sách & Hỗ trợ",
+    "privacyPolicy": "Chính sách bảo mật",
+    "terms": "Điều khoản & Điều kiện",
+    "refundPolicy": "Chính sách hoàn hủy",
+    "faqs": "Câu hỏi thường gặp"
   },
   "thingsToDo": {
     "title": "Trải nghiệm",

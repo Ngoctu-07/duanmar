@@ -56,7 +56,9 @@ export default async function SupportPage() {
       </div>
 
       <div className="mx-auto mt-12 max-w-3xl rounded-xl border bg-muted/50 p-8 text-center">
-        <h2 className="text-xl font-semibold mb-2">{t("contactTitle")}</h2>
+        <h2 id="contact" className="mb-2 scroll-mt-24 text-xl font-semibold">
+          {t("contactTitle")}
+        </h2>
         <p className="text-sm text-muted-foreground mb-4">{t("contactText")}</p>
         <Link
           href="/contact"

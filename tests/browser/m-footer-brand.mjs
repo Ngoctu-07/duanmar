@@ -100,10 +100,10 @@ try {
   // --- F footer (VI)
   const viCols = await columns(page);
   const vi = msg.vi;
-  check("F1 exactly 4 column blocks", viCols.count === 4, String(viCols.count));
+  check("F1 exactly 5 column blocks", viCols.count === 5, String(viCols.count));
   check(
     "F2 titles order",
-    JSON.stringify(viCols.titles) === JSON.stringify(["DuanMar", vi.footer.tours, vi.footer.contact, vi.footer.info]),
+    JSON.stringify(viCols.titles) === JSON.stringify(["DuanMar", vi.footer.tours, vi.footer.contact, vi.footer.info, vi.footer.policies]),
     JSON.stringify(viCols.titles)
   );
   check(
@@ -120,9 +120,13 @@ try {
     JSON.stringify(viCols.links[2].map((l) => l.href)) === JSON.stringify(viNodes),
     JSON.stringify(viCols.links[2].map((l) => l.href))
   );
+  // CMS socialLinks can shorten the rendered anchor list (drift) — never index past it,
+  // F4 already reports the count mismatch and the run must continue to F7-F12.
+  const viSocials = viCols.links[2].slice(2);
   check(
     "F6 socials _blank+noopener, tel/mailto same-tab",
-    SOCIALS.every((_, i) => viCols.links[2][i + 2].target === "_blank" && /noopener/.test(viCols.links[2][i + 2].rel) && /noreferrer/.test(viCols.links[2][i + 2].rel)) &&
+    viSocials.length === SOCIALS.length &&
+      viSocials.every((l) => l.target === "_blank" && /noopener/.test(l.rel ?? "") && /noreferrer/.test(l.rel ?? "")) &&
       viCols.links[2].slice(0, 2).every((l) => l.target === null),
     JSON.stringify(viCols.links[2].map((l) => [l.target, l.rel]))
   );
@@ -146,6 +150,14 @@ try {
     JSON.stringify(bottomHrefs)
   );
   check("F10 old groups gone", !viCols.allHrefs.some((h) => /\/explore\/|\/plan-your-trip\/|\/trade/.test(h)), JSON.stringify(viCols.allHrefs));
+  check(
+    "F12 Col E policies 4 links + labels",
+    viCols.links[4].map((l) => l.label).join() ===
+      [vi.footer.privacyPolicy, vi.footer.terms, vi.footer.refundPolicy, vi.footer.faqs].join() &&
+      viCols.links[4].map((l) => l.href).join() ===
+        "/vi/privacy#privacy-policy,/vi/privacy#terms,/vi/support#contact,/vi/support",
+    JSON.stringify(viCols.links[4])
+  );
 
   // --- R routes
   const viRoutes = await page.evaluate(async (urls) => {
@@ -163,7 +175,7 @@ try {
   await go(page, "en");
   const enCols = await columns(page);
   const en = msg.en;
-  check("F2 EN titles order", JSON.stringify(enCols.titles) === JSON.stringify(["DuanMar", en.footer.tours, en.footer.contact, en.footer.info]), JSON.stringify(enCols.titles));
+  check("F2 EN titles order", JSON.stringify(enCols.titles) === JSON.stringify(["DuanMar", en.footer.tours, en.footer.contact, en.footer.info, en.footer.policies]), JSON.stringify(enCols.titles));
   check(
     "F7 EN Col C prefixed hrefs",
     enCols.links[3].map((l) => l.href).join() === "/en/support,/en/blog,/en/about/careers",

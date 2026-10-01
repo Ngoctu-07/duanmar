@@ -8,6 +8,7 @@ import { HOMEPAGE_QUERY, FEATURED_DESTINATIONS_QUERY } from "@/sanity/queries/ho
 import { ALL_TOUR_PRICING_QUERY } from "@/sanity/queries/tour-pricing";
 import { getLocale, getTranslations } from "next-intl/server";
 import { buildPriceRangeLabels } from "@/lib/pricing";
+import { pickBilingual } from "@/lib/bilingual-string";
 
 export default async function HomePage() {
   const [locale, priceT, homepageData, destinationsData, pricingDocs] =
@@ -21,6 +22,11 @@ export default async function HomePage() {
       fetchPublished(ALL_TOUR_PRICING_QUERY, {}, { tags: ["sanity:pricing:all"] }),
     ]);
   const priceRanges = buildPriceRangeLabels(pricingDocs, locale, priceT("label"));
+  // Bilingual CMS slogan → legacy heroSubtitle → i18n fallback inside the component.
+  const heroSlogan =
+    pickBilingual(homepageData?.heroSlogan, locale) ||
+    homepageData?.heroSubtitle?.trim() ||
+    null;
   // About Us media: uploaded file wins over the external stream URL (plan 260929-1500).
   const aboutVideoSrc =
     homepageData?.aboutUsVideo?.asset?.url ??
@@ -30,7 +36,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroSection hero={homepageData} />
+      <HeroSection hero={homepageData} slogan={heroSlogan} />
       <QuickAccessIcons />
       <FeaturedDestinations destinations={destinationsData || []} priceRanges={priceRanges} />
       <AboutUsSection

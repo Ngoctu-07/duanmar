@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { BrandWordmark } from "@/components/layout/brand-wordmark";
@@ -16,6 +17,14 @@ const infoLinks = [
   { labelKey: "careers", href: "/about/careers" },
 ] as const;
 
+// E-commerce travel policies → deepest matching section of the pages that exist today.
+const policyLinks = [
+  { labelKey: "privacyPolicy", href: "/privacy#privacy-policy" },
+  { labelKey: "terms", href: "/privacy#terms" },
+  { labelKey: "refundPolicy", href: "/support#contact" },
+  { labelKey: "faqs", href: "/support" },
+] as const;
+
 // Phone/Email always come from i18n (tel:/mailto: — not CMS-managed).
 const contactKeys = ["phone", "email"] as const;
 // Same order/set as contact.nodes — i18n fallback when the CMS list is empty.
@@ -23,7 +32,23 @@ const socialFallbackKeys = ["facebook", "instagram", "tiktok"] as const;
 
 type ContactNode = { label: string; value: string; href: string };
 
-export function Footer({ socialLinks }: { socialLinks?: unknown }) {
+/** Column heading token — synced with the homepage "Stories & Inspiration" title. */
+function ColumnHeading({ children }: { children: ReactNode }) {
+  return <h3 className="mb-4 text-3xl font-bold">{children}</h3>;
+}
+
+// Compact body link: text-sm + subtle opacity, full white on hover/focus.
+const linkClass =
+  "text-sm opacity-80 transition-opacity hover:opacity-100 focus-visible:opacity-100";
+
+export function Footer({
+  socialLinks,
+  slogan,
+}: {
+  socialLinks?: unknown;
+  /** CMS `siteConfiguration.footerSlogan` already resolved for the active locale. */
+  slogan?: string | null;
+}) {
   const t = useTranslations("common");
   const tf = useTranslations("footer");
   const tc = useTranslations("contact");
@@ -51,25 +76,24 @@ export function Footer({ socialLinks }: { socialLinks?: unknown }) {
 
   return (
     <footer className="bg-primary text-white print:hidden">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-[minmax(210px,1.5fr)_0_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(64px,0.35fr)] md:gap-x-6">
-          <div className="col-span-2 md:col-span-1 md:col-start-1">
-            <BrandLogo size={88} variant="knockout" className="mb-3" />
-            <h3 className="mb-4">
-              <BrandWordmark className="text-4xl md:text-5xl font-bold tracking-tight leading-none" />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
+          <div>
+            <BrandLogo size={72} variant="knockout" className="mb-3" />
+            <h3 className="mb-3">
+              <BrandWordmark className="text-3xl md:text-[2.5rem] font-bold tracking-tight leading-none" />
             </h3>
-            <p className="text-sm">{tf("tagline")}</p>
+            <p data-testid="footer-slogan" className="text-sm">
+              {slogan ?? tf("tagline")}
+            </p>
           </div>
 
-          <div className="md:col-start-3">
-            <h3 className="text-2xl font-semibold mb-5">{tf("tours")}</h3>
-            <ul className="space-y-3">
+          <div>
+            <ColumnHeading>{tf("tours")}</ColumnHeading>
+            <ul className="space-y-2">
               {tourLinks.map((link) => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-lg hover:text-white/80 transition-colors"
-                  >
+                  <Link href={link.href} className={linkClass}>
                     {t(link.key)}
                   </Link>
                 </li>
@@ -77,30 +101,40 @@ export function Footer({ socialLinks }: { socialLinks?: unknown }) {
             </ul>
           </div>
 
-          <div className="md:col-start-4">
-            <h3 className="text-2xl font-semibold mb-5">{tf("contact")}</h3>
-            <ul className="space-y-3">
+          <div>
+            <ColumnHeading>{tf("contact")}</ColumnHeading>
+            <ul className="space-y-2">
               {contactItems.map((item, index) => (
                 <li key={`${item.id}-${index}`}>
                   <SocialAnchor
                     targetUrl={item.href}
                     displayText={item.label}
-                    className="text-lg break-words hover:text-white/80 transition-colors"
+                    className={`${linkClass} break-words`}
                   />
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="md:col-start-5">
-            <h3 className="text-2xl font-semibold mb-5">{tf("info")}</h3>
-            <ul className="space-y-3">
+          <div>
+            <ColumnHeading>{tf("info")}</ColumnHeading>
+            <ul className="space-y-2">
               {infoLinks.map((link) => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-lg hover:text-white/80 transition-colors"
-                  >
+                  <Link href={link.href} className={linkClass}>
+                    {tf(link.labelKey)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <ColumnHeading>{tf("policies")}</ColumnHeading>
+            <ul className="space-y-2">
+              {policyLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className={linkClass}>
                     {tf(link.labelKey)}
                   </Link>
                 </li>
@@ -109,7 +143,7 @@ export function Footer({ socialLinks }: { socialLinks?: unknown }) {
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col items-center gap-3 border-t border-white/20 pt-8 text-sm sm:flex-row sm:justify-between sm:text-left">
+        <div className="mt-8 flex flex-col items-center gap-3 border-t border-white/20 pt-6 text-xs sm:flex-row sm:justify-between sm:text-left">
           <p>&copy; {new Date().getFullYear()} DuanMar. {tf("rights")}</p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link

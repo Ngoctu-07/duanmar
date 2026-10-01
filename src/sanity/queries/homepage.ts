@@ -6,6 +6,7 @@ export const HOMEPAGE_QUERY = defineQuery(`
     title,
     heroTitle,
     heroSubtitle,
+    heroSlogan{ vi, en },
     heroImage { ${imageFragment} },
     aboutUsVideo { asset->{url} },
     aboutUsVideoStreamUrl,

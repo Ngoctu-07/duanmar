@@ -69,6 +69,17 @@ export default defineType({
       ],
     }),
     defineField({
+      name: "footerSlogan",
+      title: "Footer Slogan (bilingual)",
+      type: "object",
+      description:
+        "Text shown under the DuanMar logo in the global footer. Store BOTH languages — {vi, en}. Empty → i18n footer.tagline.",
+      fields: [
+        defineField({ name: "vi", title: "Tiếng Việt", type: "string" }),
+        defineField({ name: "en", title: "English", type: "string" }),
+      ],
+    }),
+    defineField({
       name: "enableEntryPopup",
       title: "Enable Entry Popup",
       type: "boolean",

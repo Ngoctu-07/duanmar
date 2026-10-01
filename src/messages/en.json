@@ -523,7 +523,12 @@
     "tours": "Tours",
     "info": "Information",
     "howToBook": "How to Book",
-    "articles": "Articles"
+    "articles": "Articles",
+    "policies": "Policies & Support",
+    "privacyPolicy": "Privacy Policy",
+    "terms": "Terms & Conditions",
+    "refundPolicy": "Refund & Cancellation Policy",
+    "faqs": "FAQs"
   },
   "thingsToDo": {
     "title": "Things to Do",

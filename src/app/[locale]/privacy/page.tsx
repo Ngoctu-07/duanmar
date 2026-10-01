@@ -58,12 +58,16 @@ export default async function PrivacyPage() {
       </div>
 
       <div className="mx-auto max-w-3xl">
-        <h2 className="mb-6 text-2xl font-bold">{t("policyHeading")}</h2>
+        <h2 id="privacy-policy" className="mb-6 scroll-mt-24 text-2xl font-bold">
+          {t("policyHeading")}
+        </h2>
         <SectionList sections={policy} />
 
         <hr className="my-10" />
 
-        <h2 className="mb-6 text-2xl font-bold">{t("termsHeading")}</h2>
+        <h2 id="terms" className="mb-6 scroll-mt-24 text-2xl font-bold">
+          {t("termsHeading")}
+        </h2>
         <SectionList sections={terms} />
       </div>
 

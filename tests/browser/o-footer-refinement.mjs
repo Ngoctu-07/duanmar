@@ -74,16 +74,16 @@ try {
   await go(page, "vi");
   await page.evaluate(() => document.querySelector("footer")?.scrollIntoView());
   const d = await page.evaluate(measure, msg.vi.footer.tagline);
-  check("O1a footer .grid has exactly 4 children", d?.children === 4, String(d?.children));
+  check("O1a footer .grid has exactly 5 children", d?.children === 5, String(d?.children));
   check(
     "O1b title order unchanged",
-    JSON.stringify(d?.titles) === JSON.stringify(["DuanMar", msg.vi.footer.tours, msg.vi.footer.contact, msg.vi.footer.info]),
+    JSON.stringify(d?.titles) === JSON.stringify(["DuanMar", msg.vi.footer.tours, msg.vi.footer.contact, msg.vi.footer.info, msg.vi.footer.policies]),
     JSON.stringify(d?.titles)
   );
 
   check(
-    "O2a wordmark = text-5xl 48px (300%) @1280",
-    d?.wm && d.wm.fontSize >= 47.5 && d.wm.fontSize <= 48.5,
+    "O2a wordmark = 40px (83% of 48px) @1280",
+    d?.wm && d.wm.fontSize >= 39.5 && d.wm.fontSize <= 40.5,
     `fontSize=${d?.wm?.fontSize}`
   );
   check("O2b footer wordmark >= header wordmark", d?.wm && d.wm.fontSize >= d.headerFontSize, `footer=${d?.wm?.fontSize} header=${d?.headerFontSize}`);
@@ -104,7 +104,7 @@ try {
   );
 
   const gaps1280 = [1, 2].map((i) => d.childRects[i + 1].left - d.childRects[i].right);
-  check("O5a nav gaps <= 25px @1280", gaps1280.every((g) => g <= 25), gaps1280.map((g) => g.toFixed(1)).join("/"));
+  check("O5a nav gaps = gap-8 (32px) @1280", gaps1280.every((g) => g <= 33), gaps1280.map((g) => g.toFixed(1)).join("/"));
   const cluster1280 = d.childRects[3].right - d.childRects[1].left;
   check(
     "O5b nav cluster <= 65% of grid width @1280",
@@ -125,8 +125,8 @@ try {
   }
   const gaps768 = [1, 2].map((i) => t.childRects[i + 1].left - t.childRects[i].right);
   check(
-    "O6a md: matched + nav gaps <= 25px @768",
-    t.mdMatch === true && gaps768.every((g) => g <= 25),
+    "O6a md: matched + nav gaps <= 33px @768",
+    t.mdMatch === true && gaps768.every((g) => g <= 33),
     `${gaps768.map((g) => g.toFixed(1)).join("/")} md=${t.mdMatch}${guard}`
   );
   check(
@@ -141,13 +141,13 @@ try {
   const m = await page.evaluate(measure, msg.vi.footer.tagline);
   check("O7a no horizontal overflow @375", m.overflow <= 1, `overflow=${m.overflow} vw=${m.innerWidth}`);
   check(
-    "O7b brand block spans full width (col-span-2 intact)",
+    "O7b brand block spans full width (grid-cols-1)",
     Math.abs(m.childRects[0].width - m.gridW) <= 2,
     `brand=${m.childRects[0].width?.toFixed(0)} grid=${m.gridW.toFixed(0)}`
   );
   check(
-    "O7c mobile wordmark = text-4xl 36px (225%)",
-    m.wm && m.wm.fontSize >= 35.5 && m.wm.fontSize <= 36.5,
+    "O7c mobile wordmark = 30px (83% of 36px)",
+    m.wm && m.wm.fontSize >= 29.5 && m.wm.fontSize <= 30.5,
     `fontSize=${m?.wm?.fontSize}`
   );
   await (await page.$("footer")).screenshot({ path: `${OUT}/o-footer-03-375.png` });

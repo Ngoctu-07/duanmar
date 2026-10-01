@@ -20,6 +20,18 @@ export default defineType({
       name: "heroSubtitle",
       title: "Hero Subtitle",
       type: "string",
+      description: "Legacy single-language subtitle. Prefer Hero Slogan below.",
+    }),
+    defineField({
+      name: "heroSlogan",
+      title: "Hero Slogan (bilingual)",
+      type: "object",
+      description:
+        "Descriptive line under the H1. Store BOTH languages — {vi, en}. Empty → Hero Subtitle → i18n home.heroSubtitle.",
+      fields: [
+        defineField({ name: "vi", title: "Tiếng Việt", type: "string" }),
+        defineField({ name: "en", title: "English", type: "string" }),
+      ],
     }),
     defineField({
       name: "heroImage",

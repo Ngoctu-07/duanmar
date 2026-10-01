@@ -11,12 +11,13 @@ import Image from "next/image";
 interface HeroProps {
   hero?: {
     heroTitle?: string;
-    heroSubtitle?: string;
     heroImage?: { asset?: { url: string } };
   };
+  /** Per-locale slogan resolved on the server (page.tsx); null → i18n fallback. */
+  slogan?: string | null;
 }
 
-export function HeroSection({ hero }: HeroProps) {
+export function HeroSection({ hero, slogan }: HeroProps) {
   const t = useTranslations("home");
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,8 +47,8 @@ export function HeroSection({ hero }: HeroProps) {
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
             {hero?.heroTitle || t("heroTitle")}
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground">
-            {hero?.heroSubtitle || t("heroSubtitle")}
+          <p data-testid="hero-slogan" className="text-lg md:text-xl text-muted-foreground">
+            {slogan ?? t("heroSubtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="max-w-xl mx-auto space-y-6">
