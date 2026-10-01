@@ -44,7 +44,7 @@ export default async function CareersPage() {
               <div key={position.title} className="rounded-xl border p-5">
                 <div className="flex flex-wrap items-center gap-3 mb-2">
                   <h3 className="font-semibold">{position.title}</h3>
-                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-link">
                     {position.type}
                   </span>
                   <span className="text-xs text-muted-foreground">{position.location}</span>
@@ -58,7 +58,7 @@ export default async function CareersPage() {
         <section className="rounded-xl border p-6">
           <a
             href={`mailto:${careers.applyEmail}`}
-            className="inline-flex items-center gap-2 font-medium text-primary hover:underline"
+            className="inline-flex items-center gap-2 font-medium text-link hover:underline"
           >
             <Mail className="h-4 w-4" />
             {careers.applyLabel}: {careers.applyEmail}

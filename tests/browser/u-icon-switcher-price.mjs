@@ -276,8 +276,8 @@ try {
       const dts = [...document.querySelectorAll("dl dt")];
       return { total: read(dts.find((d) => d.textContent.trim() === "Tổng cộng")), date: read(dts.find((d) => d.textContent.trim() === "Ngày khởi hành")) };
     });
-    check("U8 summary 'Tổng cộng' dd 22–23px + fw 600–700 + text-primary", u8rows.total && u8rows.total.fs >= 22 && u8rows.total.fs <= 23 && u8rows.total.fw >= 600 && u8rows.total.fw <= 700 && u8rows.total.cls.includes("text-primary"), JSON.stringify(u8rows.total));
-    check("U8 travel-date dd keeps font-semibold + text-primary (F7 guard)", u8rows.date && u8rows.date.cls.includes("font-semibold") && u8rows.date.cls.includes("text-primary"), JSON.stringify(u8rows.date));
+    check("U8 summary 'Tổng cộng' dd 22–23px + fw 600–700 + text-link", u8rows.total && u8rows.total.fs >= 22 && u8rows.total.fs <= 23 && u8rows.total.fw >= 600 && u8rows.total.fw <= 700 && u8rows.total.cls.includes("text-link"), JSON.stringify(u8rows.total));
+    check("U8 travel-date dd keeps font-semibold + text-link (F7 guard)", u8rows.date && u8rows.date.cls.includes("font-semibold") && u8rows.date.cls.includes("text-link"), JSON.stringify(u8rows.date));
 
     await page.click('input[name="payment-method"][value="momo"]');
     await page.waitForSelector('img[alt="Mã QR thanh toán"]', { timeout: 8000 });

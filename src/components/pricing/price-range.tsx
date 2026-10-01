@@ -17,7 +17,7 @@ export function PriceRangeRow({ priceRange, className }: PriceRangeRowProps) {
       className={`flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-xs ${className ?? ""}`}
     >
       <span className="text-muted-foreground">{priceRange.label}</span>
-      <span className="text-[0.9rem] font-semibold tabular-nums text-primary">
+      <span className="text-[0.9rem] font-semibold tabular-nums text-link">
         {priceRange.text}
       </span>
     </p>

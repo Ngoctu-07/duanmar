@@ -107,10 +107,10 @@ export function BookingSummary({
       className="rounded-xl border bg-card p-5"
     >
       <div className="flex items-center gap-2">
-        <CheckCircle2 className="h-5 w-5 text-primary" aria-hidden="true" />
+        <CheckCircle2 className="h-5 w-5 text-link" aria-hidden="true" />
         <h2
           id="booking-summary-heading"
-          className="text-sm font-semibold uppercase tracking-widest text-primary"
+          className="text-sm font-semibold uppercase tracking-widest text-link"
         >
           {t("summaryTitle")}
         </h2>
@@ -127,9 +127,9 @@ export function BookingSummary({
             <dd
               className={`text-right tabular-nums ${
                 row.price
-                  ? "text-[1.4rem] font-semibold text-primary"
+                  ? "text-[1.4rem] font-semibold text-link"
                   : row.strong
-                    ? "font-semibold text-primary"
+                    ? "font-semibold text-link"
                     : "font-medium"
               }`}
             >
@@ -149,7 +149,7 @@ export function BookingSummary({
 
       <Link
         href={`/explore/destinations/${slug}`}
-        className="mt-4 inline-block text-sm text-primary hover:underline"
+        className="mt-4 inline-block text-sm text-link hover:underline"
       >
         {t("backToTour")}
       </Link>

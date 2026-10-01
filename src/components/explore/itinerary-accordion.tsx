@@ -33,7 +33,7 @@ export function ItineraryAccordion({ title, days }: ItineraryAccordionProps) {
     >
       <h2
         id="tour-itinerary-heading"
-        className="text-xs font-semibold uppercase tracking-widest text-primary"
+        className="text-xs font-semibold uppercase tracking-widest text-link"
       >
         {title}
       </h2>

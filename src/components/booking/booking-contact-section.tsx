@@ -24,7 +24,7 @@ export function BookingContactSection({
     >
       <h2
         id="booking-contact-heading"
-        className="text-sm font-semibold uppercase tracking-widest text-primary"
+        className="text-sm font-semibold uppercase tracking-widest text-link"
       >
         {t("contactTitle")}
       </h2>

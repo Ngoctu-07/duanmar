@@ -28,7 +28,7 @@ export function PromotionCard({ card, countdownLabel, viewTourLabel }: Promotion
       )}
       <div className="flex flex-1 flex-col p-6">
         {card.badgeTag && (
-          <span className="mb-3 w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+          <span className="mb-3 w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-link">
             {card.badgeTag}
           </span>
         )}
@@ -38,7 +38,7 @@ export function PromotionCard({ card, countdownLabel, viewTourLabel }: Promotion
         )}
         {mainPrice && (
           <div className="mb-4 flex items-baseline gap-2">
-            <span className="text-lg font-bold text-primary">{mainPrice}</span>
+            <span className="text-lg font-bold text-link">{mainPrice}</span>
             {hasDiscount && <span className="text-sm text-muted-foreground line-through">{card.originalPrice}</span>}
           </div>
         )}

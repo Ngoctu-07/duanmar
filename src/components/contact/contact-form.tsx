@@ -151,7 +151,7 @@ export function ContactForm() {
       </Button>
 
       {submitted && !submitError && (
-        <p data-testid="contact-form-success" role="status" className="text-sm text-primary">
+        <p data-testid="contact-form-success" role="status" className="text-sm text-link">
           {t("form.success")}
         </p>
       )}

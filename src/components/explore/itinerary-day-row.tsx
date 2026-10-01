@@ -67,7 +67,7 @@ export function ItineraryDayRow({
             aria-hidden="true"
             className={cn(
               "mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform duration-300 motion-reduce:transition-none",
-              open && "rotate-90 text-primary"
+              open && "rotate-90 text-link"
             )}
           />
         </button>

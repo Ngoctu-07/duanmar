@@ -20,7 +20,7 @@ export function ReviewAvatar({ name, size = "md" }: ReviewAvatarProps) {
   if (!initials) {
     return (
       <span
-        className={`inline-flex shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary ${SIZES[size]}`}
+        className={`inline-flex shrink-0 items-center justify-center rounded-full bg-primary/10 text-link ${SIZES[size]}`}
         aria-hidden
       >
         <User className="h-4 w-4" />
@@ -30,7 +30,7 @@ export function ReviewAvatar({ name, size = "md" }: ReviewAvatarProps) {
 
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-primary/10 font-medium text-primary ${SIZES[size]}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-primary/10 font-medium text-link ${SIZES[size]}`}
       aria-hidden
     >
       {initials}

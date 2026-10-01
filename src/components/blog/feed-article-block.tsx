@@ -33,11 +33,11 @@ export function FeedArticleBlock({
     >
       <time
         dateTime={item.isoDate || undefined}
-        className="text-xs font-medium uppercase tracking-widest text-primary"
+        className="text-xs font-medium uppercase tracking-widest text-link"
       >
         {item.date}
       </time>
-      <Heading className="mt-3 text-4xl font-bold leading-[1.05] tracking-tight transition-colors hover:text-primary md:text-5xl">
+      <Heading className="mt-3 text-4xl font-bold leading-[1.05] tracking-tight transition-colors hover:text-link md:text-5xl">
         {single ? (
           item.title
         ) : (

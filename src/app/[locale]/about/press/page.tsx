@@ -45,7 +45,7 @@ export default async function PressPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {press.facts.map((fact) => (
               <div key={fact.label} className="rounded-xl border p-5 text-center">
-                <div className="text-2xl font-bold text-primary">{fact.value}</div>
+                <div className="text-2xl font-bold text-link">{fact.value}</div>
                 <div className="mt-1 text-xs text-muted-foreground">{fact.label}</div>
               </div>
             ))}
@@ -57,7 +57,7 @@ export default async function PressPage() {
           <h2 className="text-xl font-semibold mb-3">{press.mediaContactTitle}</h2>
           <a
             href={`mailto:${press.mediaEmail}`}
-            className="inline-flex items-center gap-2 font-medium text-primary hover:underline"
+            className="inline-flex items-center gap-2 font-medium text-link hover:underline"
           >
             <Mail className="h-4 w-4" />
             {press.mediaEmail}

@@ -61,7 +61,7 @@ function PromoModal({ imageSrc, width = 1200, height = 800, enableEntryPopup }: 
         closeSlot="promo-modal-close"
         closeLabel={t("close")}
         className="w-[min(90vw,50.4rem)] border-0 bg-transparent p-0 shadow-none"
-        closeClassName="border-0 bg-black/60 text-white hover:bg-black/80 hover:text-white focus-visible:ring-white/60"
+        closeClassName="border-0 bg-black/60! text-white hover:bg-black/80! hover:text-white focus-visible:ring-white/60"
       >
         <DialogTitle className="sr-only">{t("title")}</DialogTitle>
         <Image

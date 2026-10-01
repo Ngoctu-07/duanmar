@@ -25,7 +25,7 @@ export async function PriceBlock({ tiers, locale }: PriceBlockProps) {
     >
       <h2
         id="tour-price-heading"
-        className="text-xs font-semibold uppercase tracking-widest text-primary"
+        className="text-xs font-semibold uppercase tracking-widest text-link"
       >
         {t("label")}
       </h2>
@@ -70,7 +70,7 @@ export async function PriceBlock({ tiers, locale }: PriceBlockProps) {
                   <th scope="row" className="py-2.5 pr-4 text-left font-semibold">
                     {label}
                   </th>
-                  <td className="py-2.5 pl-4 text-right text-[1.4rem] font-semibold tabular-nums text-primary">
+                  <td className="py-2.5 pl-4 text-right text-[1.4rem] font-semibold tabular-nums text-link">
                     {formatPrice(tier.pricePerGuest, locale, currency)}
                   </td>
                   <td className="py-2.5 pl-4 text-right text-[1.4rem] font-semibold tabular-nums text-muted-foreground">

@@ -74,7 +74,7 @@ export default async function ContactPage() {
                 targetUrl={node.href}
                 className={CARD_CLASS}
               >
-                {Icon && <Icon className="size-5 shrink-0 text-primary" aria-hidden />}
+                {Icon && <Icon className="size-5 shrink-0 text-link" aria-hidden />}
                 <span className="min-w-0">
                   <span className="block text-sm text-muted-foreground">
                     {node.label}

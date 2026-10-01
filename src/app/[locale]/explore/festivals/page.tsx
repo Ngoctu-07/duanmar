@@ -29,7 +29,7 @@ export default async function FestivalsPage() {
         <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
         <Link
           href="/explore/events"
-          className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+          className="mt-3 inline-block text-sm font-medium text-link hover:underline"
         >
           {tEvents("viewCalendar")}
         </Link>

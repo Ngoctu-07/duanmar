@@ -111,7 +111,7 @@ export function BookingPaymentSection({
     >
       <h2
         id="booking-payment-heading"
-        className="text-sm font-semibold uppercase tracking-widest text-primary"
+        className="text-sm font-semibold uppercase tracking-widest text-link"
       >
         {t("paymentTitle")}
       </h2>
@@ -126,7 +126,7 @@ export function BookingPaymentSection({
             key={value}
             className={`flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm font-medium transition-colors ${
               method === value
-                ? "border-primary bg-primary/5"
+                ? "border-primary bg-primary/10"
                 : "hover:bg-muted"
             }`}
           >
@@ -166,14 +166,14 @@ export function BookingPaymentSection({
 
             <div className="flex-1 text-center sm:text-left">
               <p className="text-sm text-muted-foreground">{t("payable")}</p>
-              <p className="text-[2rem] font-semibold tabular-nums text-primary">
+              <p className="text-[2rem] font-semibold tabular-nums text-link">
                 {formatPrice(total, locale, currency)}
               </p>
               <p
                 aria-live="polite"
                 className={`mt-2 text-sm ${
                   status === "success"
-                    ? "font-bold text-green-700"
+                    ? "font-bold text-green-400"
                     : "text-muted-foreground"
                 }`}
               >
@@ -184,7 +184,7 @@ export function BookingPaymentSection({
               {status === "success" && (
                 <Link
                   href="/my-trips"
-                  className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+                  className="mt-3 inline-block text-sm font-medium text-link hover:underline"
                 >
                   {t("viewMyTrips")}
                 </Link>

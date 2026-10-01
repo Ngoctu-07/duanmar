@@ -72,7 +72,7 @@ export default async function MapPage({
               className="group rounded-xl border p-5 transition-colors hover:bg-muted"
             >
               <div className="flex items-start justify-between gap-2">
-                <h3 className="min-w-0 font-semibold group-hover:text-primary transition-colors">
+                <h3 className="min-w-0 font-semibold group-hover:text-link transition-colors">
                   {item.name}
                 </h3>
                 <TourRatingBadge slug={item.slug} />

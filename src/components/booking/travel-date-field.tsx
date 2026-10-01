@@ -57,7 +57,7 @@ function CapacityDayButton(props: DayButtonProps) {
       {badge && (
         <span
           className={`block max-w-full text-center text-[9px] font-medium leading-[1.1] ${
-            badge.soldOut ? "text-primary" : "text-muted-foreground"
+            badge.soldOut ? "text-link" : "text-muted-foreground"
           }`}
           data-testid="capacity-badge"
         >
@@ -164,11 +164,11 @@ export function TravelDateField({
               }}
               classNames={{
                 day_button:
-                  "flex flex-col items-center justify-center gap-0.5 rounded-full text-sm text-inherit transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-not-allowed",
+                  "flex flex-col items-center justify-center gap-0.5 rounded-full text-sm text-inherit transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-link disabled:cursor-not-allowed",
                 selected:
                   "rounded-full bg-primary font-semibold text-primary-foreground",
                 disabled: "text-muted-foreground",
-                today: "font-medium text-primary",
+                today: "font-medium text-link",
                 outside: "text-muted-foreground",
                 caption_label: "text-sm font-semibold",
                 month_caption: "flex h-9 items-center justify-center",

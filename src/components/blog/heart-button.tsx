@@ -63,11 +63,11 @@ export function HeartButton({ slug, initialCount }: HeartButtonProps) {
       aria-pressed={liked}
       aria-label={t(liked ? "liked" : "like")}
       data-testid="like-button"
-      className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-red-300 hover:text-red-500"
+      className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-link hover:text-link"
     >
       <Heart
         aria-hidden="true"
-        className={`h-5 w-5 ${liked ? "text-red-500 fill-current" : ""}`}
+        className={`h-5 w-5 ${liked ? "text-link fill-current" : ""}`}
       />
       <span aria-live="polite" className="tabular-nums font-medium">
         {count}

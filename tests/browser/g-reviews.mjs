@@ -225,7 +225,7 @@ try {
   const badgeText = (await page.$eval(BADGE, (el) => el.textContent ?? "")).trim();
   const badgeClass = await page.$eval(BADGE, (el) => el.className);
   check("R6 badge shows 4.0", badgeText.startsWith("4.0"), badgeText);
-  check("R6 badge uses theme token", badgeClass.includes("text-primary"), badgeClass);
+  check("R6 badge uses theme token", badgeClass.includes("text-link"), badgeClass);
   await page.screenshot({ path: `${OUT}/g-reviews-03-submitted.png`, fullPage: true });
 
   // --- R7 persistence across reload (form pre-fills the existing review)

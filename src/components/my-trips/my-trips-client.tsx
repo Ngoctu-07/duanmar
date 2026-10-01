@@ -55,7 +55,7 @@ export function MyTripsClient({ locale }: MyTripsClientProps) {
         <p className="text-muted-foreground">{t("empty")}</p>
         <Link
           href="/explore/destinations"
-          className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+          className="mt-3 inline-block text-sm font-medium text-link hover:underline"
         >
           {t("emptyCta")}
         </Link>

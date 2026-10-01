@@ -40,7 +40,7 @@ export default async function CulturePage() {
             {key === "cuisine" && (
               <Link
                 href="/explore/things-to-do/food"
-                className="mt-4 inline-block text-sm font-medium text-primary hover:underline"
+                className="mt-4 inline-block text-sm font-medium text-link hover:underline"
               >
                 {t("cuisineLink")}
               </Link>
@@ -48,7 +48,7 @@ export default async function CulturePage() {
             {key === "festivals" && (
               <Link
                 href="/explore/festivals"
-                className="mt-4 inline-block text-sm font-medium text-primary hover:underline"
+                className="mt-4 inline-block text-sm font-medium text-link hover:underline"
               >
                 {t("festivalLink")}
               </Link>

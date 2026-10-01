@@ -21,7 +21,7 @@ export function QuickAccessIcons() {
             <Link key={link.href} href={link.href}>
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardContent className="flex items-center space-x-3 p-4">
-                  <link.icon className="h-6 w-6 stroke-[1.5] text-primary" />
+                  <link.icon className="h-6 w-6 stroke-[1.5] text-link" />
                   <span className="text-sm font-medium">{link.label}</span>
                 </CardContent>
               </Card>

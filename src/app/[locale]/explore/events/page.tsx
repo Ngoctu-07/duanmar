@@ -106,7 +106,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
       <div className="mt-10 text-center">
         <Link
           href="/explore/festivals"
-          className="text-sm font-medium text-primary hover:underline"
+          className="text-sm font-medium text-link hover:underline"
         >
           {tf("title")} →
         </Link>

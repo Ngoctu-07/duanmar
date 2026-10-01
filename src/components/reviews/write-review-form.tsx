@@ -120,11 +120,11 @@ export function WriteReviewForm({ tourSlug, onSaved }: WriteReviewFormProps) {
               setSaved(false);
               setError(null);
             }}
-            className="rounded p-1 transition-colors hover:text-primary"
+            className="rounded p-1 transition-colors hover:text-link"
           >
             <Star
               className={`h-6 w-6 ${
-                star <= rating ? "fill-current text-primary" : "text-muted-foreground/40"
+                star <= rating ? "fill-current text-link" : "text-muted-foreground/40"
               }`}
             />
           </button>
@@ -155,7 +155,7 @@ export function WriteReviewForm({ tourSlug, onSaved }: WriteReviewFormProps) {
         </Button>
         {error && <p className="text-sm text-destructive">{error}</p>}
         {!error && saved && (
-          <p className="text-sm text-primary">{t("reviews.submitSuccess")}</p>
+          <p className="text-sm text-link">{t("reviews.submitSuccess")}</p>
         )}
       </div>
       </form>

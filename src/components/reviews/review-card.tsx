@@ -66,7 +66,7 @@ export function ReviewCard({ review, locale, owned }: ReviewCardProps) {
               aria-hidden
               className={`h-4 w-4 ${
                 star <= review.rating
-                  ? "fill-current text-primary"
+                  ? "fill-current text-link"
                   : "text-muted-foreground/40"
               }`}
             />

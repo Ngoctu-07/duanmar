@@ -150,7 +150,7 @@ try {
     const dd = dt?.parentElement?.querySelector("dd");
     return dd ? dd.className : "";
   });
-  check("F7 travel date prominent (primary bold)", dateRowStyle.includes("font-semibold") && dateRowStyle.includes("text-primary"), dateRowStyle);
+  check("F7 travel date prominent (link bold)", dateRowStyle.includes("font-semibold") && dateRowStyle.includes("text-link"), dateRowStyle);
   check("F7 other rows intact (reference/tour/total)", rows.some((r) => r.value?.startsWith("VN-")) && rows.some((r) => r.value === "HCM") && rows.some((r) => r.label === "Tổng cộng"));
   const reference = rows.find((r) => r.label === "Mã yêu cầu")?.value;
   check("F7 reference captured", Boolean(reference), String(reference));

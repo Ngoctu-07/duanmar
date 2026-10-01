@@ -91,7 +91,7 @@ export function SearchClient({ entries, labels, initialQuery = "" }: SearchClien
                 className="block rounded-xl border p-5 transition-colors hover:bg-muted"
               >
                 <div className="mb-1 flex items-center gap-2">
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-link">
                     {labels.types[result.type] ?? labels.types.page}
                   </span>
                 </div>

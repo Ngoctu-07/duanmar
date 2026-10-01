@@ -35,7 +35,7 @@ export function BookingPricingSection({
     >
       <h2
         id="booking-pricing-heading"
-        className="text-sm font-semibold uppercase tracking-widest text-primary"
+        className="text-sm font-semibold uppercase tracking-widest text-link"
       >
         {t("pricingTitle")}
       </h2>
@@ -69,7 +69,7 @@ export function BookingPricingSection({
             </p>
             <p className="mt-1 flex items-baseline justify-between gap-3">
               <span className="text-sm font-medium">{t("total")}</span>
-              <span className="text-[1.8rem] font-semibold tabular-nums text-primary">
+              <span className="text-[1.8rem] font-semibold tabular-nums text-link">
                 {formatPrice(total, locale, currency)}
               </span>
             </p>

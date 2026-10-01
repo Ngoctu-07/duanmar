@@ -30,7 +30,7 @@ export default async function ThingsToDoPage() {
             href={`/explore/things-to-do/${slug}`}
             className="group rounded-xl border p-6 transition-colors hover:bg-muted"
           >
-            <h2 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+            <h2 className="text-xl font-semibold mb-2 group-hover:text-link transition-colors">
               {category.title}
             </h2>
             <p className="text-sm text-muted-foreground">{category.summary}</p>

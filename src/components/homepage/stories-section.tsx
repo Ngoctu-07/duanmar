@@ -21,7 +21,7 @@ export async function StoriesSection() {
         </div>
         <Link
           href="/blog"
-          className="text-sm font-medium text-primary hover:underline"
+          className="text-sm font-medium text-link hover:underline"
         >
           {t("viewAll")} →
         </Link>

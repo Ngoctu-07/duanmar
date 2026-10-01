@@ -37,7 +37,7 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
         <p className="text-muted-foreground">{t("notFound")}</p>
         <Link
           href="/my-trips"
-          className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+          className="mt-3 inline-block text-sm font-medium text-link hover:underline"
         >
           {t("back")}
         </Link>
@@ -74,11 +74,11 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
       <div className="flex flex-wrap items-center gap-2">
         <h2
           id="trip-detail-heading"
-          className="text-sm font-semibold uppercase tracking-widest text-primary"
+          className="text-sm font-semibold uppercase tracking-widest text-link"
         >
           {t("detailTitle")}
         </h2>
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-link">
           {t("paidBadge")}
         </span>
       </div>
@@ -98,9 +98,9 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
             <dd
               className={`text-right tabular-nums ${
                 row.price
-                  ? "text-[1.4rem] font-semibold text-primary"
+                  ? "text-[1.4rem] font-semibold text-link"
                   : row.strong
-                    ? "font-semibold text-primary"
+                    ? "font-semibold text-link"
                     : "font-medium"
               }`}
             >
@@ -112,7 +112,7 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
 
       <Link
         href="/my-trips"
-        className="mt-4 inline-block text-sm text-primary hover:underline"
+        className="mt-4 inline-block text-sm text-link hover:underline"
       >
         {t("back")}
       </Link>

@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html className={`${inter.variable} ${sora.variable}`}>
+    <html className={`dark ${inter.variable} ${sora.variable}`}>
       <body className="antialiased">{children}</body>
     </html>
   );

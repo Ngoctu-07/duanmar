@@ -42,10 +42,10 @@ export default async function ItinerariesPage() {
             href={`/explore/itineraries/${slug}`}
             className="group flex flex-col rounded-xl border p-6 transition-colors hover:bg-muted"
           >
-            <span className="mb-3 w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            <span className="mb-3 w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-link">
               {itinerary.duration}
             </span>
-            <h2 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+            <h2 className="text-xl font-semibold mb-2 group-hover:text-link transition-colors">
               {itinerary.title}
             </h2>
             <p className="text-sm text-muted-foreground mb-4">{itinerary.summary}</p>
