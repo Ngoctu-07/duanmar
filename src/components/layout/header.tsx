@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { HoverTooltip } from "@/components/ui/hover-tooltip";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { ThemeSwitcher } from "@/components/layout/theme-switcher";
 import { BrandWordmark } from "@/components/layout/brand-wordmark";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { Luggage, Menu, Search } from "lucide-react";
@@ -61,7 +62,7 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <HoverTooltip label={t("search")}>
             <Button
               variant="ghost"
@@ -87,6 +88,7 @@ export function Header() {
             </Button>
           </HoverTooltip>
           <LocaleSwitcher />
+          <ThemeSwitcher />
 
           <Sheet>
             <SheetTrigger
@@ -98,7 +100,10 @@ export function Header() {
               <span className="sr-only">{t("menu")}</span>
             </SheetTrigger>
             <SheetContent side="right">
-              <LocaleSwitcher />
+              <div className="flex items-center gap-2">
+                <LocaleSwitcher />
+                <ThemeSwitcher />
+              </div>
               <Link
                 href="/search"
                 className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
