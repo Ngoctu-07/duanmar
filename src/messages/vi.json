@@ -103,7 +103,10 @@
   "nav": {
     "language": "Ngôn ngữ",
     "english": "English",
-    "vietnamese": "Tiếng Việt"
+    "vietnamese": "Tiếng Việt",
+    "theme": "Giao diện",
+    "darkMode": "Chế độ tối",
+    "lightMode": "Chế độ sáng"
   },
   "destinations": {
     "title": "Điểm đến",
@@ -136,6 +139,7 @@
       "imagesHint": "Tối đa 3 ảnh (không bắt buộc)",
       "errorRequired": "Vui lòng chọn điểm và viết nhận xét.",
       "errorStorage": "Không thể lưu — bộ nhớ trình duyệt đầy hoặc không khả dụng.",
+      "errorSave": "Không thể lưu — vui lòng thử lại sau.",
       "menuLabel": "Thao tác đánh giá",
       "menuEdit": "Chỉnh sửa",
       "menuDelete": "Xóa",

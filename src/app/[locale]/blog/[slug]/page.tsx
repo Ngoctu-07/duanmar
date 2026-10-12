@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { getNewsArticle } from "@/lib/news-content-provider";
-import { getArticleLikeCounts } from "@/lib/article-likes-db";
+import { getArticleLikeCounts, getVisitorLikedSlugs } from "@/lib/article-likes-db";
+import { readVisitor } from "@/lib/visitor";
 import { FeedArticleBlock } from "@/components/blog/feed-article-block";
 
 interface PageProps {
@@ -35,7 +37,9 @@ export default async function BlogArticlePage({ params }: PageProps) {
   if (!data) notFound();
 
   const t = await getTranslations("news");
+  const visitor = readVisitor(await cookies());
   const likeCounts = getArticleLikeCounts([slug]);
+  const likedSlugs = getVisitorLikedSlugs([slug], visitor);
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -51,6 +55,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
           item={data}
           single
           initialLikeCount={likeCounts.get(slug) ?? 0}
+          initialLiked={likedSlugs.get(slug) ?? false}
         />
       </div>
     </div>

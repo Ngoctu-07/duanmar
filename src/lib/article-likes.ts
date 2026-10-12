@@ -1,43 +1,39 @@
 /**
- * Per-browser "liked articles" persistence (plan 260929-2254).
- * One like per browser per article — `markArticleLiked` is append-only
- * (no un-like, no duplicate votes). Reviews-style changed event for
- * cross-component refresh; the `storage` event covers cross-tab.
+ * Client side of the global like system (plan 261007-2145): one POST
+ * toggle helper for HeartButton plus cleanup of the retired device-local
+ * vote list (`vn-liked-articles:v1` — dropped, not migrated; the server
+ * SQLite store is the source of truth).
  */
 export const LIKED_ARTICLES_STORAGE_KEY = "vn-liked-articles:v1";
-export const LIKED_ARTICLES_CHANGED_EVENT = "vn-liked-articles:changed";
 
-const hasWindow = (): boolean => typeof window !== "undefined";
+export interface LikeToggleResult {
+  slug: string;
+  count: number;
+  isLiked: boolean;
+}
 
-/** Tolerant read: corrupted JSON / private mode → []. */
-export function getLikedArticleSlugs(): string[] {
-  if (!hasWindow()) return [];
-  try {
-    const raw = window.localStorage.getItem(LIKED_ARTICLES_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((entry): entry is string => typeof entry === "string");
-  } catch {
-    return [];
+/** POST the visitor's toggle; throws on non-2xx or malformed payload. */
+export async function postLikeToggle(slug: string): Promise<LikeToggleResult> {
+  const response = await fetch(
+    `/api/articles/${encodeURIComponent(slug)}/like`,
+    { method: "POST" }
+  );
+  if (!response.ok) throw new Error(`like failed: ${response.status}`);
+  const data: unknown = await response.json();
+  if (!data || typeof data !== "object") throw new Error("like failed: bad payload");
+  const { count, isLiked } = data as { count?: unknown; isLiked?: unknown };
+  if (typeof count !== "number" || typeof isLiked !== "boolean") {
+    throw new Error("like failed: bad payload");
   }
+  return { slug, count, isLiked };
 }
 
-export function isArticleLiked(slug: string): boolean {
-  return getLikedArticleSlugs().includes(slug);
-}
-
-/** First like persists + fires the changed event. Returns false if already liked. */
-export function markArticleLiked(slug: string): boolean {
-  if (!hasWindow()) return false;
-  if (isArticleLiked(slug)) return false;
+/** Drop the legacy per-browser vote list; private mode / SSR → no-op. */
+export function clearLegacyLikedArticles(): void {
+  if (typeof window === "undefined") return;
   try {
-    const next = [...getLikedArticleSlugs(), slug];
-    window.localStorage.setItem(LIKED_ARTICLES_STORAGE_KEY, JSON.stringify(next));
-    window.dispatchEvent(new Event(LIKED_ARTICLES_CHANGED_EVENT));
-    return true;
+    window.localStorage.removeItem(LIKED_ARTICLES_STORAGE_KEY);
   } catch {
-    // Storage unavailable — still treat as liked for this session's UI.
-    return true;
+    // storage unavailable (private mode) — nothing to clear
   }
 }

@@ -1,27 +1,35 @@
 import { listBookings } from "@/lib/booking-history";
 
 /**
- * One customer review as stored in localStorage (device-local, no backend).
- * `reference` is the composite upsert key `${bookingReference}:${tourSlug}` so
- * each booking can leave exactly one review per tour (re-submitting edits it).
+ * One customer review as seen by client code: the device-local record in
+ * `vn-reviews:v1` (migration source) and the `/api/reviews` row. `reference`
+ * is the composite upsert key `${bookingReference}:${tourSlug}` so each booking
+ * can leave exactly one review per tour (re-submitting edits it). `authorEmail`
+ * exists only in the local copy (the API never returns it); `owned` comes only
+ * from the API (visitor-cookie match).
  */
 export interface TourReview {
   reference: string;
   tourSlug: string;
   authorName: string;
-  authorEmail: string;
+  authorEmail?: string;
   rating: number;
   comment: string;
   images: string[];
   createdAt: string;
   bookingReference: string;
+  owned?: boolean;
 }
+
+/** Local-storage entry — `listReviews()` only yields records passing `isReview`. */
+export type StoredReview = TourReview & { authorEmail: string };
 
 export const REVIEWS_STORAGE_KEY = "vn-reviews:v1";
 /** Same-tab notification — `storage` events only fire cross-tab. */
 export const REVIEWS_CHANGED_EVENT = "vn-reviews:changed";
 
-function notifyChanged(): void {
+/** Broadcast a reviews change so badges/lists refetch (API layer calls this). */
+export function notifyReviewsChanged(): void {
   try {
     window.dispatchEvent(new Event(REVIEWS_CHANGED_EVENT));
   } catch {
@@ -29,7 +37,7 @@ function notifyChanged(): void {
   }
 }
 
-export function isReview(value: unknown): value is TourReview {
+export function isReview(value: unknown): value is StoredReview {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
   const isString = (field: string) => typeof record[field] === "string";
@@ -51,7 +59,7 @@ export function isReview(value: unknown): value is TourReview {
 }
 
 /** Newest first. Returns `[]` when storage is unavailable (SSR, private mode). */
-export function listReviews(): TourReview[] {
+export function listReviews(): StoredReview[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(REVIEWS_STORAGE_KEY);
@@ -66,40 +74,30 @@ export function listReviews(): TourReview[] {
   }
 }
 
-/** Upsert by `reference`. Returns `false` when storage write fails (quota/private). */
-export function saveReview(review: TourReview): boolean {
-  if (typeof window === "undefined") return false;
+/**
+ * Drop one local entry after the server has accepted (or canonically
+ * rejected) it — a stale copy must never be re-uploaded by the migration
+ * over a fresh API save. No change event: callers notify once.
+ */
+export function dropLocalReview(reference: string): void {
+  if (typeof window === "undefined") return;
   try {
-    const all = listReviews();
-    const existing = all.find((entry) => entry.reference === review.reference);
-    // Edits keep the ORIGINAL createdAt — the 3h edit window must not
-    // self-extend every time the author re-saves.
-    const record: TourReview = existing
-      ? { ...review, createdAt: existing.createdAt }
-      : review;
-    const current = all.filter((entry) => entry.reference !== review.reference);
-    window.localStorage.setItem(
+    const store = window.localStorage;
+    if (!store.getItem(REVIEWS_STORAGE_KEY)) return;
+    store.setItem(
       REVIEWS_STORAGE_KEY,
-      JSON.stringify([record, ...current])
+      JSON.stringify(listReviews().filter((entry) => entry.reference !== reference))
     );
-    notifyChanged();
-    return true;
   } catch {
-    return false;
+    // Storage unavailable — migration will retry on the next mount
   }
 }
 
-export function deleteReview(reference: string): void {
+/** Full-key clear once every entry has migrated (invalid ones included). */
+export function clearLocalReviews(): void {
   if (typeof window === "undefined") return;
   try {
-    const current = listReviews().filter(
-      (entry) => entry.reference !== reference
-    );
-    window.localStorage.setItem(
-      REVIEWS_STORAGE_KEY,
-      JSON.stringify(current)
-    );
-    notifyChanged();
+    window.localStorage.removeItem(REVIEWS_STORAGE_KEY);
   } catch {
     // Storage unavailable — nothing to clear
   }
@@ -109,17 +107,6 @@ export function reviewsForSlug(reviews: TourReview[], slug: string): TourReview[
   return reviews
     .filter((review) => review.tourSlug === slug)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-}
-
-/** `null` at 0 reviews — badge hides, section shows its empty state. */
-export function getAggregate(
-  reviews: TourReview[],
-  slug: string
-): { avg: number; count: number } | null {
-  const forSlug = reviews.filter((review) => review.tourSlug === slug);
-  if (forSlug.length === 0) return null;
-  const total = forSlug.reduce((sum, review) => sum + review.rating, 0);
-  return { avg: total / forSlug.length, count: forSlug.length };
 }
 
 /** One decimal place: `4` → `"4.0"`, `4.25` → `"4.3"`. */

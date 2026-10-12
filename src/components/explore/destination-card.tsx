@@ -26,12 +26,19 @@ interface DestinationCardProps {
   destination: Destination;
   actionLabel: string;
   priceRange?: PriceRangeLabel | null;
+  /**
+   * Server-computed rating aggregate (destinations listing RSC); `null` = the
+   * server saw 0 reviews (badge hides), omit to let the badge fetch — other
+   * consumers (homepage/search/category) keep the client-side path.
+   */
+  aggregate?: { avg: number; count: number } | null;
 }
 
 export function DestinationCard({
   destination,
   actionLabel,
   priceRange,
+  aggregate,
 }: DestinationCardProps) {
   const cover = pickCoverImage(destination);
   const locale = useLocale();
@@ -71,7 +78,7 @@ export function DestinationCard({
         </div>
         <div className="mb-2 flex items-start justify-between gap-2">
           <h3 className="min-w-0 text-xl font-semibold">{destination.name}</h3>
-          <TourRatingBadge slug={destination.slug.current} />
+          <TourRatingBadge slug={destination.slug.current} initialAggregate={aggregate} />
         </div>
         <p className="text-muted-foreground line-clamp-2 mb-4">
           {destination.description}

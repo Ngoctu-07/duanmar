@@ -103,7 +103,10 @@
   "nav": {
     "language": "Language",
     "english": "English",
-    "vietnamese": "Tiếng Việt"
+    "vietnamese": "Tiếng Việt",
+    "theme": "Theme",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode"
   },
   "destinations": {
     "title": "Destinations",
@@ -136,6 +139,7 @@
       "imagesHint": "Up to 3 images (optional)",
       "errorRequired": "Please choose a rating and write a comment.",
       "errorStorage": "Could not save — browser storage is full or unavailable.",
+      "errorSave": "Could not save — please try again later.",
       "menuLabel": "Review actions",
       "menuEdit": "Edit",
       "menuDelete": "Delete",

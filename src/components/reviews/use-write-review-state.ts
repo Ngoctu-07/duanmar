@@ -6,22 +6,19 @@ import {
   listBookings,
   type TripBooking,
 } from "@/lib/booking-history";
-import {
-  listReviews,
-  REVIEWS_CHANGED_EVENT,
-  REVIEWS_STORAGE_KEY,
-  type TourReview,
-} from "@/lib/reviews";
+import type { TourReview } from "@/lib/reviews";
 
 /**
- * Device-local booking/existing-review lookup for the write-review form.
- * Re-reads after mount, on cross-tab storage changes (bookings AND reviews)
- * and on the reviews change event; every re-read hands the latest matching
- * review to `applyPrefill` (create path passes `null` so the form clears stale
- * fields instead of silently recreating a deleted review).
+ * Booking/existing-review lookup for the write-review form. The booking still
+ * comes from device storage (re-read after mount and on cross-tab booking
+ * changes); the existing review comes from the API-backed list the parent
+ * (`CustomerReviews`) passes down, so `applyPrefill` always sees server truth:
+ * create path gets `null` (clears stale fields instead of silently
+ * recreating a deleted review), edit path gets the saved review.
  */
 export function useWriteReviewState(
   tourSlug: string,
+  reviews: TourReview[],
   applyPrefill: (review: TourReview | null) => void
 ): { booking: TripBooking | null; existing: TourReview | null; loaded: boolean } {
   const [booking, setBooking] = useState<TripBooking | null>(null);
@@ -32,32 +29,24 @@ export function useWriteReviewState(
     const refresh = () => {
       const match = listBookings().find((entry) => entry.slug === tourSlug) ?? null;
       const found = match
-        ? listReviews().find(
+        ? reviews.find(
             (entry) => entry.reference === `${match.reference}:${tourSlug}`
-          )
+          ) ?? null
         : null;
       setBooking(match);
-      setExisting(found ?? null);
-      applyPrefill(found ?? null);
+      setExisting(found);
+      applyPrefill(found);
       setLoaded(true);
     };
     refresh();
     const onStorage = (event: StorageEvent) => {
-      if (
-        event.key === BOOKINGS_STORAGE_KEY ||
-        event.key === REVIEWS_STORAGE_KEY ||
-        event.key === null
-      ) {
-        refresh();
-      }
+      if (event.key === BOOKINGS_STORAGE_KEY || event.key === null) refresh();
     };
     window.addEventListener("storage", onStorage);
-    window.addEventListener(REVIEWS_CHANGED_EVENT, refresh);
     return () => {
       window.removeEventListener("storage", onStorage);
-      window.removeEventListener(REVIEWS_CHANGED_EVENT, refresh);
     };
-  }, [tourSlug, applyPrefill]);
+  }, [tourSlug, reviews, applyPrefill]);
 
   return { booking, existing, loaded };
 }

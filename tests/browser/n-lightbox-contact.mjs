@@ -1,14 +1,22 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dismissPromo } from "../helpers/promo.mjs";
+import {
+  cleanupReviewRefs,
+  setPageVisitorCookie,
+} from "../helpers/reviews-api.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
 const vi = JSON.parse(readFileSync(new URL("../../src/messages/vi.json", import.meta.url), "utf8"));
 const en = JSON.parse(readFileSync(new URL("../../src/messages/en.json", import.meta.url), "utf8"));
 
-const TOUR_URL = "http://localhost:3000/vi/explore/destinations/hcm";
+const TOUR_URL = "http://localhost:3000/vi/explore/destinations/bangkok-tam-linh";
+const ORIGIN = "http://localhost:3000";
 const REVIEWS_KEY = "vn-reviews:v1";
+/** Fixed visitor so this file's migrated rows are deletable via the API. */
+const VISITOR_N = "cccccccc-cccc-4ccc-cccc-cccccccccccc";
+const KNOWN_ROWS = ["VN-N-LIGHTBOX:bangkok-tam-linh", "VN-N-NOIMAGE:bangkok-tam-linh"];
 const CARD = '[data-testid="review-card"]';
 const THUMB = '[data-testid="review-image-thumb"]';
 const LIGHTBOX = '[data-slot="review-lightbox"]';
@@ -43,8 +51,8 @@ const seed = (page) =>
       key,
       JSON.stringify([
         {
-          reference: "VN-N-LIGHTBOX:hcm",
-          tourSlug: "hcm",
+          reference: "VN-N-LIGHTBOX:bangkok-tam-linh",
+          tourSlug: "bangkok-tam-linh",
           authorName: "N Lightbox",
           authorEmail: "n-lightbox@example.com",
           rating: 4,
@@ -54,8 +62,8 @@ const seed = (page) =>
           bookingReference: "VN-N-LIGHTBOX",
         },
         {
-          reference: "VN-N-NOIMAGE:hcm",
-          tourSlug: "hcm",
+          reference: "VN-N-NOIMAGE:bangkok-tam-linh",
+          tourSlug: "bangkok-tam-linh",
           authorName: "N No Image",
           authorEmail: "n-noimage@example.com",
           rating: 3,
@@ -85,6 +93,19 @@ const cleanupReviews = async (p) => {
       localStorage.setItem(key, JSON.stringify(list.filter((r) => !String(r.reference ?? "").startsWith("VN-N-"))));
     }, REVIEWS_KEY)
     .catch(() => {});
+  // Seeded rows migrate into SQLite on reload → delete them server-side too,
+  // otherwise g/k-suite isolation breaks (jar carries the fixed cookie).
+  await p
+    .evaluate(async (refs) => {
+      for (const ref of refs) {
+        try {
+          await fetch(`/api/reviews/${encodeURIComponent(ref)}`, { method: "DELETE" });
+        } catch {
+          /* tolerant cleanup */
+        }
+      }
+    }, KNOWN_ROWS)
+    .catch(() => {});
 };
 
 let page;
@@ -101,6 +122,11 @@ try {
 
   // ---------- AC1: review lightbox ----------
   await page.goto(TOUR_URL, { waitUntil: "networkidle2", timeout: 60000 });
+  await setPageVisitorCookie(page, VISITOR_N, ORIGIN);
+  // Pre-clean crashed-run rows (same fixed cookie ⇒ deletable); migration on
+  // reload uploads the seeds under this visitor.
+  await cleanupReviewRefs(ORIGIN, KNOWN_ROWS, VISITOR_N);
+  await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
   await seed(page);
   await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);

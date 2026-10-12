@@ -8,6 +8,8 @@ interface FeedArticleBlockProps {
   item: NewsItem;
   /** Hydrated from the SQLite like store (server). */
   initialLikeCount?: number;
+  /** Visitor-scoped vote state hydrated from the SQLite like store (server). */
+  initialLiked?: boolean;
   /** Detail mode: renders an h1 (feed mode uses h2). */
   single?: boolean;
 }
@@ -22,6 +24,7 @@ interface FeedArticleBlockProps {
 export function FeedArticleBlock({
   item,
   initialLikeCount = 0,
+  initialLiked = false,
   single = false,
 }: FeedArticleBlockProps) {
   const Heading = single ? "h1" : "h2";
@@ -65,7 +68,11 @@ export function FeedArticleBlock({
         />
       </div>
       <div className="mt-8 flex items-center border-t border-border pt-4">
-        <HeartButton slug={item.slug} initialCount={initialLikeCount} />
+        <HeartButton
+          slug={item.slug}
+          initialCount={initialLikeCount}
+          initialLiked={initialLiked}
+        />
       </div>
     </article>
   );

@@ -9,11 +9,14 @@ import { ReviewAvatar } from "@/components/reviews/review-avatar";
 import { ReviewImageInput } from "@/components/reviews/review-image-input";
 import { useEditWindowGate } from "@/components/reviews/use-edit-window-gate";
 import { useWriteReviewState } from "@/components/reviews/use-write-review-state";
-import { saveReview, type TourReview } from "@/lib/reviews";
+import { ReviewApiError, saveReviewApi } from "@/lib/reviews-api";
+import type { TourReview } from "@/lib/reviews";
 
 interface WriteReviewFormProps {
   tourSlug: string;
   locale: string;
+  /** API-backed review list from the parent — drives prefill/edit gating. */
+  reviews: TourReview[];
   onSaved: () => void;
 }
 
@@ -21,8 +24,14 @@ interface WriteReviewFormProps {
  * Booking-gated review form: enabled only when this device holds a booking for
  * the tour (disabled + hint before that, no hint pre-hydration). One review per
  * booking per tour — an existing one is pre-filled and re-submitted as an edit.
+ * Submit goes to `POST /api/reviews`; 409 surfaces the edit-window copy, any
+ * other failure shows the generic save error (list/badge keep prior state).
  */
-export function WriteReviewForm({ tourSlug, onSaved }: WriteReviewFormProps) {
+export function WriteReviewForm({
+  tourSlug,
+  reviews,
+  onSaved,
+}: WriteReviewFormProps) {
   const t = useTranslations("destinations");
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -39,13 +48,17 @@ export function WriteReviewForm({ tourSlug, onSaved }: WriteReviewFormProps) {
     setComment(review ? review.comment : "");
     setImages(review ? review.images : []);
   }, []);
-  const { booking, existing, loaded } = useWriteReviewState(tourSlug, applyPrefill);
+  const { booking, existing, loaded } = useWriteReviewState(
+    tourSlug,
+    reviews,
+    applyPrefill
+  );
 
   const enabled = loaded && booking !== null;
   const editExpired = useEditWindowGate(existing);
   const formEnabled = enabled && !editExpired;
 
-  const onSubmit = (event: FormEvent) => {
+  const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!booking || submitting) return;
     if (!rating || !comment.trim()) {
@@ -64,18 +77,22 @@ export function WriteReviewForm({ tourSlug, onSaved }: WriteReviewFormProps) {
       bookingReference: booking.reference,
     };
     setSubmitting(true);
-    const ok = saveReview(review);
-    setSubmitting(false);
-    if (!ok) {
-      setError(t("reviews.errorStorage"));
-      return;
+    try {
+      await saveReviewApi(review);
+      setError(null);
+      setSaved(true);
+      setRating(0);
+      setComment("");
+      setImages([]);
+      onSaved();
+    } catch (failure) {
+      setSaved(false);
+      const closed =
+        failure instanceof ReviewApiError && failure.status === 409;
+      setError(closed ? t("reviews.editWindowClosed") : t("reviews.errorSave"));
+    } finally {
+      setSubmitting(false);
     }
-    setError(null);
-    setSaved(true);
-    setRating(0);
-    setComment("");
-    setImages([]);
-    onSaved();
   };
 
   return (

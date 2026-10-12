@@ -1,15 +1,14 @@
 import assert from "node:assert/strict";
 import {
-  deleteReview,
+  clearLocalReviews,
+  dropLocalReview,
   formatRating,
-  getAggregate,
   hasBookingForSlug,
   isMyReview,
   isReview,
   listReviews,
   reviewsForSlug,
   REVIEWS_STORAGE_KEY,
-  saveReview,
   type TourReview,
 } from "../../src/lib/reviews.ts";
 import { BOOKINGS_STORAGE_KEY } from "../../src/lib/booking-history.ts";
@@ -94,20 +93,6 @@ check("formatRating always renders one decimal", () => {
   assert.equal(formatRating(2.96), "3.0");
 });
 
-check("getAggregate returns null at 0 reviews", () => {
-  assert.equal(getAggregate([], "hcm"), null);
-});
-
-check("getAggregate filters by slug and averages ratings", () => {
-  const reviews = [
-    review({ reference: "a:hcm", rating: 4, createdAt: "2026-09-03" }),
-    review({ reference: "b:hcm", rating: 5, createdAt: "2026-09-02" }),
-    review({ reference: "c:dn", tourSlug: "dn", rating: 1, createdAt: "2026-09-01" }),
-  ];
-  const aggregate = getAggregate(reviews, "hcm");
-  assert.deepEqual(aggregate, { avg: 4.5, count: 2 });
-});
-
 check("reviewsForSlug filters and sorts newest first", () => {
   const reviews = [
     review({ reference: "old:hcm", createdAt: "2026-09-01" }),
@@ -186,47 +171,7 @@ check("listReviews filters invalid entries and sorts newest first", () => {
   }
 });
 
-check("saveReview inserts by reference; same key upserts (latest rating wins)", () => {
-  const harness = stubWindow();
-  try {
-    assert.equal(saveReview(review({ reference: "VN-1:hcm", rating: 4 })), true);
-    assert.equal(saveReview(review({ reference: "VN-2:hcm", rating: 2 })), true);
-    let list = listReviews();
-    assert.equal(list.length, 2);
-    assert.equal(saveReview(review({ reference: "VN-1:hcm", rating: 5 })), true);
-    list = listReviews();
-    assert.equal(list.length, 2);
-    assert.equal(
-      list.find((entry) => entry.reference === "VN-1:hcm")?.rating,
-      5
-    );
-  } finally {
-    harness.restore();
-  }
-});
-
-check("saveReview returns false on quota failure and leaves list unchanged", () => {
-  const harness = stubWindow();
-  try {
-    assert.equal(saveReview(review({ reference: "VN-1:hcm" })), true);
-    const other = stubWindow({
-      throwOnWrite: true,
-      data: JSON.stringify([review({ reference: "VN-0:hcm" })]),
-    });
-    try {
-      assert.equal(saveReview(review({ reference: "VN-9:hcm" })), false);
-      const list = listReviews();
-      assert.equal(list.length, 1);
-      assert.equal(list[0].reference, "VN-0:hcm");
-    } finally {
-      other.restore();
-    }
-  } finally {
-    harness.restore();
-  }
-});
-
-check("deleteReview removes only the target reference", () => {
+check("dropLocalReview removes only the target reference", () => {
   const harness = stubWindow({
     data: JSON.stringify([
       review({ reference: "VN-1:hcm" }),
@@ -234,55 +179,26 @@ check("deleteReview removes only the target reference", () => {
     ]),
   });
   try {
-    deleteReview("VN-1:hcm");
+    dropLocalReview("VN-1:hcm");
     const list = listReviews();
     assert.equal(list.length, 1);
     assert.equal(list[0].reference, "VN-2:hcm");
-    deleteReview("does-not-exist");
+    dropLocalReview("does-not-exist");
     assert.equal(listReviews().length, 1);
   } finally {
     harness.restore();
   }
 });
 
-check("saveReview preserves the ORIGINAL createdAt on upsert (insert keeps its own)", () => {
+check("dropLocalReview without a key is a no-op; clearLocalReviews wipes it", () => {
   const harness = stubWindow();
   try {
-    assert.equal(
-      saveReview(
-        review({
-          reference: "VN-1:hcm",
-          rating: 4,
-          createdAt: "2026-09-01T00:00:00.000Z",
-        })
-      ),
-      true
-    );
-    assert.equal(
-      saveReview(
-        review({
-          reference: "VN-1:hcm",
-          rating: 5,
-          createdAt: "2026-09-28T12:00:00.000Z",
-        })
-      ),
-      true
-    );
-    const edited = listReviews().find((entry) => entry.reference === "VN-1:hcm");
-    assert.equal(edited?.createdAt, "2026-09-01T00:00:00.000Z");
-    assert.equal(edited?.rating, 5);
-
-    assert.equal(
-      saveReview(
-        review({
-          reference: "VN-2:hcm",
-          createdAt: "2026-09-28T12:00:00.000Z",
-        })
-      ),
-      true
-    );
-    const fresh = listReviews().find((entry) => entry.reference === "VN-2:hcm");
-    assert.equal(fresh?.createdAt, "2026-09-28T12:00:00.000Z");
+    dropLocalReview("VN-1:hcm");
+    assert.equal(harness.store.has(REVIEWS_STORAGE_KEY), false);
+    harness.store.set(REVIEWS_STORAGE_KEY, JSON.stringify([review()]));
+    clearLocalReviews();
+    assert.equal(harness.store.has(REVIEWS_STORAGE_KEY), false);
+    assert.deepEqual(listReviews(), []);
   } finally {
     harness.restore();
   }

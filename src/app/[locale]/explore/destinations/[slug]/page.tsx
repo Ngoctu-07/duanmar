@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
@@ -15,6 +16,13 @@ import {
 import { cn } from "@/lib/utils";
 import { mapPricingTiers } from "@/lib/pricing";
 import { pickGalleryImages } from "@/lib/destination-gallery";
+import { readVisitor } from "@/lib/visitor";
+import {
+  getRatingAggregates,
+  listReviewsForSlug,
+  type PublicReview,
+  type RatingAggregate,
+} from "@/lib/reviews-db";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { DESTINATION_BY_SLUG_QUERY } from "@/sanity/queries/destinations";
 import { TOUR_PRICING_BY_SLUG_QUERY } from "@/sanity/queries/tour-pricing";
@@ -50,6 +58,20 @@ export default async function DestinationDetailPage({ params }: PageProps) {
   ]);
 
   if (!destination) notFound();
+
+  // Server-side hydration: visitor-scoped review list + AVG/COUNT so the SSR
+  // HTML already carries badge and cards (no empty→populated flash). Storage
+  // degraded → leave both props undefined and let the client fetch instead of
+  // freezing a wrong "0 reviews" verdict.
+  let initialReviews: PublicReview[] | undefined;
+  let initialAggregate: RatingAggregate | null | undefined;
+  try {
+    initialReviews = listReviewsForSlug(slug, readVisitor(await cookies()));
+    initialAggregate = getRatingAggregates([slug]).get(slug) ?? null;
+  } catch {
+    initialReviews = undefined;
+    initialAggregate = undefined;
+  }
 
   const tiers = mapPricingTiers(pricingDoc, locale);
   const itineraryDays: ItineraryDay[] = destination.itinerary ?? [];
@@ -93,7 +115,7 @@ export default async function DestinationDetailPage({ params }: PageProps) {
           </div>
           <div className="mb-4 flex items-start justify-between gap-3">
             <h1 className="min-w-0 text-4xl font-bold">{destination.name}</h1>
-            <TourRatingBadge slug={slug} />
+            <TourRatingBadge slug={slug} initialAggregate={initialAggregate} />
           </div>
           {destination.description && (
             <p className="text-lg text-muted-foreground whitespace-pre-line">
@@ -110,7 +132,14 @@ export default async function DestinationDetailPage({ params }: PageProps) {
         )}
 
         {/* Own grid item so a long review list never pushes the itinerary off-screen on mobile. */}
-        <CustomerReviews tourSlug={slug} locale={locale} />
+        {/* key=slug: soft-nav to another tour remounts the section instead of
+            briefly showing the previous tour's list while the refetch runs. */}
+        <CustomerReviews
+          key={slug}
+          tourSlug={slug}
+          locale={locale}
+          initialReviews={initialReviews}
+        />
       </div>
     </div>
   );

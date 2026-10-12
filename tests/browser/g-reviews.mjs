@@ -1,6 +1,20 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dismissPromo } from "../helpers/promo.mjs";
+import {
+  cleanupReviewRefs,
+  listSlugReviews,
+  deleteReviewRef,
+  setPageVisitorCookie,
+} from "../helpers/reviews-api.mjs";
+
+/**
+ * Customer reviews on the tour detail page (plan 261007-2145): writes go to
+ * SQLite via /api/reviews, reads come from the server (RSC + refetch), the
+ * device booking stays the form gate. A fixed `vn_visitor` cookie makes seed
+ * rows deletable, so pre/post-clean keeps reruns hermetic (foreign-cookie
+ * leftovers from manual testing fail loudly instead of being swept away).
+ */
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -13,10 +27,15 @@ const { getBrowser, getPage, closeBrowser } = await import(
   ).href
 );
 
-const TOUR_URL = "http://localhost:3000/vi/explore/destinations/hcm";
+const ORIGIN = "http://localhost:3000";
+const TOUR_URL = `${ORIGIN}/vi/explore/destinations/bangkok-tam-linh`;
+const SLUG = "bangkok-tam-linh";
 const REVIEWS_KEY = "vn-reviews:v1";
 const BOOKINGS_KEY = "vn-my-trips:v1";
 const PROBE_REF = "VN-G-REVIEWS";
+const PROBE_ROW = `${PROBE_REF}:${SLUG}`;
+/** Fixed visitor so this file's rows are always deletable (pre + post clean). */
+const VISITOR_G = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa";
 const HINT = "Chỉ khách đã đặt tour này mới có thể viết đánh giá.";
 const SECTION = "#customer-reviews";
 const WRAP = `${SECTION} [aria-disabled="true"]`;
@@ -45,7 +64,7 @@ const seedProbe = (page) =>
     }
     const probe = {
       reference: "VN-G-REVIEWS",
-      slug: "hcm",
+      slug: "bangkok-tam-linh",
       tourName: "Saigon",
       travelDate: "2026-10-05",
       fullName: "G Review Probe",
@@ -75,7 +94,7 @@ const cleanup = (page) =>
           reviewsKey,
           JSON.stringify(
             Array.isArray(reviews)
-              ? reviews.filter((r) => r?.reference !== `${probeRef}:hcm`)
+              ? reviews.filter((r) => r?.reference !== `${probeRef}:bangkok-tam-linh`)
               : []
           )
         );
@@ -113,6 +132,13 @@ const setTextValue = (page, selector, value) =>
     value
   );
 
+/** Server rows owned by our fixed cookie (only these are deletable). */
+const ownedRows = async () => {
+  const { status, json } = await listSlugReviews(ORIGIN, SLUG, VISITOR_G);
+  if (status !== 200 || !Array.isArray(json?.reviews)) return null;
+  return json.reviews.filter((row) => row?.owned === true);
+};
+
 const fixture = `${OUT}/review-fixture.png`;
 writeFileSync(
   fixture,
@@ -123,9 +149,21 @@ writeFileSync(
 );
 
 try {
+  // --- R0 pre-clean: crashed-run rows (same fixed cookie) are deletable via API
+  const before = await ownedRows();
+  if (before === null) {
+    check("R0 pre-clean reachable (GET /api/reviews 200)", false, "list failed");
+  } else {
+    for (const row of before) await deleteReviewRef(ORIGIN, row.reference, VISITOR_G);
+    const after = await ownedRows();
+    check("R0 pre-clean: no owned rows left on bangkok-tam-linh", after !== null && after.length === 0,
+      JSON.stringify(after?.map((row) => row.reference)));
+  }
+
   const browser = await getBrowser({ headless: true, viewport: { width: 1280, height: 1100 } });
   const page = await getPage(browser);
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+  await setPageVisitorCookie(page, VISITOR_G, ORIGIN);
 
   // --- R1 clean slate: no reviews → no badge, empty state, section below price
   await page.goto(TOUR_URL, { waitUntil: "networkidle2", timeout: 60000 });
@@ -204,7 +242,7 @@ try {
   check("R4 textarea enabled", !(await page.$eval(TEXTAREA, (el) => el.disabled)));
   check("R4 star buttons enabled", !(await page.$eval(star(4), (el) => el.disabled)));
 
-  // --- R5 submit a review (4 stars + comment + 1 image)
+  // --- R5 submit a review (4 stars + comment + 1 image) → POST /api/reviews
   await page.click(star(4));
   await setTextValue(page, TEXTAREA, "Amazing food and friendly guides!");
   const fileInput = await page.$(FILE_INPUT);
@@ -234,6 +272,11 @@ try {
   await page.waitForSelector(CARD, { timeout: 15000 });
   check("R7 card persists after reload", Boolean(await page.$(CARD)));
   check("R7 badge persists after reload", Boolean(await page.$(BADGE)));
+  await page.waitForFunction(
+    (sel) => document.querySelector(sel)?.value?.includes("Amazing food"),
+    { timeout: 15000 },
+    TEXTAREA
+  ).catch(() => {});
   const prefilled = await page.$eval(TEXTAREA, (el) => el.value);
   check("R7 form pre-fills existing review", prefilled.includes("Amazing food"), prefilled.slice(0, 40));
 
@@ -250,31 +293,45 @@ try {
   const badgeAfter = (await page.$eval(BADGE, (el) => el.textContent ?? "")).trim();
   check("R8 badge updates to 5.0", badgeAfter.startsWith("5.0"), badgeAfter);
 
-  // --- R9 stored record: ≤3 images, JPEG data URLs
-  const stored = await page.evaluate(
-    (key, ref) => {
-      try {
-        const list = JSON.parse(localStorage.getItem(key) ?? "[]");
-        const record = Array.isArray(list)
-          ? list.find((r) => r?.reference === `${ref}:hcm`)
-          : null;
-        return record ? { count: list.length, images: record.images } : null;
-      } catch {
-        return null;
-      }
-    },
-    REVIEWS_KEY,
-    PROBE_REF
-  );
-  check("R9 single stored review", stored?.count === 1, JSON.stringify(stored?.count));
-  check("R9 images capped at 3", (stored?.images?.length ?? 99) <= 3, `${stored?.images?.length}`);
+  // --- R9 server record (was localStorage payload): ≤3 images, JPEG data URLs, no PII
+  const record = await page.evaluate(async (slug) => {
+    const response = await fetch(`/api/reviews?slug=${encodeURIComponent(slug)}`, { cache: "no-store" });
+    if (!response.ok) return { http: response.status };
+    return response.json();
+  }, SLUG);
+  const rows = Array.isArray(record?.reviews) ? record.reviews : [];
+  const mine = rows.find((row) => row?.reference === PROBE_ROW);
+  check("R9 API holds exactly our review", rows.length === 1 && Boolean(mine), JSON.stringify(rows.map((row) => row?.reference)));
+  check("R9 images capped at 3", (mine?.images?.length ?? 99) <= 3, `${mine?.images?.length}`);
   check(
     "R9 images are downscaled JPEG data URLs",
-    Boolean(stored?.images?.[0]?.startsWith("data:image/jpeg")),
-    stored?.images?.[0]?.slice(0, 30)
+    Boolean(mine?.images?.[0]?.startsWith("data:image/jpeg")),
+    mine?.images?.[0]?.slice(0, 30)
   );
+  check("R9 aggregate tracks the edit (avg 5, count 1)",
+    record?.aggregate?.avg === 5 && record?.aggregate?.count === 1, JSON.stringify(record?.aggregate));
+  check("R9 row carries no authorEmail / visitor identity",
+    mine && !("authorEmail" in mine) && !("visitor" in mine), JSON.stringify(Object.keys(mine ?? {})));
+  check("R9 row is owned by our visitor", mine?.owned === true, JSON.stringify(mine?.owned));
+  const localLeftover = await page.evaluate(
+    ([key, ref]) => {
+      try {
+        const list = JSON.parse(localStorage.getItem(key) ?? "[]");
+        return Array.isArray(list) ? list.some((r) => r?.reference === ref) : false;
+      } catch {
+        return false;
+      }
+    },
+    [REVIEWS_KEY, PROBE_ROW]
+  );
+  check("R9 server is source of truth (no local copy of the ref)", localLeftover === false);
 
-  // --- R10 cleanup: remove review + probe → empty state + disabled form
+  // --- R10 cleanup: API DELETE + drop probe → empty state + disabled form
+  const delStatus = await page.evaluate(async (ref) => {
+    const response = await fetch(`/api/reviews/${encodeURIComponent(ref)}`, { method: "DELETE" });
+    return response.status;
+  }, PROBE_ROW);
+  check("R10 API DELETE → 200", delStatus === 200, `status=${delStatus}`);
   await cleanup(page);
   await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
@@ -284,6 +341,11 @@ try {
   check("R10 empty state restored", (await page.$eval(SECTION, (el) => el.textContent ?? "")).includes("Chưa có đánh giá"));
   check("R10 badge gone after cleanup", !(await page.$(BADGE)));
   check("R10 form disabled again", Boolean(await page.$(WRAP)));
+  const belt = await cleanupReviewRefs(ORIGIN, [PROBE_ROW], VISITOR_G);
+  const finalRows = await ownedRows();
+  check("R10 server holds 0 owned rows (hermetic reruns)",
+    belt.length === 0 && finalRows !== null && finalRows.length === 0,
+    JSON.stringify({ belt, final: finalRows?.map((row) => row.reference) }));
   await page.screenshot({ path: `${OUT}/g-reviews-04-final.png`, fullPage: true });
 
   await closeBrowser(browser);

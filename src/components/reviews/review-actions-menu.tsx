@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { EllipsisVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { deleteReview, type TourReview } from "@/lib/reviews";
+import { deleteReviewApi } from "@/lib/reviews-api";
+import type { TourReview } from "@/lib/reviews";
 import { fetchServerNow, isEditWindowExpired } from "@/lib/edit-window";
 
 interface ReviewActionsMenuProps {
@@ -13,10 +14,11 @@ interface ReviewActionsMenuProps {
 /**
  * Owner-only kebab menu on a review card: Edit (scrolls/focuses the write
  * form; native `disabled` once the 3h window vs SERVER time is closed) and
- * Delete (confirm → `deleteReview` → existing change event refreshes badge,
- * list and count everywhere). Bespoke dropdown (no Base UI Menu): its items
- * strip native `disabled`, which the edit gate requires. Client-side
- * ownership affordance only — not authorization.
+ * Delete (confirm → `DELETE /api/reviews/[reference]` → the change event
+ * refreshes badge, list and count everywhere; a failed delete changes
+ * nothing — the refetched list shows the truth). Bespoke dropdown (no Base UI
+ * Menu): its items strip native `disabled`, which the edit gate requires.
+ * Client-side ownership affordance only — not authorization.
  */
 export function ReviewActionsMenu({ review }: ReviewActionsMenuProps) {
   const t = useTranslations("destinations");
@@ -59,10 +61,14 @@ export function ReviewActionsMenu({ review }: ReviewActionsMenuProps) {
     form?.querySelector("textarea")?.focus();
   };
 
-  const onDelete = () => {
+  const onDelete = async () => {
     if (!window.confirm(t("reviews.deleteConfirm"))) return;
-    deleteReview(review.reference);
     setOpen(false);
+    try {
+      await deleteReviewApi(review.reference);
+    } catch {
+      // Non-owner / network failure: no optimistic removal — list refetch rules
+    }
   };
 
   const itemClass =

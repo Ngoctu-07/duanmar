@@ -1,69 +1,65 @@
 "use client";
 
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { useTranslations } from "next-intl";
-import {
-  LIKED_ARTICLES_CHANGED_EVENT,
-  isArticleLiked,
-  markArticleLiked,
-} from "@/lib/article-likes";
+import { clearLegacyLikedArticles, postLikeToggle } from "@/lib/article-likes";
 
 interface HeartButtonProps {
   slug: string;
   initialCount: number;
-}
-
-function subscribeToLiked(onChange: () => void) {
-  const refresh = () => onChange();
-  window.addEventListener(LIKED_ARTICLES_CHANGED_EVENT, refresh);
-  window.addEventListener("storage", refresh);
-  return () => {
-    window.removeEventListener(LIKED_ARTICLES_CHANGED_EVENT, refresh);
-    window.removeEventListener("storage", refresh);
-  };
+  /** Visitor-scoped vote state hydrated by the RSC blog pages. */
+  initialLiked?: boolean;
 }
 
 /**
- * Social-style reaction button (plan 260929-2254): 1 like per browser
- * (localStorage), optimistic +1 with POST reconcile, persistent red fill.
- * Re-clicking a liked article is a no-op (no duplicate votes).
- * Liked state reads via useSyncExternalStore (SSR-safe, no effect setState).
+ * Social-style reaction toggle (plan 261007-2145): like ↔ unlike against
+ * the shared server count. Optimistic flip first, then reconcile with the
+ * authoritative `{count,isLiked}` — any failure reverts both fields to the
+ * pre-click state. Locked while a toggle is in flight so a double click
+ * cannot double-count. Retires the device-local vote list on mount.
  */
-export function HeartButton({ slug, initialCount }: HeartButtonProps) {
+export function HeartButton({
+  slug,
+  initialCount,
+  initialLiked = false,
+}: HeartButtonProps) {
   const t = useTranslations("blog");
   const [count, setCount] = useState(initialCount);
+  const [liked, setLiked] = useState(initialLiked);
+  const [pending, setPending] = useState(false);
 
-  const subscribe = useCallback(
-    (onChange: () => void) => subscribeToLiked(onChange),
-    []
-  );
-  const getSnapshot = useCallback(() => isArticleLiked(slug), [slug]);
-  const getServerSnapshot = useCallback(() => false, []);
-  const liked = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  useEffect(() => {
+    clearLegacyLikedArticles();
+  }, []);
 
   const handleClick = () => {
-    if (liked) return; // already voted — keep red, block duplicate
-    if (!markArticleLiked(slug)) return;
-    setCount((current) => current + 1); // optimistic
-    void fetch(`/api/articles/${encodeURIComponent(slug)}/like`, {
-      method: "POST",
-    })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data: { count?: number } | null) => {
-        if (data && typeof data.count === "number") setCount(data.count);
+    if (pending) return;
+    const previous = { count, liked };
+    setLiked(!previous.liked);
+    setCount(Math.max(0, previous.count + (previous.liked ? -1 : 1)));
+    setPending(true);
+    postLikeToggle(slug)
+      .then((result) => {
+        setCount(result.count);
+        setLiked(result.isLiked);
       })
-      .catch(() => undefined); // keep optimistic count on failure
+      .catch(() => {
+        setCount(previous.count);
+        setLiked(previous.liked);
+      })
+      .finally(() => setPending(false));
   };
 
   return (
     <button
       type="button"
       onClick={handleClick}
+      disabled={pending}
       aria-pressed={liked}
       aria-label={t(liked ? "liked" : "like")}
       data-testid="like-button"
-      className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-link hover:text-link"
+      className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-link hover:text-link disabled:cursor-wait"
     >
       <Heart
         aria-hidden="true"

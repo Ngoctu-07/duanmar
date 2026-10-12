@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { setPageVisitorCookie } from "../helpers/reviews-api.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -13,11 +14,18 @@ const { getBrowser, getPage, closeBrowser } = await import(
   ).href
 );
 
-const TOUR_URL = "http://localhost:3000/vi/explore/destinations/hcm";
+const ORIGIN = "http://localhost:3000";
+const TOUR_URL = `${ORIGIN}/vi/explore/destinations/bangkok-tam-linh`;
+const SLUG = "bangkok-tam-linh";
 const REVIEWS_KEY = "vn-reviews:v1";
 const BOOKINGS_KEY = "vn-my-trips:v1";
 const PROBE_REF = "VN-K-REVIEW";
 const ORPHAN_REF = "VN-K-OTHER";
+const EXPIRED_REF = "VN-K-EXPIRED";
+/** Every server row this file can create (pre-cleaned each phase, belt-cleaned at K6). */
+const KNOWN_ROWS = [`${PROBE_REF}:${SLUG}`, `${ORPHAN_REF}:${SLUG}`, `${EXPIRED_REF}:${SLUG}`];
+/** Fixed visitor so this file's rows are always deletable via the API. */
+const VISITOR_K = "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb";
 const SECTION = "#customer-reviews";
 const CARD = '[data-testid="review-card"]';
 const TRIGGER = '[data-testid="review-actions-trigger"]';
@@ -35,27 +43,45 @@ const check = (name, ok, detail = "") => {
   if (!ok) errors.push(name);
 };
 
-const booking = () => ({
-  reference: PROBE_REF, slug: "hcm", tourName: "Saigon", travelDate: "2026-10-05",
-  fullName: "K Owner", email: "kowner@example.com", phone: "0900000000", notes: "",
+const booking = (ref = PROBE_REF) => ({
+  reference: ref, slug: "bangkok-tam-linh", tourName: "Saigon", travelDate: "2026-10-05",
+  fullName: ref === PROBE_REF ? "K Owner" : "K Aged", email: "kowner@example.com", phone: "0900000000", notes: "",
   guests: 1, difficulty: "easy", pricePerGuest: null, total: null, currency: "VND",
   locale: "vi", paidAt: new Date().toISOString(),
 });
-const review = (ref, authorName, ageMs, rating) => ({
-  reference: `${ref}:hcm`, tourSlug: "hcm", authorName,
+const review = (ref, authorName, ageMs, rating, comment) => ({
+  reference: `${ref}:bangkok-tam-linh`, tourSlug: "bangkok-tam-linh", authorName,
   authorEmail: `${ref.toLowerCase()}@example.com`, rating,
-  comment: ref === PROBE_REF ? "Owned review" : "Orphan review", images: [],
+  comment, images: [],
   createdAt: new Date(Date.now() - ageMs).toISOString(), bookingReference: ref,
 });
 
-const load = async (page, reviews) => {
+/** Rows seeded via localStorage migrate into SQLite on reload (fixed jar cookie owns them). */
+const load = async (page, reviews, bookings) => {
   await page.evaluate(([bk, rv, items, list]) => {
     localStorage.setItem(bk, JSON.stringify(items));
     localStorage.setItem(rv, JSON.stringify(list));
-  }, [BOOKINGS_KEY, REVIEWS_KEY, [booking()], reviews]);
+  }, [BOOKINGS_KEY, REVIEWS_KEY, bookings, reviews]);
+  // Server rows persist across phases (upsert preserves the original created_at,
+  // so a re-seeded reference can never become "4h old") → delete known refs first.
+  await page.evaluate(async (refs) => {
+    for (const ref of refs) {
+      try {
+        await fetch(`/api/reviews/${encodeURIComponent(ref)}`, { method: "DELETE" });
+      } catch {
+        /* tolerant pre-clean */
+      }
+    }
+  }, KNOWN_ROWS);
   await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
 };
+const apiRows = (page) =>
+  page.evaluate(async (slug) => {
+    const response = await fetch(`/api/reviews?slug=${encodeURIComponent(slug)}`, { cache: "no-store" });
+    if (!response.ok) return { http: response.status, reviews: null, aggregate: null };
+    return response.json();
+  }, SLUG);
 const openMenu = async (page) => {
   await page.click(TRIGGER);
   await page.waitForResponse((r) => r.url().includes("/api/server-time") && r.ok(), { timeout: 15000 });
@@ -70,11 +96,14 @@ try {
   const browser = await getBrowser({ headless: true, viewport: { width: 1280, height: 1100 } });
   const page = await getPage(browser);
   page.on("pageerror", (e) => pageErrors.push(e.message));
+  await page.goto(TOUR_URL, { waitUntil: "networkidle2", timeout: 60000 });
+  await setPageVisitorCookie(page, VISITOR_K, ORIGIN);
+  await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
 
   // --- K1 ownership: owned card has the kebab, orphan card has none but is visible
-  await page.goto(TOUR_URL, { waitUntil: "networkidle2", timeout: 60000 });
-  await load(page, [review(PROBE_REF, "K Owner", 60_000, 4), review(ORPHAN_REF, "K Orphan", 60_000, 2)]);
-  await page.waitForSelector(CARD, { timeout: 15000 });
+  await load(page, [review(PROBE_REF, "K Owner", 60_000, 4, "Owned review"), review(ORPHAN_REF, "K Orphan", 60_000, 2, "Orphan review")], [booking()]);
+  await page.waitForFunction((sel) => document.querySelectorAll(sel).length === 2, { timeout: 15000 }, CARD);
   const own = await page.$$eval(CARD, (els) =>
     els.map((el) => ({
       orphan: el.textContent.includes("K Orphan"),
@@ -110,8 +139,10 @@ try {
   await page.screenshot({ path: `${OUT}/k-review-actions-02-menu.png`, fullPage: true });
   await closeMenu(page);
 
-  // --- K3 time gate: 4h-old review → menu Edit disabled+opacity AND form gated
-  await load(page, [review(PROBE_REF, "K Owner", 4 * 3600_000, 4)]);
+  // --- K3 time gate: 4h-old review → menu Edit disabled+opacity AND form gated.
+  // Fresh reference: upserts preserve the original created_at, so the aged row
+  // must be inserted (not re-seeded over a young row) with its own booking.
+  await load(page, [review(EXPIRED_REF, "K Aged", 4 * 3600_000, 4, "Aged review")], [booking(EXPIRED_REF)]);
   await page.waitForSelector(TRIGGER, { timeout: 15000 });
   await openMenu(page);
   const gate = {
@@ -134,8 +165,8 @@ try {
   );
   check("K3 FORM path gated + editWindowClosed hint", await page.$eval(FORM, (el, hint) => el.textContent.includes(hint), M.editWindowClosed));
   await page.screenshot({ path: `${OUT}/k-review-actions-03-expired.png`, fullPage: true });
-  // --- K4 delete → dialog copy + badge/count/list/storage recalc
-  await load(page, [review(PROBE_REF, "K Owner", 60_000, 4)]);
+  // --- K4 delete → dialog copy + badge/count/list/API recalc
+  await load(page, [review(PROBE_REF, "K Owner", 60_000, 4, "Owned review")], [booking()]);
   await page.waitForSelector(BADGE, { timeout: 15000 });
   check("K4 badge shows 4.0 before delete", (await page.$eval(BADGE, (el) => el.textContent)).trim().startsWith("4.0"));
   await openMenu(page);
@@ -146,8 +177,10 @@ try {
   check("K4 confirm copy = deleteConfirm", dialogMessage === M.deleteConfirm, String(dialogMessage));
   check("K4 cards 0 + badge gone after delete", (await page.$$(CARD)).length === 0 && !(await page.$(BADGE)));
   check("K4 empty state shown", await page.$eval(SECTION, (el, txt) => el.textContent.includes(txt), M.empty));
-  const stored = await page.evaluate(([k]) => JSON.parse(localStorage.getItem(k) ?? "[]").filter((r) => r.reference === `${PROBE_REF}:hcm`).length, [REVIEWS_KEY]);
-  check("K4 storage payload removed", stored === 0, `left=${stored}`);
+  const server = await apiRows(page);
+  const kRows = Array.isArray(server?.reviews) ? server.reviews.filter((r) => String(r?.reference ?? "").startsWith("VN-K-")) : null;
+  check("K4 API holds 0 K rows after delete", kRows !== null && kRows.length === 0, JSON.stringify(kRows?.map((r) => r.reference)));
+  check("K4 aggregate null after delete", server?.aggregate === null, JSON.stringify(server?.aggregate));
   await page.screenshot({ path: `${OUT}/k-review-actions-04-deleted.png`, fullPage: true });
 
   // --- K5 else-fix: form re-enabled with cleared fields, gate reset
@@ -167,7 +200,7 @@ try {
   check("K5 all 5 stars aria-pressed false", cleared.stars.length === 5 && cleared.stars.every((s) => s === "false"), JSON.stringify(cleared.stars));
   check("K5 editWindowClosed hint reset", cleared.hint === false);
 
-  // --- K6 hygiene: no pageerrors, full cleanup of probe data
+  // --- K6 hygiene: no pageerrors, full cleanup of probe data (device + server)
   check("K6 zero pageerrors", pageErrors.length === 0, pageErrors.join("; "));
   await page.evaluate(
     ([bk, rv]) => {
@@ -176,6 +209,15 @@ try {
     },
     [BOOKINGS_KEY, REVIEWS_KEY]
   );
+  await page.evaluate(async (refs) => {
+    for (const ref of refs) {
+      try {
+        await fetch(`/api/reviews/${encodeURIComponent(ref)}`, { method: "DELETE" });
+      } catch {
+        /* belt-and-braces cleanup */
+      }
+    }
+  }, KNOWN_ROWS);
   await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
   const fin = await page.evaluate(
@@ -183,6 +225,9 @@ try {
     CARD
   );
   check("K6 cleanup: 0 cards, 0 triggers, empty state", fin.cards === 0 && fin.triggers === 0 && fin.empty, JSON.stringify(fin));
+  const finApi = await apiRows(page);
+  const finLeft = Array.isArray(finApi?.reviews) ? finApi.reviews.filter((r) => String(r?.reference ?? "").startsWith("VN-K-")) : null;
+  check("K6 cleanup: 0 K rows on the server", finLeft !== null && finLeft.length === 0, JSON.stringify(finLeft?.map((r) => r.reference)));
   await closeBrowser(browser);
 } catch (error) {
   errors.push(`fatal: ${error.message}`);

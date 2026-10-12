@@ -5,50 +5,94 @@ import { Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   formatRating,
-  getAggregate,
-  listReviews,
   REVIEWS_CHANGED_EVENT,
   REVIEWS_STORAGE_KEY,
 } from "@/lib/reviews";
+import { fetchRatingAggregates } from "@/lib/reviews-api";
+
+type Aggregate = { avg: number; count: number };
 
 interface TourRatingBadgeProps {
   /** Destination slug; when absent the badge renders nothing (non-tour surfaces). */
   slug?: string;
+  /**
+   * Server-computed aggregate: RSC surfaces (detail/map/destinations list)
+   * render it synchronously (no slot flash); omit (`undefined`) to let the
+   * badge fetch `/api/ratings` after hydration; `null` = server saw 0 reviews.
+   */
+  initialAggregate?: Aggregate | null;
+}
+
+interface BadgeView {
+  slug: string | undefined;
+  source: Aggregate | null | undefined;
+  loaded: boolean;
+  avg: number | null;
+  count: number;
+}
+
+function toView(
+  slug: string | undefined,
+  initialAggregate: Aggregate | null | undefined
+): BadgeView {
+  return {
+    slug,
+    source: initialAggregate,
+    loaded: initialAggregate !== undefined,
+    avg: initialAggregate?.avg ?? null,
+    count: initialAggregate?.count ?? 0,
+  };
 }
 
 /**
- * Derived star-rating badge ("4.0 ★") for a tour. Reads device-local reviews
- * after hydration (SSR-safe slot), re-reads on cross-tab storage changes, and
- * renders nothing at 0 reviews.
+ * Derived star-rating badge ("4.0 ★"). Hydrates from `initialAggregate` when
+ * the RSC page provides one (renders immediately, refetches only on change
+ * events); otherwise keeps the SSR-safe slot and fetches after mount. Never
+ * reads localStorage — `vn-reviews:changed` (same tab) and `storage`
+ * (cross-tab, pre-migration only) both trigger an API refetch.
  */
-export function TourRatingBadge({ slug }: TourRatingBadgeProps) {
+export function TourRatingBadge({ slug, initialAggregate }: TourRatingBadgeProps) {
   const t = useTranslations("destinations");
-  const [loaded, setLoaded] = useState(false);
-  const [avg, setAvg] = useState<number | null>(null);
-  const [count, setCount] = useState(0);
+  const [view, setView] = useState(() => toView(slug, initialAggregate));
+  // Soft navigation can hand the mounted badge a new slug/aggregate — realign
+  // during render (React's documented props-adjust-state pattern).
+  if (view.slug !== slug || view.source !== initialAggregate) {
+    setView(toView(slug, initialAggregate));
+  }
+  const hydrated = initialAggregate !== undefined;
 
   useEffect(() => {
     if (!slug) return;
-    const refresh = () => {
-      const aggregate = getAggregate(listReviews(), slug);
-      setAvg(aggregate?.avg ?? null);
-      setCount(aggregate?.count ?? 0);
-      setLoaded(true);
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const found = (await fetchRatingAggregates([slug]))[slug];
+        if (cancelled) return;
+        setView((previous) => ({
+          ...previous,
+          loaded: true,
+          avg: found?.avg ?? null,
+          count: found?.count ?? 0,
+        }));
+      } catch {
+        // 503/network — keep the last known render (initial props or slot)
+      }
     };
-    refresh();
+    if (!hydrated) void refresh();
     const onStorage = (event: StorageEvent) => {
-      if (event.key === REVIEWS_STORAGE_KEY || event.key === null) refresh();
+      if (event.key === REVIEWS_STORAGE_KEY || event.key === null) void refresh();
     };
     window.addEventListener("storage", onStorage);
     window.addEventListener(REVIEWS_CHANGED_EVENT, refresh);
     return () => {
+      cancelled = true;
       window.removeEventListener("storage", onStorage);
       window.removeEventListener(REVIEWS_CHANGED_EVENT, refresh);
     };
-  }, [slug]);
+  }, [slug, hydrated]);
 
   if (!slug) return null;
-  if (!loaded) {
+  if (!view.loaded) {
     return (
       <span
         data-testid="tour-rating-badge-slot"
@@ -57,15 +101,15 @@ export function TourRatingBadge({ slug }: TourRatingBadgeProps) {
       />
     );
   }
-  if (avg === null) return null;
+  if (view.avg === null) return null;
 
   return (
     <span
       data-testid="tour-rating-badge"
-      aria-label={t("ratingAria", { avg: formatRating(avg), count })}
+      aria-label={t("ratingAria", { avg: formatRating(view.avg), count: view.count })}
       className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-link tabular-nums"
     >
-      {formatRating(avg)}
+      {formatRating(view.avg)}
       <Star className="h-3 w-3 fill-current" aria-hidden />
     </span>
   );

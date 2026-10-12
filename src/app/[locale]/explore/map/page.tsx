@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
+import { getDb } from "@/lib/db/sqlite-store";
+import { getRatingAggregates } from "@/lib/reviews-db";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { DESTINATIONS_QUERY } from "@/sanity/queries/destinations";
 import {
@@ -47,6 +49,12 @@ export default async function MapPage({
   }));
   const missingCoords = items.some((item) => item.lat == null || item.lng == null);
 
+  // Batch AVG/COUNT for the list badges; storage degraded → `undefined` so
+  // every badge falls back to its own client-side `/api/ratings` fetch.
+  const aggregates = getDb() ? getRatingAggregates(items.map((item) => item.slug)) : null;
+  const aggregateFor = (slug: string) =>
+    aggregates ? (aggregates.get(slug) ?? null) : undefined;
+
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mb-8 text-center">
@@ -75,7 +83,7 @@ export default async function MapPage({
                 <h3 className="min-w-0 font-semibold group-hover:text-link transition-colors">
                   {item.name}
                 </h3>
-                <TourRatingBadge slug={item.slug} />
+                <TourRatingBadge slug={item.slug} initialAggregate={aggregateFor(item.slug)} />
               </div>
               {REGION_KEYS.includes(item.region as (typeof REGION_KEYS)[number]) && (
                 <p className="mt-1 text-xs text-muted-foreground">

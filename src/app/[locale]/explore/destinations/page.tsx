@@ -5,7 +5,9 @@ import {
   type Destination,
 } from "@/components/explore/destination-card";
 import { Link } from "@/i18n/navigation";
+import { getDb } from "@/lib/db/sqlite-store";
 import { buildPriceRangeLabels } from "@/lib/pricing";
+import { getRatingAggregates } from "@/lib/reviews-db";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import {
   DESTINATIONS_QUERY,
@@ -40,6 +42,13 @@ export default async function DestinationsPage({
   ]);
   const destinations = rawDestinations ?? [];
   const priceRanges = buildPriceRangeLabels(pricingDocs, locale, priceT("label"));
+  // Batch AVG/COUNT for the card badges; storage degraded → `undefined` per
+  // card so each badge falls back to its own client-side `/api/ratings` fetch.
+  const aggregates = getDb()
+    ? getRatingAggregates(destinations.map((dest: Destination) => dest.slug.current))
+    : null;
+  const aggregateFor = (slug: string) =>
+    aggregates ? (aggregates.get(slug) ?? null) : undefined;
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -84,6 +93,7 @@ export default async function DestinationsPage({
               destination={dest}
               actionLabel={t("viewDetails")}
               priceRange={priceRanges[dest.slug.current]}
+              aggregate={aggregateFor(dest.slug.current)}
             />
           ))}
         </div>
