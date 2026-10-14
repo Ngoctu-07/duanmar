@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Ghost, Send, X } from "lucide-react";
+import { Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -211,22 +211,16 @@ export function AssistantWidget() {
           className="relative size-[58px] rounded-none border-0 bg-transparent p-0 shadow-none hover:bg-transparent"
           onClick={() => setOpen((value) => !value)}
         >
-          <Ghost
+          <svg
+            viewBox="0 0 24 24"
+            data-testid="ghost-body"
             className="absolute inset-0 size-full text-primary"
             fill="currentColor"
-            strokeWidth={0}
+            fillRule="evenodd"
             aria-hidden
-          />
-          <span
-            aria-hidden
-            data-testid="ghost-eye"
-            className="absolute left-[37.5%] top-[41.5%] size-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
-          />
-          <span
-            aria-hidden
-            data-testid="ghost-eye"
-            className="absolute left-[62.5%] top-[41.5%] size-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
-          />
+          >
+            <path d="M7.528 20.472a1.6 1.6 0 012.277 0l1.057 1.056a1.6 1.6 0 002.276 0l1.057-1.056a1.6 1.6 0 012.277 0l1.114 1.114a1.4 1.4 0 002.414-1V10a8 8 0 00-16 0v10.586a1.4 1.4 0 002.414 1zM7.8 10.5a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0-2.4 0zM13.8 10.5a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0-2.4 0z" />
+          </svg>
         </Button>
       </div>
     </div>

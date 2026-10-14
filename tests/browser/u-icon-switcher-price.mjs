@@ -136,21 +136,20 @@ try {
   check("U4 click en → /en, en active fw 600–700 opacity=1", u4a && u4a.text === "en" && u4a.fw >= 600 && u4a.fw <= 700 && u4a.opacity === 1, JSON.stringify(u4a));
   check("U4 vi demoted (no aria-current, opacity≤0.65)", u4v && !u4v.current && u4v.opacity <= 0.65, JSON.stringify(u4v));
 
-  // --- U5 chatbot trigger (desktop /vi): ghost silhouette body + twin eye dots
+  // --- U5 chatbot trigger (desktop /vi): ghost body + punch-through eye holes
   await goto(page, "/vi");
   const u5 = await page.evaluate(() => {
     const b = document.querySelector('[data-testid="assistant-trigger"]');
     if (!b) return null;
     const r = b.getBoundingClientRect();
-    const eyes = [...b.querySelectorAll('[data-testid="ghost-eye"]')].map((el) => {
-      const s = el.getBoundingClientRect();
-      const cs = getComputedStyle(el);
-      return { w: Math.round(s.width), color: cs.backgroundColor, radius: cs.borderRadius };
-    });
-    return { w: r.width, h: r.height, eyes, noChatIcon: !b.querySelector("svg.lucide-message-square"), visible: Boolean(b.offsetParent), expanded: b.getAttribute("aria-expanded"), label: b.getAttribute("aria-label") };
+    const svg = b.querySelector('[data-testid="ghost-body"]');
+    const path = svg?.querySelector("path");
+    const d = path?.getAttribute("d") ?? "";
+    const scs = svg ? getComputedStyle(svg) : null;
+    return { w: r.width, h: r.height, subpaths: (d.match(/M/g) || []).length, arcs: (d.match(/a1\.2/g) || []).length, circles: svg?.querySelectorAll("circle").length ?? -1, fillRule: scs?.fillRule ?? "", fill: scs?.fill ?? "", visible: Boolean(b.offsetParent), expanded: b.getAttribute("aria-expanded"), label: b.getAttribute("aria-label") };
   });
   check("U5 trigger box 57–59 (expect 58 = 55 × 1.05)", u5 && u5.w >= 57 && u5.w <= 59 && u5.h >= 57 && u5.h <= 59, `w=${u5?.w} h=${u5?.h}`);
-  check("U5 twin white eye dots, no chat icon", u5 && u5.eyes.length === 2 && u5.eyes.every((e) => e.w >= 5 && e.w <= 7) && u5.noChatIcon, JSON.stringify(u5 && { eyes: u5.eyes, noChatIcon: u5.noChatIcon }));
+  check("U5 red body + 2 evenodd eye cutouts (single compound path)", u5 && u5.subpaths === 3 && u5.arcs === 4 && u5.circles === 0 && u5.fillRule === "evenodd", JSON.stringify(u5 && { subpaths: u5.subpaths, arcs: u5.arcs, circles: u5.circles, fillRule: u5.fillRule, fill: u5.fill }));
   check("U5 visible + aria-expanded=false + aria-label", u5 && u5.visible && u5.expanded === "false" && Boolean(u5.label), JSON.stringify(u5));
 
   // --- U6 mobile 375×812
