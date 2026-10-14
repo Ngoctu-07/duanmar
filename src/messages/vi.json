@@ -87,6 +87,10 @@
     "internationalTours": "Tour nước ngoài",
     "blog": "Blog"
   },
+  "quickLinks": {
+    "interactiveMap": "Bản đồ tương tác",
+    "howToBook": "Hướng dẫn đặt tour"
+  },
   "home": {
     "heroTitle": "Khám phá Việt Nam",
     "heroSubtitle": "Trải nghiệm vẻ đẹp, văn hóa và sự thân thiện của Việt Nam",
@@ -895,6 +899,55 @@
     "empty": "Hiện chưa có ưu đãi đang diễn ra — bạn quay lại sau nhé.",
     "viewTour": "Xem tour"
   },
+  "bookingSteps": {
+    "title": "Hướng dẫn đặt tour",
+    "subtitle": "Năm bước đơn giản từ lời chào đầu tiên đến ngày khởi hành — luôn có đội ngũ thật đồng hành cùng bạn.",
+    "hotlineLabel": "Hotline",
+    "steps": [
+      {
+        "title": "Tư vấn",
+        "body": "Tìm hiểu thông tin tour trên website, dùng AI Chatbot, hoặc liên hệ trực tiếp đội ngũ DUANMAR để được tư vấn."
+      },
+      {
+        "title": "Chọn tour & Thông tin",
+        "body": "Chọn mức độ thử thách, kịch bản lịch trình và gửi thông tin cá nhân."
+      },
+      {
+        "title": "Đặt cọc & Thanh toán",
+        "body": "Hoàn tất đặt cọc 20% hoặc thanh toán 100% để giữ chỗ."
+      },
+      {
+        "title": "Xác nhận",
+        "body": "Kiểm tra email xác nhận để nhận chi tiết tour và các mốc quan trọng từ DUANMAR."
+      },
+      {
+        "title": "Khởi hành & Đánh giá",
+        "body": "Khởi hành, tận hưởng chuyến đi và gửi đánh giá sau tour."
+      }
+    ],
+    "faq": [
+      {
+        "q": "1. Làm thế nào để đặt tour tại DỰ ÁN MAR?",
+        "a": "Hãy thực hiện theo năm bước dưới đây — tư vấn, thông tin, thanh toán, xác nhận, khởi hành."
+      },
+      {
+        "q": "2. Quy định về đặt cọc và thời hạn giữ chỗ như thế nào?",
+        "a": "Bạn giữ chỗ bằng đặt cọc tối thiểu 20% hoặc thanh toán 100%. Mỗi đơn được giữ chỗ tối đa 2 tuần; quá hạn mà chưa hoàn tất thanh toán, tiền cọc sẽ không được hoàn lại."
+      },
+      {
+        "q": "3. Tôi có cần chuẩn bị hay lưu ý đặc biệt gì về sức khỏe khi đăng ký tour không?",
+        "a": "Có — vui lòng ghi rõ tình trạng bệnh lý, vấn đề tim mạch/thần kinh hoặc các lưu ý sức khỏe đặc biệt ở Bước 2 để chúng tôi điều chỉnh kịch bản lịch trình phù hợp."
+      },
+      {
+        "q": "4. Sau khi đặt cọc thành công, làm sao để tôi xác nhận thông tin chuyến đi?",
+        "a": "Bạn sẽ nhận email xác nhận tự động gồm lịch trình chi tiết, hạn thanh toán số tiền còn lại và hướng dẫn an toàn — kèm email nhắc nhở trước ngày khởi hành."
+      },
+      {
+        "q": "5. Tôi có thể liên hệ hỗ trợ trực tiếp qua những kênh nào?",
+        "a": "Liên hệ qua Hotline/Zalo bên dưới, email, AI Chatbot hoặc live chat trên website — chúng tôi phản hồi trong vòng một ngày làm việc."
+      }
+    ]
+  },
   "news": {
     "title": "Tin tức & Câu chuyện",
     "subtitle": "Thông cáo báo chí và câu chuyện du lịch khắp Việt Nam",
@@ -950,40 +1003,6 @@
   "support": {
     "title": "Hỗ trợ & Câu hỏi thường gặp",
     "subtitle": "Trả lời những câu hỏi du khách thường gặp nhất",
-    "faqs": [
-      {
-        "q": "Tôi có cần visa để đến Việt Nam không?",
-        "a": "Nhiều quốc gia được miễn thị thực trong thời gian ngắn; phần còn lại thường có thể xin e-visa trực tuyến trước khi khởi hành. Quy định thay đổi thường xuyên — hãy kiểm tra cổng e-visa chính thức hoặc Đại sứ quán Việt Nam gần nhất với quốc tịch của bạn trước khi đặt vé."
-      },
-      {
-        "q": "Khi nào là thời điểm tốt nhất để đi?",
-        "a": "Việt Nam trải ba miền với khí hậu khác nhau. Nhìn chung tháng 12 đến tháng 4 khô ráo nhất ở phần lớn đất nước: miền Bắc dễ chịu từ tháng 10 đến tháng 4, miền Trung từ tháng 2 đến tháng 5, miền Nam từ tháng 12 đến tháng 4. Hãy xem dự báo từng vùng cho thời điểm bạn đi."
-      },
-      {
-        "q": "Tiền tệ gì được sử dụng?",
-        "a": "Đồng Việt Nam (VND) là tiền tệ địa phương. Tiền mặt hữu ích cho chợ, đồ ăn vặt và cửa hàng nhỏ; thẻ được chấp nhận rộng rãi ở khách sạn, nhà hàng và cửa hàng tại các thành phố lớn. ATM phổ biến ở thành phố và khu du lịch."
-      },
-      {
-        "q": "Di chuyển như thế nào?",
-        "a": "Chuyến bay nội địa ngắn kết nối các thành phố xa nhanh chóng, tàu hỏa chạy dọc bờ biển, xe khách đường dài giá rẻ. Trong thành phố có taxi, ứng dụng gọi xe và xe buýt. Với quãng đường ngắn, thuê xe máy và đi bộ cũng tiện."
-      },
-      {
-        "q": "Việt Nam có an toàn cho du khách không?",
-        "a": "Việt Nam nhìn chung an toàn cho du khách, tỷ lệ tội phạm bạo lực thấp. Cẩn thận túi xách ở nơi đông người, lưu ý khi qua đường đông xe, giữ hành lý bên mình. Nên mua bảo hiểm du lịch."
-      },
-      {
-        "q": "Điện thoại của tôi có dùng được không?",
-        "a": "SIM/eSIM địa phương có data giá rẻ, mua dễ dàng tại sân bay và cửa hàng tiện lợi. Wi-Fi phổ biến ở khách sạn, quán cà phê, nhà hàng. Mua từ nhà mạng chính thức và mang theo hộ chiếu khi đăng ký SIM."
-      },
-      {
-        "q": "Dùng ổ cắm gì?",
-        "a": "Việt Nam dùng điện 220V, 50Hz. Ổ cắm thường nhận hai chấu phẳng (loại A) hoặc hai chấu tròn (loại C) — hãy mang adapter đa năng nếu phích cắm của bạn khác."
-      },
-      {
-        "q": "Tôi có giao tiếp được không?",
-        "a": "Tiếng Việt là ngôn ngữ chính thức. Tiếng Anh phổ biến ở khu du lịch, khách sạn và các thành phố lớn; ở nơi khác, vài câu giao tiếp cơ bản và ứng dụng dịch sẽ giúp ích nhiều. Biển chỉ dẫn ở các điểm du lịch nổi tiếng thường có tiếng Anh."
-      }
-    ],
     "contactTitle": "Vẫn còn thắc mắc?",
     "contactText": "Đội ngũ chúng tôi sẵn lòng giải đáp mọi điều chưa có ở đây.",
     "contactCta": "Liên hệ chúng tôi"

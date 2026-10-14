@@ -99,10 +99,10 @@ try {
   check("U2 hero search adornment 20×20", u2a && near(u2a.w, 20) && near(u2a.h, 20), JSON.stringify(u2a));
   check("U2 hero adornment inside pl-10 content edge", u2a && u2a.left >= 0 && u2a.right <= u2a.inputLeft + 41, `left=${u2a?.left.toFixed(1)} right=${u2a?.right.toFixed(1)} edge=${(u2a.inputLeft + 40).toFixed(1)}`);
   const u2b = await page.$$eval("section.py-8 svg", (els) => els.map((el) => { const r = el.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height), stroke: getComputedStyle(el).strokeWidth }; }));
-  check("U2 quick-access icons ×5 all 24×24", u2b.length === 5 && u2b.every((s) => near(s.w, 24) && near(s.h, 24)), JSON.stringify(u2b));
+  check("U2 quick-access icons ×2 all 24×24", u2b.length === 2 && u2b.every((s) => near(s.w, 24) && near(s.h, 24)), JSON.stringify(u2b));
   check(
     "U2 hero + quick-access strokes ≤1.5 (S2, S3)",
-    Boolean(u2a) && fs(u2a.stroke) <= 1.5 && u2b.length === 5 && u2b.every((s) => fs(s.stroke) <= 1.5),
+    Boolean(u2a) && fs(u2a.stroke) <= 1.5 && u2b.length === 2 && u2b.every((s) => fs(s.stroke) <= 1.5),
     JSON.stringify({ hero: u2a?.stroke, quick: u2b.map((s) => s.stroke) })
   );
   await goto(page, "/vi/search");
@@ -136,19 +136,21 @@ try {
   check("U4 click en → /en, en active fw 600–700 opacity=1", u4a && u4a.text === "en" && u4a.fw >= 600 && u4a.fw <= 700 && u4a.opacity === 1, JSON.stringify(u4a));
   check("U4 vi demoted (no aria-current, opacity≤0.65)", u4v && !u4v.current && u4v.opacity <= 0.65, JSON.stringify(u4v));
 
-  // --- U5 chatbot trigger (desktop /vi)
+  // --- U5 chatbot trigger (desktop /vi): ghost silhouette body + twin eye dots
   await goto(page, "/vi");
   const u5 = await page.evaluate(() => {
     const b = document.querySelector('[data-testid="assistant-trigger"]');
     if (!b) return null;
     const r = b.getBoundingClientRect();
-    const svg = b.querySelector("svg");
-    const s = svg?.getBoundingClientRect();
-    return { w: r.width, h: r.height, sw: s?.width ?? 0, sh: s?.height ?? 0, stroke: svg ? getComputedStyle(svg).strokeWidth : "", visible: Boolean(b.offsetParent), expanded: b.getAttribute("aria-expanded"), label: b.getAttribute("aria-label") };
+    const eyes = [...b.querySelectorAll('[data-testid="ghost-eye"]')].map((el) => {
+      const s = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      return { w: Math.round(s.width), color: cs.backgroundColor, radius: cs.borderRadius };
+    });
+    return { w: r.width, h: r.height, eyes, noChatIcon: !b.querySelector("svg.lucide-message-square"), visible: Boolean(b.offsetParent), expanded: b.getAttribute("aria-expanded"), label: b.getAttribute("aria-label") };
   });
-  check("U5 trigger box 47–49 (expect 48 = 60% of 80)", u5 && u5.w >= 47 && u5.w <= 49 && u5.h >= 47 && u5.h <= 49, `w=${u5?.w} h=${u5?.h}`);
-  check("U5 trigger icon 23–25 (expect 24 = 60% of 40)", u5 && u5.sw >= 23 && u5.sw <= 25 && u5.sh >= 23 && u5.sh <= 25, `sw=${u5?.sw} sh=${u5?.sh}`);
-  check("U5 trigger icon stroke ≤1.5 (S4)", u5 && fs(u5.stroke) <= 1.5, u5?.stroke);
+  check("U5 trigger box 57–59 (expect 58 = 55 × 1.05)", u5 && u5.w >= 57 && u5.w <= 59 && u5.h >= 57 && u5.h <= 59, `w=${u5?.w} h=${u5?.h}`);
+  check("U5 twin white eye dots, no chat icon", u5 && u5.eyes.length === 2 && u5.eyes.every((e) => e.w >= 5 && e.w <= 7) && u5.noChatIcon, JSON.stringify(u5 && { eyes: u5.eyes, noChatIcon: u5.noChatIcon }));
   check("U5 visible + aria-expanded=false + aria-label", u5 && u5.visible && u5.expanded === "false" && Boolean(u5.label), JSON.stringify(u5));
 
   // --- U6 mobile 375×812
@@ -177,7 +179,7 @@ try {
     const r = b.getBoundingClientRect();
     return { w: r.width, h: r.height, right: r.right, bottom: r.bottom, vw: window.innerWidth, vh: window.innerHeight };
   });
-  check("U6 trigger 48±1, right≤375, bottom≤viewport", u6t && near(u6t.w, 48) && near(u6t.h, 48) && u6t.right <= u6t.vw && u6t.bottom <= u6t.vh, JSON.stringify(u6t));
+  check("U6 trigger 58±1, right≤375, bottom≤viewport", u6t && near(u6t.w, 58) && near(u6t.h, 58) && u6t.right <= u6t.vw && u6t.bottom <= u6t.vh, JSON.stringify(u6t));
   await page.screenshot({ path: `${OUT}/u-icons-01-mobile.png` });
 
   // --- U7 price prominence, homepage cards

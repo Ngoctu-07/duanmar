@@ -158,3 +158,27 @@
     box-shadow: var(--elevation-soft);
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Floating chatbot ghost silhouette (assistant-widget): slow vertical hover
+   bob. Transform-only keyframes + will-change keep it on the compositor;
+   disabled under prefers-reduced-motion.
+--------------------------------------------------------------------------- */
+@keyframes assistant-float {
+  0%,
+  100% {
+    transform: translateY(-8px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+}
+.animate-assistant-float {
+  animation: assistant-float 2.5s ease-in-out infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-assistant-float {
+    animation: none;
+  }
+}

@@ -34,12 +34,12 @@ type ContactNode = { label: string; value: string; href: string };
 
 /** Column heading token — synced with the homepage "Stories & Inspiration" title. */
 function ColumnHeading({ children }: { children: ReactNode }) {
-  return <h3 className="mb-4 text-3xl font-bold">{children}</h3>;
+  return <h3 className="mb-2 text-sm font-bold lg:mb-4 lg:text-3xl">{children}</h3>;
 }
 
-// Compact body link: text-sm + subtle opacity, full white on hover/focus.
+// Compact body link: text-xs on mobile, text-sm on lg + subtle opacity, full white on hover/focus.
 const linkClass =
-  "text-sm opacity-80 transition-opacity hover:opacity-100 focus-visible:opacity-100";
+  "text-xs lg:text-sm opacity-80 transition-opacity hover:opacity-100 focus-visible:opacity-100";
 
 export function Footer({
   socialLinks,
@@ -76,21 +76,21 @@ export function Footer({
 
   return (
     <footer className="bg-primary text-white print:hidden">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
-          <div>
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-5">
+          <div className="col-span-2 md:col-span-1">
             <BrandLogo size={72} variant="knockout" className="mb-3" />
             <h3 className="mb-3">
               <BrandWordmark className="text-3xl md:text-[2.5rem] font-bold tracking-tight leading-none" />
             </h3>
-            <p data-testid="footer-slogan" className="text-sm">
+            <p data-testid="footer-slogan" className="text-xs lg:text-sm">
               {slogan ?? tf("tagline")}
             </p>
           </div>
 
           <div>
             <ColumnHeading>{tf("tours")}</ColumnHeading>
-            <ul className="space-y-2">
+            <ul className="space-y-1.5 lg:space-y-2">
               {tourLinks.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className={linkClass}>
@@ -103,7 +103,7 @@ export function Footer({
 
           <div>
             <ColumnHeading>{tf("contact")}</ColumnHeading>
-            <ul className="space-y-2">
+            <ul className="space-y-1.5 lg:space-y-2">
               {contactItems.map((item, index) => (
                 <li key={`${item.id}-${index}`}>
                   <SocialAnchor
@@ -118,7 +118,7 @@ export function Footer({
 
           <div>
             <ColumnHeading>{tf("info")}</ColumnHeading>
-            <ul className="space-y-2">
+            <ul className="space-y-1.5 lg:space-y-2">
               {infoLinks.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className={linkClass}>
@@ -131,7 +131,7 @@ export function Footer({
 
           <div>
             <ColumnHeading>{tf("policies")}</ColumnHeading>
-            <ul className="space-y-2">
+            <ul className="space-y-1.5 lg:space-y-2">
               {policyLinks.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className={linkClass}>
@@ -143,9 +143,9 @@ export function Footer({
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col items-center gap-3 border-t border-white/20 pt-6 text-xs sm:flex-row sm:justify-between sm:text-left">
+        <div className="mt-8 flex flex-col items-center gap-2 border-t border-white/20 pt-4 text-xs sm:flex-row sm:justify-between sm:text-left lg:gap-3 lg:pt-6">
           <p>&copy; {new Date().getFullYear()} DuanMar. {tf("rights")}</p>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-2 lg:gap-4">
             <Link
               href="/support"
               className="hover:text-white/80 transition-colors"

@@ -87,6 +87,10 @@
     "internationalTours": "International Tours",
     "blog": "Blog"
   },
+  "quickLinks": {
+    "interactiveMap": "Interactive Map",
+    "howToBook": "How to Book"
+  },
   "home": {
     "heroTitle": "Discover Vietnam",
     "heroSubtitle": "Experience the beauty, culture, and warmth of Vietnam",
@@ -895,6 +899,54 @@
     "empty": "No active promotions right now — please check back soon.",
     "viewTour": "View tour"
   },
+  "bookingSteps": {
+    "title": "How to Book",
+    "subtitle": "Five simple steps from first hello to wheels-up — with a real human team behind every booking.",
+    "hotlineLabel": "Hotline",
+    "steps": [      {
+        "title": "Consultation",
+        "body": "Explore tour info on the website, use the AI Chatbot, or directly contact the DUANMAR team for consultation."
+      },
+      {
+        "title": "Selection & Details",
+        "body": "Select challenge level, itinerary script, and submit personal details."
+      },
+      {
+        "title": "Deposit & Payment",
+        "body": "Complete a 20% deposit or 100% full payment to secure the reservation."
+      },
+      {
+        "title": "Confirmation",
+        "body": "Check confirmation email for tour details and key milestones from DUANMAR."
+      },
+      {
+        "title": "Departure & Review",
+        "body": "Depart, enjoy the trip, and submit a post-tour review."
+      }
+    ],
+    "faq": [
+      {
+        "q": "1. How to book a tour with DUANMAR?",
+        "a": "Follow the five steps below — consultation, details, payment, confirmation, departure."
+      },
+      {
+        "q": "2. What are the deposit requirements and how long is my spot held?",
+        "a": "Reserve with a minimum 20% deposit or 100% full payment. Each reservation is held for up to 2 weeks; if payment is not completed before expiry, the deposit is non-refundable."
+      },
+      {
+        "q": "3. Do I need to prepare anything or note health concerns when booking?",
+        "a": "Yes — please note any medical conditions, heart or neurological issues, or other sensitive health concerns in Step 2 so we can tailor the itinerary script to you."
+      },
+      {
+        "q": "4. After a successful deposit, how do I confirm my trip details?",
+        "a": "You will receive an automated confirmation email with the full itinerary, remaining-balance deadline, and safety guidelines — plus a reminder email shortly before departure."
+      },
+      {
+        "q": "5. Which channels can I use to reach support directly?",
+        "a": "Reach us via Hotline/Zalo below, email, the AI Chatbot, or the website live chat — we reply within one business day."
+      }
+    ]
+  },
   "news": {
     "title": "News & Stories",
     "subtitle": "Press releases and travel stories from across Vietnam",
@@ -950,40 +1002,6 @@
   "support": {
     "title": "Support & FAQs",
     "subtitle": "Answers to the questions travelers ask most",
-    "faqs": [
-      {
-        "q": "Do I need a visa to visit Vietnam?",
-        "a": "Many nationalities can enter Vietnam visa-free for a limited period, and most others can apply online for an e-visa before departure. Requirements change often, so check the official e-visa portal or your nearest Vietnamese embassy for your nationality before booking flights."
-      },
-      {
-        "q": "When is the best time to visit?",
-        "a": "Vietnam spans three regions with different climates. Generally December to April is the driest period across much of the country: the north is pleasant from October to April, the centre from February to May, and the south from December to April. Check the regional forecast for your travel window."
-      },
-      {
-        "q": "What currency do you accept?",
-        "a": "The Vietnamese đồng (VND) is the local currency. Cash is handy for markets, street food and small shops; cards are widely accepted at hotels, restaurants and stores in major cities. ATMs are common in cities and tourist areas."
-      },
-      {
-        "q": "How do I get around?",
-        "a": "Short domestic flights connect distant cities quickly, trains run along the coast, and long-distance buses are budget-friendly. In cities you can use taxis, ride-hailing apps and public buses. For shorter hops, motorbike rentals and walking work well."
-      },
-      {
-        "q": "Is Vietnam safe for travelers?",
-        "a": "Vietnam is generally safe for visitors, with low violent crime. Take normal precautions against pickpocketing in crowded places, be careful crossing busy streets, and keep an eye on your belongings. Travel insurance is recommended."
-      },
-      {
-        "q": "Will my phone work there?",
-        "a": "Local SIM cards and eSIMs with data are affordable and widely available at airports and convenience stores. Wi-Fi is common in hotels, cafes and restaurants. Buy from official carriers and keep your passport handy for SIM registration."
-      },
-      {
-        "q": "What power plugs are used?",
-        "a": "Vietnam runs on 220V, 50Hz power. Sockets commonly accept two flat pins (type A) or two round pins (type C) — bring a universal adapter if your plugs differ."
-      },
-      {
-        "q": "Will I be able to communicate?",
-        "a": "Vietnamese is the official language. English is widely spoken in tourist areas, hotels and larger cities; elsewhere a few basic phrases and a translation app go a long way. Signs at popular destinations often include English."
-      }
-    ],
     "contactTitle": "Still have questions?",
     "contactText": "Our team is happy to help with anything not covered here.",
     "contactCta": "Contact us"

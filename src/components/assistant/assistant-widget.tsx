@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { MessageSquare, Send, X } from "lucide-react";
+import { Ghost, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -201,17 +201,34 @@ export function AssistantWidget() {
         </section>
       )}
 
-      <Button
-        data-testid="assistant-trigger"
-        aria-label={open ? t("close") : t("open")}
-        aria-expanded={open}
-        aria-controls={open ? panelId : undefined}
-        size="icon"
-        className="size-12 rounded-full shadow-soft"
-        onClick={() => setOpen((value) => !value)}
-      >
-        <MessageSquare className="size-6 stroke-[1.5]" aria-hidden />
-      </Button>
+      <div className="animate-assistant-float relative size-[58px] transition-all duration-300 hover:scale-110 hover:drop-shadow-[0_4px_14px_rgba(127,29,29,0.55)]">
+        <Button
+          data-testid="assistant-trigger"
+          aria-label={open ? t("close") : t("open")}
+          aria-expanded={open}
+          aria-controls={open ? panelId : undefined}
+          size="icon"
+          className="relative size-[58px] rounded-none border-0 bg-transparent p-0 shadow-none hover:bg-transparent"
+          onClick={() => setOpen((value) => !value)}
+        >
+          <Ghost
+            className="absolute inset-0 size-full text-primary"
+            fill="currentColor"
+            strokeWidth={0}
+            aria-hidden
+          />
+          <span
+            aria-hidden
+            data-testid="ghost-eye"
+            className="absolute left-[37.5%] top-[41.5%] size-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+          />
+          <span
+            aria-hidden
+            data-testid="ghost-eye"
+            className="absolute left-[62.5%] top-[41.5%] size-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+          />
+        </Button>
+      </div>
     </div>
   );
 }
