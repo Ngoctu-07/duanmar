@@ -29,12 +29,13 @@ const RDP_THEME: CSSProperties = {
   "--rdp-disabled-opacity": "0.6",
 } as CSSProperties;
 
-/** Room for the day number plus the spots-left line under it (7×46 fits 375px). */
+/** Room for the day number plus the spots-left line under it (compact 60px
+    cells keep badges legible without excess whitespace). */
 const CAPACITY_CELL: CSSProperties = {
   "--rdp-day-width": "46px",
-  "--rdp-day-height": "56px",
+  "--rdp-day-height": "60px",
   "--rdp-day_button-width": "44px",
-  "--rdp-day_button-height": "54px",
+  "--rdp-day_button-height": "58px",
 } as CSSProperties;
 
 interface BadgeInfo {
@@ -129,14 +130,14 @@ export function TravelDateField({
     typeof localeLabel === "function" ? localeLabel : defaultLabelDayButton;
 
   return (
-    <Field id="booking-travel-date" label={t("travelDateLabel")} error={error}>
+    <Field id="booking-travel-date" label={t("travelDateLabel")} error={error} hideLabel>
       <CapacityContext.Provider value={badgeFor}>
         <div
           id="booking-travel-date"
           role="group"
           aria-label={t("travelDateLabel")}
           aria-describedby={describedBy("booking-travel-date", error)}
-          className="w-fit rounded-lg border bg-background p-2"
+          className="w-full max-w-none rounded-lg border bg-background p-6"
           style={{ ...(capacity ? CAPACITY_CELL : {}), ...RDP_THEME }}
         >
           {ready ? (
@@ -163,6 +164,16 @@ export function TravelDateField({
                 },
               }}
               classNames={{
+                root: "w-full",
+                months: "w-full max-w-none",
+                month: "w-full",
+                month_grid: "w-full",
+                weekdays: "grid w-full grid-cols-7 gap-y-3.5 text-center",
+                weekday:
+                  "flex w-full items-center justify-center text-muted-foreground",
+                weeks: "w-full",
+                week: "grid w-full grid-cols-7 gap-y-3.5 text-center",
+                day: "flex min-h-[60px] w-full items-center justify-center",
                 day_button:
                   "flex flex-col items-center justify-center gap-0.5 rounded-full text-sm text-inherit transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-link disabled:cursor-not-allowed",
                 selected:
@@ -172,7 +183,6 @@ export function TravelDateField({
                 outside: "text-muted-foreground",
                 caption_label: "text-sm font-semibold",
                 month_caption: "flex h-9 items-center justify-center",
-                weekday: "text-muted-foreground",
               }}
             />
           ) : (

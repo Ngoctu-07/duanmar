@@ -49,7 +49,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const destination = await getDestination(slug);
   if (!destination) return {};
   const tourName = resolveLocaleString(destination.name, locale) ?? slug;
-  const tourDescription = resolveLocaleString(destination.description, locale);
+  const cleanMeta = (value: unknown): string | null =>
+    typeof value === "string" && value.trim() !== "" ? value : null;
+  const tourDescription =
+    (locale === "en" ? cleanMeta(destination.descriptionEn) : null) ??
+    resolveLocaleString(destination.description, locale);
   return {
     title: `${tourName} | DuanMar`,
     description: tourDescription?.slice(0, 160),
@@ -83,22 +87,29 @@ export default async function DestinationDetailPage({ params }: PageProps) {
   }
 
   const tiers = mapPricingTiers(pricingDoc, locale);
-  // Bilingual hydration: CMS `{vi,en}` objects (or legacy plain strings)
-  // resolve to the active locale, falling back to Vietnamese — never blank.
+  // Base fields are the primary Vietnamese source (VI renders them
+  // directly); EN renders descriptionEn/itineraryEn with base fallback.
+  const cleanText = (value: unknown): string | null =>
+    typeof value === "string" && value.trim() !== "" ? value : null;
   const tourName = resolveLocaleString(destination.name, locale) ?? slug;
-  const tourDescription = resolveLocaleString(destination.description, locale);
+  const tourDescription =
+    (locale === "en" ? cleanText(destination.descriptionEn) : null) ??
+    resolveLocaleString(destination.description, locale);
   interface RawItineraryDay {
     dayTitle: LocaleString;
     meals?: LocaleString | null;
     details?: LocaleBlocks;
   }
-  const itineraryDays: ItineraryDay[] = ((destination.itinerary ?? []) as RawItineraryDay[]).map(
-    (day) => ({
-      dayTitle: resolveLocaleString(day.dayTitle, locale) ?? "",
-      meals: resolveLocaleString(day.meals ?? null, locale),
-      details: resolveLocaleBlocks(day.details, locale),
-    })
-  );
+  const nonEmptyDays = (value: unknown): RawItineraryDay[] | null =>
+    Array.isArray(value) && value.length > 0 ? (value as RawItineraryDay[]) : null;
+  const rawItineraryDays =
+    (locale === "en" ? nonEmptyDays(destination.itineraryEn) : null) ??
+    ((destination.itinerary ?? []) as RawItineraryDay[]);
+  const itineraryDays: ItineraryDay[] = rawItineraryDays.map((day) => ({
+    dayTitle: resolveLocaleString(day.dayTitle, locale) ?? "",
+    meals: resolveLocaleString(day.meals ?? null, locale),
+    details: resolveLocaleBlocks(day.details, locale),
+  }));
   const hasItinerary = itineraryDays.length > 0;
   const highlights = resolveLocaleList(destination.highlights, locale);
   const included = resolveLocaleList(destination.inclusions, locale);
@@ -124,93 +135,96 @@ export default async function DestinationDetailPage({ params }: PageProps) {
 
       <div
         className={cn(
-          "mt-8 grid grid-cols-1 gap-8",
+          "mt-8 grid grid-cols-1 items-start gap-8",
           hasItinerary ? "lg:grid-cols-2 lg:gap-10" : "max-w-3xl"
         )}
       >
-        {/* Overview: identity, description, price and reviews. */}
-        <div>
-          <div className="mb-3 flex items-center gap-3">
-            <span className="rounded-full border px-3 py-1 text-xs font-medium capitalize">
-              {destination.country?.[locale as "vi" | "en"] ??
-                (destination.category === "domestic"
-                  ? t("vietnam")
-                  : t(destination.region as "north" | "central" | "south"))}
-            </span>
-            <TourAttributeBadges isSpecialTour={destination.isSpecialTour} />
-            <BookTicketButton slug={destination.slug.current} />
-          </div>
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <h1 className="min-w-0 text-4xl font-bold">{tourName}</h1>
-            <TourRatingBadge slug={slug} initialAggregate={initialAggregate} />
-          </div>
-          {tourDescription && (
-            <p className="text-lg text-muted-foreground whitespace-pre-line">
-              {tourDescription}
-            </p>
-          )}
-          {highlights.length > 0 && (
-            <section aria-label={t("highlights")} className="mt-6">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-link">
-                {t("highlights")}
-              </h2>
-              <ul className="mt-3 space-y-2">
-                {highlights.map((item, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm">
-                    <span aria-hidden className="mt-0.5 text-link">✓</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+        {/* Left column: overview + price + reviews in one wrapper so right-
+            column accordion expansion never stretches or pushes this column. */}
+        <div className="flex min-w-0 flex-col gap-6">
+          <div>
+            <div className="mb-3 flex items-center gap-3">
+              <span className="rounded-full border px-3 py-1 text-xs font-medium capitalize">
+                {destination.country?.[locale as "vi" | "en"] ??
+                  (destination.category === "domestic"
+                    ? t("vietnam")
+                    : t(destination.region as "north" | "central" | "south"))}
+              </span>
+              <TourAttributeBadges isSpecialTour={destination.isSpecialTour} />
+              <BookTicketButton slug={destination.slug.current} />
+            </div>
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <h1 className="min-w-0 text-4xl font-bold">{tourName}</h1>
+              <TourRatingBadge slug={slug} initialAggregate={initialAggregate} />
+            </div>
+            {tourDescription && (
+              <p className="text-lg text-muted-foreground whitespace-pre-line">
+                {tourDescription}
+              </p>
+            )}
+            {highlights.length > 0 && (
+              <section aria-label={t("highlights")} className="mt-6">
+                <h2 className="text-xs font-semibold uppercase tracking-widest text-link">
+                  {t("highlights")}
+                </h2>
+                <ul className="mt-3 space-y-2">
+                  {highlights.map((item, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <span aria-hidden className="mt-0.5 text-link">✓</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
-          <PriceBlock tiers={tiers} locale={locale} />
+            <PriceBlock tiers={tiers} locale={locale} />
 
-          {(included.length > 0 || excluded.length > 0) && (
-            <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {included.length > 0 && (
-                <div className="rounded-xl border bg-card p-5">
-                  <h2 className="text-xs font-semibold uppercase tracking-widest text-link">
-                    {t("included")}
-                  </h2>
-                  <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm">
-                    {included.map((item, index) => (
-                      <li key={index}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {excluded.length > 0 && (
-                <div className="rounded-xl border bg-card p-5">
-                  <h2 className="text-xs font-semibold uppercase tracking-widest text-link">
-                    {t("excluded")}
-                  </h2>
-                  <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm">
-                    {excluded.map((item, index) => (
-                      <li key={index}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </section>
-          )}
+            {(included.length > 0 || excluded.length > 0) && (
+              <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {included.length > 0 && (
+                  <div className="rounded-xl border bg-card p-5">
+                    <h2 className="text-xs font-semibold uppercase tracking-widest text-link">
+                      {t("included")}
+                    </h2>
+                    <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm">
+                      {included.map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {excluded.length > 0 && (
+                  <div className="rounded-xl border bg-card p-5">
+                    <h2 className="text-xs font-semibold uppercase tracking-widest text-link">
+                      {t("excluded")}
+                    </h2>
+                    <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm">
+                      {excluded.map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </section>
+            )}
+          </div>
+          {/* key=slug: soft-nav to another tour remounts the section instead of
+              briefly showing the previous tour's list while the refetch runs. */}
+          <CustomerReviews
+            key={slug}
+            tourSlug={slug}
+            locale={locale}
+            initialReviews={initialReviews}
+          />
         </div>
 
         {/* Right column: day-by-day itinerary (hidden until CMS days exist). */}
         {hasItinerary && (
-          <ItineraryAccordion title={t("itinerary.title")} days={itineraryDays} />
+          <div className="flex min-w-0 flex-col gap-6">
+            <ItineraryAccordion title={t("itinerary.title")} days={itineraryDays} />
+          </div>
         )}
-
-        {/* Own grid item so a long review list never pushes the itinerary off-screen on mobile. */}
-        {/* key=slug: soft-nav to another tour remounts the section instead of
-            briefly showing the previous tour's list while the refetch runs. */}
-        <CustomerReviews
-          key={slug}
-          tourSlug={slug}
-          locale={locale}
-          initialReviews={initialReviews}
-        />
       </div>
     </div>
   );

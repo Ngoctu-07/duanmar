@@ -105,9 +105,9 @@ check("H6 capacity → spots-left badge under in-window days", () => {
   assert.equal(html.includes("6 chỗ trống"), true);
 });
 
-check("H6 capacity grows the cell (46×56), no-capacity keeps rdp defaults", () => {
+check("H6 capacity grows the cell (46×60), no-capacity keeps rdp defaults", () => {
   assert.match(render({ capacity }), /--rdp-day-width:\s*46px/);
-  assert.match(render({ capacity }), /--rdp-day-height:\s*56px/);
+  assert.match(render({ capacity }), /--rdp-day-height:\s*60px/);
   assert.equal(/--rdp-day-width/.test(render({ capacity: null })), false);
 });
 

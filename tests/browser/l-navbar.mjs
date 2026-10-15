@@ -5,8 +5,8 @@ import { dismissPromo } from "../helpers/promo.mjs";
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
 const vi = JSON.parse(readFileSync(new URL("../../src/messages/vi.json", import.meta.url), "utf8"));
-const LABELS = [vi.common.home, vi.common.domesticTours, vi.common.internationalTours, vi.common.blog, vi.common.howToBook, vi.common.deals];
-const HREFS = ["/vi", "/vi/tours/domestic", "/vi/tours/international", "/vi/blog", "/vi/support#how-to-book", "/vi/deals"];
+const LABELS = [vi.common.home, vi.common.domesticTours, vi.common.internationalTours, vi.common.deals, vi.common.howToBook, vi.common.blog];
+const HREFS = ["/vi", "/vi/tours/domestic", "/vi/tours/international", "/vi/deals", "/vi/support#how-to-book", "/vi/blog"];
 const LEGACY = ["/vi/explore", "/vi/plan-your-trip", "/vi/culture", "/vi/news"];
 
 const { getBrowser, getPage, closeBrowser } = await import(
@@ -72,9 +72,9 @@ try {
   check("L4 all six h1 texts distinct", new Set(pages.map((p) => p.h1)).size === 6, JSON.stringify(pages.map((p) => p.h1)));
   check("L4 home h1 non-empty (CMS hero fallback)", pages[0].h1.length > 0, pages[0].h1);
   check("L4 domestic/international h1 from i18n", pages[1].h1 === vi.tours.domestic.title && pages[2].h1 === vi.tours.international.title, `${pages[1].h1} | ${pages[2].h1}`);
-  check("L4 blog h1 from i18n", pages[3].h1 === vi.blog.title, pages[3].h1);
+  check("L4 blog h1 from i18n", pages[5].h1 === vi.blog.title, pages[5].h1);
   check("L4 how-to-book resolves to support h1", pages[4].h1 === vi.support.title, pages[4].h1);
-  check("L4 deals h1 from i18n", pages[5].h1 === vi.deals.title, pages[5].h1);
+  check("L4 deals h1 from i18n", pages[3].h1 === vi.deals.title, pages[3].h1);
 
   // --- L5 header chrome preserved
   await page.setViewport({ width: 1280, height: 900 });

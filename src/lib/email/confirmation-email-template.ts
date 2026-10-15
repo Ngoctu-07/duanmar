@@ -122,9 +122,9 @@ export function renderConfirmationEmail(
       <td align="center">
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
           <tr>
-            <td style="background:#166534;padding:24px 32px;">
+            <td style="background:#7F1D1D;padding:24px 32px;">
               <div style="font-size:22px;font-weight:bold;color:#ffffff;">DuanMar</div>
-              <div style="font-size:12px;color:#bbf7d0;margin-top:4px;">Tour Booking Confirmation / Xác nhận đặt tour</div>
+              <div style="font-size:12px;color:#fecaca;margin-top:4px;">Tour Booking Confirmation / Xác nhận đặt tour</div>
             </td>
           </tr>
           <tr>
@@ -151,7 +151,7 @@ export function renderConfirmationEmail(
               <div style="margin-top:24px;">
                 <div style="font-size:14px;color:#111827;line-height:1.6;">${escapeHtml(EMAIL_CLOSING_EN)}</div>
                 <div style="font-size:14px;color:#111827;line-height:1.6;margin-top:6px;">${escapeHtml(EMAIL_CLOSING_VI)}</div>
-                <div style="font-size:14px;font-weight:bold;color:#166534;margin-top:16px;">${escapeHtml(EMAIL_SIGN_OFF)}</div>
+                <div style="font-size:14px;font-weight:bold;color:#7F1D1D;margin-top:16px;">${escapeHtml(EMAIL_SIGN_OFF)}</div>
               </div>
             </td>
           </tr>

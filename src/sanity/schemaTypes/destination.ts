@@ -1,10 +1,55 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 
-// Bilingual editorial shape: `{ vi, en }`. Vietnamese is the authoring
-// language (required where the legacy single-language field was required);
-// English is optional — the frontend falls back to `vi` when `en` is empty.
-// Legacy plain-string docs are migrated by
-// `scripts/backfill-destination-localization.mjs` (string → `{ vi }`).
+// Shared monolingual day shape reused by the base `itinerary` field (primary
+// Vietnamese source) and the explicit `itineraryEn` expansion field below
+// (safe, non-breaking: base field definitions are untouched).
+const itineraryDayMember = defineArrayMember({
+  name: "day",
+  title: "Day",
+  type: "object",
+  fields: [
+    defineField({
+      name: "dayTitle",
+      title: "Day title",
+      type: "string",
+      description: 'Full row heading, e.g. "Ngày 1: Tp. Hồ Chí Minh → Sài Gòn..."',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "meals",
+      title: "Meals",
+      type: "string",
+      description: 'Shown under the title, e.g. "Ăn sáng, trưa, tối". Leave empty when none.',
+    }),
+    defineField({
+      name: "details",
+      title: "Details",
+      type: "array",
+      description:
+        "Main activities for the day — revealed when the row is expanded. Paragraphs and lists only: headings are disabled so a day can never inject a stray H1 into the page outline.",
+      of: [
+        {
+          type: "block",
+          styles: [{ title: "Normal", value: "normal" }],
+          lists: [
+            { title: "Bullet", value: "bullet" },
+            { title: "Numbered", value: "number" },
+          ],
+          marks: {
+            decorators: [
+              { title: "Strong", value: "strong" },
+              { title: "Emphasis", value: "em" },
+            ],
+          },
+        },
+      ],
+    }),
+  ],
+  preview: {
+    select: { title: "dayTitle", subtitle: "meals" },
+  },
+});
+
 export default defineType({
   name: "destination",
   title: "Destination",
@@ -12,21 +57,15 @@ export default defineType({
   fields: [
     defineField({
       name: "name",
-      title: "Name (tour title, bilingual)",
-      type: "object",
+      title: "Name",
+      type: "string",
       validation: (rule) => rule.required(),
-      description:
-        "Tour title in both languages. Existing single-language titles migrate to Tiếng Việt.",
-      fields: [
-        defineField({ name: "vi", title: "Tiếng Việt", type: "string", validation: (rule) => rule.required() }),
-        defineField({ name: "en", title: "English", type: "string" }),
-      ],
     }),
     defineField({
       name: "slug",
       title: "Slug",
       type: "slug",
-      options: { source: "name.vi", maxLength: 96 },
+      options: { source: "name", maxLength: 96 },
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -85,134 +124,56 @@ export default defineType({
     }),
     defineField({
       name: "description",
-      title: "Description (overview, bilingual)",
-      type: "object",
-      description: "Tour overview shown under the title on the detail page.",
-      fields: [
-        defineField({ name: "vi", title: "Tiếng Việt", type: "text", rows: 3 }),
-        defineField({ name: "en", title: "English", type: "text", rows: 3 }),
-      ],
+      title: "Description",
+      type: "text",
+      rows: 3,
+      description:
+        "Primary Vietnamese overview (VI locale renders this directly).",
     }),
     defineField({
       name: "highlights",
-      title: "Highlights (bilingual)",
-      type: "object",
+      title: "Highlights",
+      type: "array",
       description: "Bullet highlights shown on the detail page. Leave empty to hide.",
-      fields: [
-        defineField({ name: "vi", title: "Tiếng Việt", type: "array", of: [{ type: "string" }] }),
-        defineField({ name: "en", title: "English", type: "array", of: [{ type: "string" }] }),
-      ],
+      of: [{ type: "string" }],
     }),
     defineField({
       name: "inclusions",
-      title: "Inclusions (bilingual)",
-      type: "object",
+      title: "Inclusions",
+      type: "array",
       description: "What's included in the tour price. Leave empty to hide.",
-      fields: [
-        defineField({ name: "vi", title: "Tiếng Việt", type: "array", of: [{ type: "string" }] }),
-        defineField({ name: "en", title: "English", type: "array", of: [{ type: "string" }] }),
-      ],
+      of: [{ type: "string" }],
     }),
     defineField({
       name: "exclusions",
-      title: "Exclusions (bilingual)",
-      type: "object",
+      title: "Exclusions",
+      type: "array",
       description: "What's NOT included in the tour price. Leave empty to hide.",
-      fields: [
-        defineField({ name: "vi", title: "Tiếng Việt", type: "array", of: [{ type: "string" }] }),
-        defineField({ name: "en", title: "English", type: "array", of: [{ type: "string" }] }),
-      ],
+      of: [{ type: "string" }],
     }),
     defineField({
       name: "itinerary",
       title: "Itinerary",
       type: "array",
       description:
-        "Day-by-day program shown in the right column of the tour detail page. Listed in order; leave empty to hide the block (page falls back to a single column).",
-      of: [
-        defineArrayMember({
-          name: "day",
-          title: "Day",
-          type: "object",
-          fields: [
-            defineField({
-              name: "dayTitle",
-              title: "Day title (bilingual)",
-              type: "object",
-              validation: (rule) => rule.required(),
-              description: 'Full row heading, e.g. "Ngày 1: Tp. Hồ Chí Minh → Sài Gòn..."',
-              fields: [
-                defineField({ name: "vi", title: "Tiếng Việt", type: "string", validation: (rule) => rule.required() }),
-                defineField({ name: "en", title: "English", type: "string" }),
-              ],
-            }),
-            defineField({
-              name: "meals",
-              title: "Meals (bilingual)",
-              type: "object",
-              description: 'Shown under the title, e.g. "Ăn sáng, trưa, tối". Leave empty when none.',
-              fields: [
-                defineField({ name: "vi", title: "Tiếng Việt", type: "string" }),
-                defineField({ name: "en", title: "English", type: "string" }),
-              ],
-            }),
-            defineField({
-              name: "details",
-              title: "Details (bilingual)",
-              type: "object",
-              description:
-                "Main activities for the day — revealed when the row is expanded. Paragraphs and lists only: headings are disabled so a day can never inject a stray H1 into the page outline.",
-              fields: [
-                defineField({
-                  name: "vi",
-                  title: "Tiếng Việt",
-                  type: "array",
-                  of: [
-                    {
-                      type: "block",
-                      styles: [{ title: "Normal", value: "normal" }],
-                      lists: [
-                        { title: "Bullet", value: "bullet" },
-                        { title: "Numbered", value: "number" },
-                      ],
-                      marks: {
-                        decorators: [
-                          { title: "Strong", value: "strong" },
-                          { title: "Emphasis", value: "em" },
-                        ],
-                      },
-                    },
-                  ],
-                }),
-                defineField({
-                  name: "en",
-                  title: "English",
-                  type: "array",
-                  of: [
-                    {
-                      type: "block",
-                      styles: [{ title: "Normal", value: "normal" }],
-                      lists: [
-                        { title: "Bullet", value: "bullet" },
-                        { title: "Numbered", value: "number" },
-                      ],
-                      marks: {
-                        decorators: [
-                          { title: "Strong", value: "strong" },
-                          { title: "Emphasis", value: "em" },
-                        ],
-                      },
-                    },
-                  ],
-                }),
-              ],
-            }),
-          ],
-          preview: {
-            select: { title: "dayTitle.vi", subtitle: "meals.vi" },
-          },
-        }),
-      ],
+        "Day-by-day program shown in the right column of the tour detail page. Primary Vietnamese source (VI locale renders this directly). Listed in order; leave empty to hide the block (page falls back to a single column).",
+      of: [itineraryDayMember],
+    }),
+    defineField({
+      name: "descriptionEn",
+      title: "Description (English)",
+      type: "text",
+      rows: 3,
+      description:
+        "English tour overview. Leave empty to fall back to Description (Vietnamese) — never leaves a blank box.",
+    }),
+    defineField({
+      name: "itineraryEn",
+      title: "Itinerary (English)",
+      type: "array",
+      description:
+        "English day-by-day program. Falls back to the base Itinerary (Vietnamese) when empty.",
+      of: [itineraryDayMember],
     }),
     defineField({
       name: "galleryImages",
@@ -256,6 +217,6 @@ export default defineType({
     }),
   ],
   preview: {
-    select: { title: "name.vi", subtitle: "region", media: "galleryImages" },
+    select: { title: "name", subtitle: "region", media: "galleryImages" },
   },
 });

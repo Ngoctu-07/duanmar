@@ -16,9 +16,9 @@ const navItems = [
   { key: "home", href: "/" },
   { key: "domesticTours", href: "/tours/domestic" },
   { key: "internationalTours", href: "/tours/international" },
-  { key: "blog", href: "/blog" },
-  { key: "howToBook", href: "/support#how-to-book" },
   { key: "deals", href: "/deals" },
+  { key: "howToBook", href: "/support#how-to-book" },
+  { key: "blog", href: "/blog" },
 ];
 
 export function Header() {
@@ -51,8 +51,8 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 print:hidden">
-      <div className="container mx-auto flex h-16 items-center justify-between px-3 sm:px-4">
+    <header className="sticky top-0 z-50 w-full overflow-x-clip border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 print:hidden">
+      <div className="container mx-auto flex h-16 min-w-0 items-center justify-between px-3 sm:px-4">
         <div className="flex items-center gap-1">
           <Link href="/" aria-label="DuanMar" onClick={handleHomeClick} className="flex items-center gap-2">
             <span className="relative inline-flex h-9 w-9 shrink-0">
@@ -76,14 +76,14 @@ export function Header() {
           </Link>
         </div>
 
-        <nav className="hidden md:flex items-center space-x-6">
+        <nav aria-label="Primary" className="hidden min-w-0 flex-1 items-center justify-center gap-8 md:flex">
           {navItems.map((item) => (
             <Link
               key={item.key}
               href={item.href}
               onClick={item.href === "/" ? handleHomeClick : undefined}
               aria-current={isActive(item.href) ? "page" : undefined}
-              className={`text-sm ${linkClass(item.href)}`}
+              className={`whitespace-nowrap text-sm ${linkClass(item.href)}`}
             >
               {t(item.key as keyof typeof t)}
             </Link>

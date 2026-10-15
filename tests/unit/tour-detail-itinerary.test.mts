@@ -68,14 +68,13 @@ check("schema: destination document exposes an itinerary array", () => {
   assert.ok(schema.includes('name: "details"'), "details field missing");
 });
 
-check("schema: dayTitle required, details is a Portable Text block array", () => {
+check("schema: dayTitle required string, details is a Portable Text block array", () => {
   const dayBlock = schema.slice(schema.indexOf('name: "dayTitle"'));
   assert.ok(
     /name: "dayTitle"[\s\S]{0,200}rule\.required\(\)/.test(dayBlock),
     "dayTitle must be required"
   );
-  assert.ok(dayBlock.includes('name: "vi"'), "dayTitle needs a vi subfield");
-  assert.ok(dayBlock.includes('name: "en"'), "dayTitle needs an en subfield");
+  assert.ok(dayBlock.includes('type: "string"'), "dayTitle must be an unlocalized string");
   const detailsField = schema.slice(schema.indexOf('name: "details"'));
   assert.ok(detailsField.includes('type: "block"'), "details must be a Portable Text block array");
   assert.ok(
@@ -85,23 +84,51 @@ check("schema: dayTitle required, details is a Portable Text block array", () =>
   assert.ok(detailsField.includes('value: "bullet"'), "bullet lists must stay available");
 });
 
-check("schema: studio row preview titles days by dayTitle.vi", () => {
+check("schema: studio row preview titles days by plain dayTitle", () => {
   assert.ok(
-    schema.includes('select: { title: "dayTitle.vi", subtitle: "meals.vi" }'),
+    schema.includes('select: { title: "dayTitle", subtitle: "meals" }'),
     "day preview missing"
   );
 });
 
-check("schema: tour name/description/highlights/inclusions/exclusions are bilingual", () => {
+check("schema: tour name/description/highlights/inclusions/exclusions are unlocalized", () => {
   for (const field of ["highlights", "inclusions", "exclusions"]) {
     assert.ok(schema.includes(`name: "${field}"`), `${field} field missing`);
   }
   const nameBlock = schema.slice(schema.indexOf('name: "name"'));
-  assert.ok(nameBlock.includes('name: "vi"') && nameBlock.includes('name: "en"'), "name must be {vi,en}");
-  assert.ok(schema.includes('source: "name.vi"'), "slug source must follow name.vi");
+  assert.ok(nameBlock.includes('type: "string"'), "name must be an unlocalized string");
+  assert.ok(!schema.includes('source: "name.vi"'), "slug source must not follow name.vi");
+  assert.ok(schema.includes('source: "name"'), "slug source must follow name");
 });
 
 // --- GROQ projection ------------------------------------------------------------
+
+check("schema: explicit descriptionEn + itineraryEn fields, no redundant _vi fields", () => {
+  for (const field of ["descriptionEn", "itineraryEn"]) {
+    assert.ok(schema.includes(`name: "${field}"`), `${field} field missing`);
+  }
+  for (const field of ["descriptionVi", "itineraryVi"]) {
+    assert.ok(!schema.includes(`name: "${field}"`), `${field} must be pruned`);
+  }
+  assert.ok(!schema.includes('name: "vi"'), "expansion must use separate fields, not {vi,en} objects");
+});
+
+check("query: by-slug projection fetches English fields without _vi fields", () => {
+  for (const field of ["descriptionEn", "itineraryEn"]) {
+    assert.ok(DESTINATION_BY_SLUG_QUERY.includes(field), `query missing ${field}`);
+  }
+  for (const field of ["descriptionVi", "itineraryVi"]) {
+    assert.ok(!DESTINATION_BY_SLUG_QUERY.includes(field), `query must not fetch ${field}`);
+  }
+});
+
+check("page: vi renders base fields, en prefers *En with base fallback (never blank)", () => {
+  assert.ok(page.includes("destination.descriptionEn"), "page must read descriptionEn");
+  assert.ok(page.includes("destination.itineraryEn"), "page must read itineraryEn");
+  assert.ok(!page.includes("descriptionVi"), "page must not read pruned descriptionVi");
+  assert.ok(!page.includes("itineraryVi"), "page must not read pruned itineraryVi");
+  assert.ok(page.includes("destination.itinerary ?? []"), "base itinerary must stay the fallback");
+});
 
 check("query: DESTINATION_BY_SLUG_QUERY parses with groq-js", () => {
   assert.equal(typeof DESTINATION_BY_SLUG_QUERY, "string");
@@ -124,7 +151,7 @@ check("query: by-slug projection fetches itinerary day fields", () => {
 // --- Page layout ----------------------------------------------------------------
 
 check("page: 2-column grid at lg with single-column fallback", () => {
-  assert.ok(page.includes('"mt-8 grid grid-cols-1 gap-8"'), "base grid classes missing");
+  assert.ok(page.includes('"mt-8 grid grid-cols-1 items-start gap-8"'), "base grid classes missing");
   assert.ok(page.includes('"lg:grid-cols-2 lg:gap-10"'), "lg two-column classes missing");
   assert.ok(page.includes('"max-w-3xl"'), "single-column fallback missing");
   assert.ok(page.includes("hasItinerary ?"), "grid must branch on itinerary data");

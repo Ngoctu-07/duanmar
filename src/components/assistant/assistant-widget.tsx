@@ -253,7 +253,7 @@ export function AssistantWidget() {
             className="absolute inset-0 top-0 left-0 block size-full text-white"
             fill="none"
             stroke="currentColor"
-            strokeWidth={1.4}
+            strokeWidth={0.7}
             style={{ clipPath: "inset(100% 0 0 0)" }}
             aria-hidden
           >

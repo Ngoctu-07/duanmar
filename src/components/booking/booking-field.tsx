@@ -7,16 +7,19 @@ interface FieldProps {
   label: string;
   /** i18n key from `booking.error.*`; absent means the field is valid. */
   error?: string;
+  /** Hide the visible label when a section heading already names the field
+      (the control keeps its own accessible name). */
+  hideLabel?: boolean;
   children: ReactNode;
 }
 
 /** Label + control + inline error, wired with `aria-describedby`. */
-export function Field({ id, label, error, children }: FieldProps) {
+export function Field({ id, label, error, hideLabel, children }: FieldProps) {
   const t = useTranslations("booking");
 
   return (
     <div className="grid gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      {!hideLabel && <Label htmlFor={id}>{label}</Label>}
       {children}
       {error && (
         <p id={`${id}-error`} role="alert" className="text-xs text-destructive">
