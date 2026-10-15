@@ -85,10 +85,7 @@
     "search": "Search",
     "domesticTours": "Domestic Tours",
     "internationalTours": "International Tours",
-    "blog": "Blog"
-  },
-  "quickLinks": {
-    "interactiveMap": "Interactive Map",
+    "blog": "Blog",
     "howToBook": "How to Book"
   },
   "home": {
@@ -128,6 +125,9 @@
     "itinerary": {
       "title": "Itinerary"
     },
+    "highlights": "Highlights",
+    "included": "What's included",
+    "excluded": "What's not included",
     "reviews": {
       "ratingAria": "{avg} out of 5 from {count} reviews",
       "title": "Customer Reviews",

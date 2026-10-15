@@ -8,15 +8,16 @@ import { Link } from "@/i18n/navigation";
 import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
 import { TourAttributeBadges } from "@/components/explore/tour-attribute-badges";
 import { pickCoverImage } from "@/lib/destination-gallery";
+import { resolveLocaleString, type LocaleString } from "@/lib/bilingual-string";
 
 export interface Destination {
   _id: string;
-  name: string;
+  name: LocaleString;
   slug: { current: string };
   region: string;
   category?: "domestic" | "international";
   country?: { vi: string; en: string; code?: string } | null;
-  description?: string;
+  description?: LocaleString;
   isSpecialTour?: boolean;
   image?: { asset?: { url: string }; alt?: string };
   galleryImages?: { asset?: { url: string }; alt?: string }[];
@@ -48,20 +49,23 @@ export function DestinationCard({
   const countryLabel =
     destination.country?.[locale as "vi" | "en"] ??
     (destination.category === "domestic" ? t("vietnam") : destination.region);
+  // Bilingual tour fields with vi fallback (legacy plain strings pass through).
+  const tourName = resolveLocaleString(destination.name, locale) ?? "";
+  const tourDescription = resolveLocaleString(destination.description ?? null, locale);
   return (
     <Card className="group relative overflow-hidden cursor-pointer transition-shadow hover:shadow-lg">
       {/* Full-card stretched hit area: clicking anywhere on the card
           (image, padding, whitespace, text) routes to the detail page. */}
       <Link
         href={`/explore/destinations/${destination.slug.current}`}
-        aria-label={destination.name}
+        aria-label={tourName}
         className="absolute inset-0 z-10 cursor-pointer"
       />
       {cover?.asset?.url && (
         <div className="aspect-video relative">
           <Image
             src={cover.asset.url}
-            alt={cover.alt || destination.name}
+            alt={cover.alt || tourName}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover"
@@ -77,11 +81,11 @@ export function DestinationCard({
           />
         </div>
         <div className="mb-2 flex items-start justify-between gap-2">
-          <h3 className="min-w-0 text-xl font-semibold">{destination.name}</h3>
+          <h3 className="min-w-0 text-xl font-semibold">{tourName}</h3>
           <TourRatingBadge slug={destination.slug.current} initialAggregate={aggregate} />
         </div>
         <p className="text-muted-foreground line-clamp-2 mb-4">
-          {destination.description}
+          {tourDescription}
         </p>
         <PriceRangeRow priceRange={priceRange} className="mb-4" />
         {/* Visual action button (now non-interactive — the card overlay link

@@ -8,8 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { AssistantMessage } from "@/lib/assistant/assistant-types";
 import { MAX_CONTENT_CHARS, MAX_MESSAGES } from "@/lib/assistant/assistant-validation";
+import { useFabFooterInversion } from "@/components/assistant/use-fab-footer-inversion";
 
 type DisplayMessage = AssistantMessage & { seeded?: boolean };
+
+// Shared ghost silhouette (body + 2 eye cutouts via evenodd).
+const GHOST_PATH =
+  "M7.528 20.472a1.6 1.6 0 012.277 0l1.057 1.056a1.6 1.6 0 002.276 0l1.057-1.056a1.6 1.6 0 012.277 0l1.114 1.114a1.4 1.4 0 002.414-1V10a8 8 0 00-16 0v10.586a1.4 1.4 0 002.414 1zM7.8 10.5a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0-2.4 0zM13.8 10.5a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0-2.4 0z";
 
 /**
  * Floating tour-assistant widget (plan 260929-2335): trigger bottom-right →
@@ -29,6 +34,12 @@ export function AssistantWidget() {
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
   const listRef = React.useRef<HTMLDivElement>(null);
   const abortRef = React.useRef<AbortController | null>(null);
+  const fabRef = React.useRef<HTMLDivElement>(null);
+  const solidRef = React.useRef<SVGSVGElement>(null);
+  const outlineRef = React.useRef<SVGSVGElement>(null);
+  // Footer-boundary inversion paints layer clips directly (rAF, no
+  // per-frame state) — see use-fab-footer-inversion.
+  useFabFooterInversion(fabRef, solidRef, outlineRef);
   const panelId = "assistant-panel";
 
   // Abort any in-flight stream on unmount (locale switch / navigation).
@@ -201,25 +212,52 @@ export function AssistantWidget() {
         </section>
       )}
 
-      <div className="animate-assistant-float relative size-[58px] transition-all duration-300 hover:scale-110 hover:drop-shadow-[0_4px_14px_rgba(127,29,29,0.55)]">
+      {/*
+        Ghost FAB: two SVGs stacked at identical coords (absolute inset-0).
+        transition-transform ONLY — clip-path must apply instantly or the
+        seam lags scroll and opens a background gap (black streak) / bleeds
+        white above the footer boundary.
+      */}
+      <div
+        ref={fabRef}
+        data-overlap="0.00"
+        className="animate-assistant-float relative size-[58px] transition-transform duration-300 hover:scale-110 hover:drop-shadow-[0_4px_14px_rgba(127,29,29,0.55)]"
+      >
         <Button
           data-testid="assistant-trigger"
           aria-label={open ? t("close") : t("open")}
           aria-expanded={open}
           aria-controls={open ? panelId : undefined}
           size="icon"
-          className="relative size-[58px] rounded-none border-0 bg-transparent p-0 shadow-none hover:bg-transparent"
+          className="relative size-[58px] overflow-hidden rounded-none border-0 bg-transparent p-0 shadow-none hover:bg-transparent"
           onClick={() => setOpen((value) => !value)}
         >
+          {/* Solid red ghost — visible above the footer boundary. */}
           <svg
+            ref={solidRef}
             viewBox="0 0 24 24"
             data-testid="ghost-body"
-            className="absolute inset-0 size-full text-primary"
+            className="absolute inset-0 top-0 left-0 block size-full text-primary"
             fill="currentColor"
             fillRule="evenodd"
             aria-hidden
           >
-            <path d="M7.528 20.472a1.6 1.6 0 012.277 0l1.057 1.056a1.6 1.6 0 002.276 0l1.057-1.056a1.6 1.6 0 012.277 0l1.114 1.114a1.4 1.4 0 002.414-1V10a8 8 0 00-16 0v10.586a1.4 1.4 0 002.414 1zM7.8 10.5a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0-2.4 0zM13.8 10.5a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0-2.4 0z" />
+            <path d={GHOST_PATH} />
+          </svg>
+          {/* White line-art ghost — visible inside the footer boundary.
+              Starts hidden (below fold) to avoid a pre-paint white flash. */}
+          <svg
+            ref={outlineRef}
+            viewBox="0 0 24 24"
+            data-testid="ghost-outline"
+            className="absolute inset-0 top-0 left-0 block size-full text-white"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.4}
+            style={{ clipPath: "inset(100% 0 0 0)" }}
+            aria-hidden
+          >
+            <path d={GHOST_PATH} />
           </svg>
         </Button>
       </div>

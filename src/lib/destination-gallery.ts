@@ -1,3 +1,5 @@
+import type { LocaleString } from "@/lib/bilingual-string";
+
 /** Shared image shape returned by the `imageFragment` GROQ projection. */
 export interface DestinationImage {
   asset?: { url: string };
@@ -6,7 +8,8 @@ export interface DestinationImage {
 
 /** Minimal structural shape both the card and detail page can supply. */
 export interface GallerySource {
-  name: string;
+  /** Unread by the helpers — typed loosely for localized `name`. */
+  name?: LocaleString;
   image?: DestinationImage;
   galleryImages?: DestinationImage[];
 }

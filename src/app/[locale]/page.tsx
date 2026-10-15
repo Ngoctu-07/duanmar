@@ -1,5 +1,4 @@
 import { HeroSection } from "@/components/homepage/hero-section";
-import { QuickAccessIcons } from "@/components/homepage/quick-access-icons";
 import { FeaturedDestinations } from "@/components/homepage/featured-destinations";
 import { AboutUsSection } from "@/components/homepage/about-us-section";
 import { StoriesSection } from "@/components/homepage/stories-section";
@@ -37,7 +36,6 @@ export default async function HomePage() {
   return (
     <>
       <HeroSection hero={homepageData} slogan={heroSlogan} />
-      <QuickAccessIcons />
       <FeaturedDestinations destinations={destinationsData || []} priceRanges={priceRanges} />
       <AboutUsSection
         videoSrc={aboutVideoSrc}

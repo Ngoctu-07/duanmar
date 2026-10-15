@@ -1,5 +1,6 @@
 import type { Destination } from "@/components/explore/destination-card";
 import { normalizeSearchText } from "@/lib/search-normalize";
+import { resolveLocaleString } from "@/lib/bilingual-string";
 
 /**
  * Hero search submit target: trimmed query → `/tours?search=…`, empty → `/tours`.
@@ -20,8 +21,9 @@ export function filterDestinations(
 
   const tokens = normalizedQuery.split(/\s+/);
   return destinations.filter((destination) => {
+    // Bilingual haystack: both locales so a query matches either language.
     const haystack = normalizeSearchText(
-      `${destination.name} ${destination.description ?? ""} ${
+      `${resolveLocaleString(destination.name, "vi") ?? ""} ${resolveLocaleString(destination.name, "en") ?? ""} ${resolveLocaleString(destination.description ?? null, "vi") ?? ""} ${resolveLocaleString(destination.description ?? null, "en") ?? ""} ${
         destination.country?.vi ?? ""
       } ${destination.country?.en ?? ""} ${destination.region}`
     );

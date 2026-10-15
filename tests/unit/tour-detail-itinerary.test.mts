@@ -74,6 +74,8 @@ check("schema: dayTitle required, details is a Portable Text block array", () =>
     /name: "dayTitle"[\s\S]{0,200}rule\.required\(\)/.test(dayBlock),
     "dayTitle must be required"
   );
+  assert.ok(dayBlock.includes('name: "vi"'), "dayTitle needs a vi subfield");
+  assert.ok(dayBlock.includes('name: "en"'), "dayTitle needs an en subfield");
   const detailsField = schema.slice(schema.indexOf('name: "details"'));
   assert.ok(detailsField.includes('type: "block"'), "details must be a Portable Text block array");
   assert.ok(
@@ -83,11 +85,20 @@ check("schema: dayTitle required, details is a Portable Text block array", () =>
   assert.ok(detailsField.includes('value: "bullet"'), "bullet lists must stay available");
 });
 
-check("schema: studio row preview titles days by dayTitle", () => {
+check("schema: studio row preview titles days by dayTitle.vi", () => {
   assert.ok(
-    schema.includes('select: { title: "dayTitle", subtitle: "meals" }'),
+    schema.includes('select: { title: "dayTitle.vi", subtitle: "meals.vi" }'),
     "day preview missing"
   );
+});
+
+check("schema: tour name/description/highlights/inclusions/exclusions are bilingual", () => {
+  for (const field of ["highlights", "inclusions", "exclusions"]) {
+    assert.ok(schema.includes(`name: "${field}"`), `${field} field missing`);
+  }
+  const nameBlock = schema.slice(schema.indexOf('name: "name"'));
+  assert.ok(nameBlock.includes('name: "vi"') && nameBlock.includes('name: "en"'), "name must be {vi,en}");
+  assert.ok(schema.includes('source: "name.vi"'), "slug source must follow name.vi");
 });
 
 // --- GROQ projection ------------------------------------------------------------

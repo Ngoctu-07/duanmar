@@ -5,8 +5,8 @@ import { dismissPromo } from "../helpers/promo.mjs";
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
 const vi = JSON.parse(readFileSync(new URL("../../src/messages/vi.json", import.meta.url), "utf8"));
-const LABELS = [vi.common.home, vi.common.domesticTours, vi.common.internationalTours, vi.common.deals, vi.common.blog];
-const HREFS = ["/vi", "/vi/tours/domestic", "/vi/tours/international", "/vi/deals", "/vi/blog"];
+const LABELS = [vi.common.home, vi.common.domesticTours, vi.common.internationalTours, vi.common.blog, vi.common.howToBook, vi.common.deals];
+const HREFS = ["/vi", "/vi/tours/domestic", "/vi/tours/international", "/vi/blog", "/vi/support#how-to-book", "/vi/deals"];
 const LEGACY = ["/vi/explore", "/vi/plan-your-trip", "/vi/culture", "/vi/news"];
 
 const { getBrowser, getPage, closeBrowser } = await import(
@@ -28,13 +28,13 @@ try {
   const page = await getPage(browser);
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
 
-  // --- L1 desktop: exactly 5 nav links, exact order, exact labels
+  // --- L1 desktop: exactly 6 nav links, exact order, exact labels
   await page.goto("http://localhost:3000/vi", { waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
   const nav = await page.$$eval("header nav a", (els) =>
     els.map((a) => ({ href: a.getAttribute("href"), label: a.textContent.trim() }))
   );
-  check("L1 desktop nav has exactly 5 links", nav.length === 5, JSON.stringify(nav));
+  check("L1 desktop nav has exactly 6 links", nav.length === 6, JSON.stringify(nav));
   check("L1 hrefs in required order", JSON.stringify(nav.map((n) => n.href)) === JSON.stringify(HREFS), JSON.stringify(nav.map((n) => n.href)));
   check("L1 labels in required order", JSON.stringify(nav.map((n) => n.label)) === JSON.stringify(LABELS), JSON.stringify(nav.map((n) => n.label)));
   await (await page.$("header")).screenshot({ path: `${OUT}/l-navbar-01-desktop.png` });
@@ -44,7 +44,7 @@ try {
   check("L2 no legacy href anywhere in header", !allHeader.some((h) => LEGACY.includes(h)), JSON.stringify(allHeader));
   check("L2 nav contains none of the legacy 4", !nav.some((n) => LEGACY.includes(n.href)), JSON.stringify(nav.map((n) => n.href)));
 
-  // --- L3 mobile sheet: same 5, same order, no legacy
+  // --- L3 mobile sheet: same 6, same order, no legacy
   await page.setViewport({ width: 390, height: 844 });
   await sleep(300);
   await page.click('button[data-slot="sheet-trigger"]');
@@ -53,7 +53,7 @@ try {
   check("L3 mobile sheet opens", Boolean(sheet));
   if (sheet) {
     const sheetLinks = await sheet.evaluate((el) => [...el.querySelectorAll("a")].map((a) => a.getAttribute("href")));
-    check("L3 sheet last 5 = required order", JSON.stringify(sheetLinks.slice(-5)) === JSON.stringify(HREFS), JSON.stringify(sheetLinks));
+    check("L3 sheet last 6 = required order", JSON.stringify(sheetLinks.slice(-6)) === JSON.stringify(HREFS), JSON.stringify(sheetLinks));
     check("L3 sheet has no legacy href", !sheetLinks.some((h) => LEGACY.includes(h)), JSON.stringify(sheetLinks));
     await sheet.screenshot({ path: `${OUT}/l-navbar-02-sheet.png` });
   }
@@ -69,10 +69,12 @@ try {
     return out;
   }, HREFS);
   for (const p of pages) check(`L4 ${p.url} → 200`, p.status === 200, `status=${p.status}`);
-  check("L4 all five h1 texts distinct", new Set(pages.map((p) => p.h1)).size === 5, JSON.stringify(pages.map((p) => p.h1)));
+  check("L4 all six h1 texts distinct", new Set(pages.map((p) => p.h1)).size === 6, JSON.stringify(pages.map((p) => p.h1)));
   check("L4 home h1 non-empty (CMS hero fallback)", pages[0].h1.length > 0, pages[0].h1);
   check("L4 domestic/international h1 from i18n", pages[1].h1 === vi.tours.domestic.title && pages[2].h1 === vi.tours.international.title, `${pages[1].h1} | ${pages[2].h1}`);
-  check("L4 deals + blog h1 from i18n", pages[3].h1 === vi.deals.title && pages[4].h1 === vi.blog.title, `${pages[3].h1} | ${pages[4].h1}`);
+  check("L4 blog h1 from i18n", pages[3].h1 === vi.blog.title, pages[3].h1);
+  check("L4 how-to-book resolves to support h1", pages[4].h1 === vi.support.title, pages[4].h1);
+  check("L4 deals h1 from i18n", pages[5].h1 === vi.deals.title, pages[5].h1);
 
   // --- L5 header chrome preserved
   await page.setViewport({ width: 1280, height: 900 });

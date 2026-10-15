@@ -1,4 +1,5 @@
 import { fetchPublished } from "@/sanity/lib/fetch-published";
+import { resolveLocaleString, type LocaleString } from "@/lib/bilingual-string";
 import { contactNodesFor } from "@/lib/assistant/contact-nodes";
 import {
   GROUNDING_QUERY_SOURCES,
@@ -10,13 +11,13 @@ const [DESTINATIONS_QUERY, ALL_TOUR_PRICING_QUERY, ARTICLES_QUERY] =
   GROUNDING_QUERY_SOURCES;
 
 interface RawDestination {
-  name?: string | null;
+  name?: LocaleString | null;
   slug?: { current?: string } | null;
   region?: string | null;
   category?: string | null;
   country?: { vi?: string | null; en?: string | null } | null;
   isSpecialTour?: boolean | null;
-  description?: string | null;
+  description?: LocaleString | null;
 }
 
 interface RawPricing {
@@ -54,13 +55,13 @@ export async function buildGroundingContext(locale: AssistantLocale): Promise<st
   const data: GroundingData = {
     locale,
     destinations: ((destinations ?? []) as RawDestination[]).map((d) => ({
-      name: d.name ?? "Unknown",
+      name: resolveLocaleString(d.name ?? null, locale) ?? "Unknown",
       slug: d.slug?.current ?? "",
       region: d.region ?? "",
       category: d.category ?? "",
       country: d.country?.[locale] ?? null,
       isSpecialTour: d.isSpecialTour === true,
-      description: d.description ?? "",
+      description: resolveLocaleString(d.description ?? null, locale) ?? "",
     })),
     pricing: ((pricing ?? []) as RawPricing[]).map((p) => {
       const vnd = (p.tiers ?? [])

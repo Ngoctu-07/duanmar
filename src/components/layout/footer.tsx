@@ -75,7 +75,11 @@ export function Footer({
   ];
 
   return (
-    <footer className="bg-primary text-white print:hidden">
+    <footer
+      id="site-footer"
+      data-testid="site-footer"
+      className="bg-primary text-white print:hidden"
+    >
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-5">
           <div className="col-span-2 md:col-span-1">

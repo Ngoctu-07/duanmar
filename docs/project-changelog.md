@@ -1,5 +1,44 @@
 # Project Changelog
 
+## 2026-10-15
+
+### Changed
+- **[Feature] Hero shortcut pruned + bilingual tour schema (VI/EN)**
+  - Deleted `QuickAccessIcons` (redundant with header nav) + `quickLinks` i18n ns; homepage hero → featured straight.
+  - Schema `destination`: `name`/`description`/`itinerary.dayTitle`/`meals`/`details` → `{vi req where legacy req, en opt}`; new opt `highlights`/`inclusions`/`exclusions` `{vi[],en[]}`; slug source → `name.vi`, previews → `*.vi`.
+  - Frontend: `resolveLocaleString/List/Blocks` (legacy-tolerant, active → vi → en) in `lib/bilingual-string.ts`; wired into card, detail page (+highlights/included/excluded sections, new i18n keys), checkout, search entries, tour-search haystack (both locales), assistant grounding. GROQ unchanged (same field names).
+  - Migration: `scripts/backfill-destination-localization.mjs` + `migrate:localization` (dry-run: 3 docs pending; needs `SANITY_WRITE_TOKEN` + explicit `--apply`, NOT run).
+  - Note: spec `/tours/[slug]` doesn't exist — detail stays `/{locale}/explore/destinations/{slug}`.
+  - Verified: tsc/eslint clean, unit 37/37 (new locale-resolvers), `/en`+`/vi`+detail+checkout 200, legacy string CMS data renders unchanged.
+
+## 2026-10-15
+
+### Fixed
+- **[Bugfix] Chatbot ghost FAB masking: black streak, outline bleed, rough transition**
+  - Root causes: `transition-all duration-300` animated `clip-path` (seam lagged scroll → gap band + bleed + dislocation); independently rounded % clips (sub-pixel gap); per-frame state re-renders; float-bob untracked.
+  - Fix: pixel seam from `fab.bottom - footerTop` with 1px outline overlap; direct style writes in rAF (no per-frame state); IO + 200px rootMargin gated loop; layers at identical `absolute inset-0 top-0 left-0 block`; `transition-transform` only; button `overflow-hidden`; outline hidden pre-paint.
+  - Verified live headless scroll: top solid-full, mid seam = H-1 (22+35=57), white edge 854 vs footerTop 855, re-scroll consistent, zero pageerrors. tsc/eslint clean, unit 36/36.
+
+## 2026-10-15
+
+### Changed
+- **[Feature] Pruned Interactive Map, header nav reorder, FAB footer inversion**
+  - Removed `src/components/explore/destinations-map.tsx` + route `src/app/[locale]/explore/map` (now 404); dropped homepage QuickAccess map card + HTML-sitemap map link; uninstalled `@vis.gl/react-google-maps`; removed Google keys from `.env.example`. CMS `location` geopoint field + queries kept (harmless).
+  - Header `navItems` (desktop + mobile sheet): Home | Domestic | International | Blog | How to Book (`/support#how-to-book`, new `common.howToBook` EN/VI) | Deals. `isActive` strips `#hash` so guide stays active on `/support`. No new modal — reuses existing 5-step `/support#how-to-book` section + HowTo JSON-LD.
+  - FAB: new `use-fab-footer-inversion.ts` hook (exact rect intersection 0..1, rAF scroll/resize + IntersectionObserver); footer gains `id/data-testid="site-footer"`; ghost renders dual layers (`ghost-body` solid red clipped above boundary, `ghost-outline` white stroke clipped inside) with `data-overlap` attr.
+  - Tests: `l-navbar.mjs` L1/L3/L4 updated to 6 links (how-to-book h1 = support title).
+  - Verified: tsc clean, eslint 0 errors, unit 36/36, `/en`+`/vi` 200 with exact nav order both locales, `/en/explore/map` 404, FAB testids + `data-overlap` present in HTML.
+
+## 2026-10-15
+
+### Changed
+- **[Feature] Interactive map migrated Leaflet/OSM → Google Maps JS API (@vis.gl/react-google-maps)**
+  - `src/components/explore/destinations-map.tsx`: APIProvider + Map (greedy gestures, zoom/fullscreen controls, DARK/LIGHT colorScheme via next-themes) + AdvancedMarker/Pin custom pins + InfoWindow (thumbnail + View Tour CTA → `/{locale}/explore/destinations/{slug}`). Keyless fallback panel when `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` unset.
+  - CMS: `destination` schema adds `location: geopoint` (preferred), keeps `lat/lng` as deprecated fallback; GROQ queries project `location`; map page hydrates `location` + `thumbnailUrl` (galleryImages[0]).
+  - Deps: removed `leaflet` + `@types/leaflet`; added `@vis.gl/react-google-maps@1.10.1`; `.env.example` documents `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (+ optional MAP_ID).
+  - Note: spec asked `/tours/[slug]` — route does not exist; CTA targets actual detail `/{locale}/explore/destinations/{slug}`.
+  - Verified: `tsc --noEmit` clean, eslint 0 errors, unit 36/36 pass, `/en` + `/en/explore/map` + `/vi/explore/map` 200, zero leaflet/module-not-found errors.
+
 ## 2025-09-25
 
 ### Fixed

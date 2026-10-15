@@ -16,8 +16,9 @@ const navItems = [
   { key: "home", href: "/" },
   { key: "domesticTours", href: "/tours/domestic" },
   { key: "internationalTours", href: "/tours/international" },
-  { key: "deals", href: "/deals" },
   { key: "blog", href: "/blog" },
+  { key: "howToBook", href: "/support#how-to-book" },
+  { key: "deals", href: "/deals" },
 ];
 
 export function Header() {
@@ -26,8 +27,14 @@ export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname === href || pathname?.startsWith(`${href}/`);
+  // Hash hrefs (e.g. /support#how-to-book) match their base route so the
+  // 5-step booking guide stays highlighted while reading /support.
+  const isActive = (href: string) => {
+    const clean = href.split("#")[0] || "/";
+    return clean === "/"
+      ? pathname === "/"
+      : pathname === clean || pathname?.startsWith(`${clean}/`);
+  };
 
   const linkClass = (href: string) =>
     isActive(href)

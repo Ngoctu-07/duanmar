@@ -13,6 +13,7 @@ export const DESTINATIONS_QUERY = defineQuery(`
     description,
     lat,
     lng,
+    location,
     image { ${imageFragment} },
     galleryImages[] { ${imageFragment} }
   }
@@ -35,6 +36,7 @@ export const DESTINATION_BY_SLUG_QUERY = defineQuery(`
     },
     lat,
     lng,
+    location,
     image { ${imageFragment} },
     galleryImages[] { ${imageFragment} }
   }
@@ -52,6 +54,7 @@ export const DESTINATIONS_BY_CATEGORY_QUERY = defineQuery(`
     description,
     lat,
     lng,
+    location,
     image { ${imageFragment} },
     galleryImages[] { ${imageFragment} }
   }

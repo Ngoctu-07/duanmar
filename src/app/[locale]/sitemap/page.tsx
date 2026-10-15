@@ -55,7 +55,6 @@ export default async function HtmlSitemapPage({
         })),
         { href: "/explore/festivals", label: tf("festivals") },
         { href: "/explore/events", label: tf("events") },
-        { href: "/explore/map", label: t("map") },
       ],
     },
     {

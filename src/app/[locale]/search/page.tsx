@@ -5,6 +5,7 @@ import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { DESTINATIONS_QUERY } from "@/sanity/queries/destinations";
 import { PROMOTIONS_QUERY } from "@/sanity/queries/promotions";
 import { filterLivePromotions, pickPromotionText, type PromotionRecord } from "@/lib/promotions";
+import { resolveLocaleString, type LocaleString } from "@/lib/bilingual-string";
 import { getNewsList, type NewsItem } from "@/lib/news-content-provider";
 import {
   SearchClient,
@@ -33,9 +34,9 @@ interface SearchMessages {
 }
 
 interface DestinationRow {
-  name: string;
+  name: LocaleString;
   slug: { current: string };
-  description: string | null;
+  description: LocaleString | null;
   region: string | null;
 }
 
@@ -122,8 +123,8 @@ function buildEntries(
       entries,
       "destination",
       `/explore/destinations/${destination.slug.current}`,
-      destination.name,
-      destination.description ?? "",
+      resolveLocaleString(destination.name, locale) ?? destination.slug.current,
+      resolveLocaleString(destination.description, locale) ?? "",
       destination.region ?? ""
     );
   }

@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { BookingForm } from "@/components/booking/booking-form";
 import { mapPricingTiers } from "@/lib/pricing";
 import { mapTourCapacity } from "@/lib/tour-capacity";
+import { resolveLocaleString } from "@/lib/bilingual-string";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { DESTINATION_BY_SLUG_QUERY } from "@/sanity/queries/destinations";
 import { TOUR_PRICING_BY_SLUG_QUERY } from "@/sanity/queries/tour-pricing";
@@ -40,6 +41,7 @@ export default async function CheckoutPage({
 
   const tiers = mapPricingTiers(pricingDoc, locale);
   const capacity = mapTourCapacity(pricingDoc);
+  const tourName = resolveLocaleString(destination.name, locale) ?? tour;
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-16">
@@ -51,13 +53,13 @@ export default async function CheckoutPage({
       </Link>
 
       <h1 className="mt-6 text-3xl font-bold">{t("title")}</h1>
-      <p className="mt-1 text-lg text-muted-foreground">{destination.name}</p>
+      <p className="mt-1 text-lg text-muted-foreground">{tourName}</p>
       <p className="mt-2 text-sm text-muted-foreground">{t("subtitle")}</p>
 
       <div className="mt-6">
         <BookingForm
           slug={tour}
-          tourName={destination.name}
+          tourName={tourName}
           tiers={tiers}
           locale={locale}
           capacity={capacity}

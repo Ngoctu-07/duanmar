@@ -33,6 +33,11 @@ const DESTINATIONS: Destination[] = [
   dest("Đà Lạt", { region: "central", country: { vi: "Việt Nam", en: "Vietnam" } }),
   dest("Hạ Long", { description: "Bay with limestone islands" }),
   dest("Phú Quốc", { region: "south", country: { vi: "Việt Nam", en: "Vietnam" } }),
+  dest("Bangkok", {
+    slug: { current: "bangkok" },
+    name: { vi: "Bangkok", en: "Bangkok City" },
+    description: { vi: "Thủ đô Thái Lan", en: "Capital of Thailand" },
+  }),
 ];
 
 check("empty query → /tours", () => {
@@ -98,6 +103,16 @@ check("matches country + region fields", () => {
 check("no match → empty array", () => {
   const result = filterDestinations(DESTINATIONS, "zzzzz");
   if (result.length !== 0) throw new Error(String(result.length));
+});
+
+check("bilingual object: en name token matches", () => {
+  const result = filterDestinations(DESTINATIONS, "bangkok city");
+  if (result.length !== 1 || result[0].slug.current !== "bangkok") throw new Error(JSON.stringify(result.map((d) => d.slug.current)));
+});
+
+check("bilingual object: vi description token matches", () => {
+  const result = filterDestinations(DESTINATIONS, "thai lan");
+  if (result.length !== 1 || result[0].slug.current !== "bangkok") throw new Error(JSON.stringify(result.map((d) => d.slug.current)));
 });
 
 console.log(`${passed}/${passed + failed} assertions passed`);
