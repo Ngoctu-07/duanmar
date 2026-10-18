@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import type { AssistantMessage } from "@/lib/assistant/assistant-types";
 import { MAX_CONTENT_CHARS, MAX_MESSAGES } from "@/lib/assistant/assistant-validation";
 import { useFabFooterInversion } from "@/components/assistant/use-fab-footer-inversion";
+import { useHeroReveal } from "@/components/layout/use-hero-reveal";
 
 type DisplayMessage = AssistantMessage & { seeded?: boolean };
 
@@ -24,6 +25,10 @@ const GHOST_PATH =
 export function AssistantWidget() {
   const t = useTranslations("assistant");
   const locale = useLocale();
+  // Mirror the header: the ghost FAB shares the homepage hero reveal gate, so
+  // it stays hidden over the "DECODE TRAVEL" video and appears together with
+  // the nav bar once the visitor scrolls past 50% of the hero height.
+  const revealed = useHeroReveal();
   const [open, setOpen] = React.useState(false);
   const [input, setInput] = React.useState("");
   const [isStreaming, setIsStreaming] = React.useState(false);
@@ -138,7 +143,19 @@ export function AssistantWidget() {
   );
 
   return (
-    <div data-testid="assistant-widget" className="fixed right-4 bottom-4 z-40 print:hidden">
+    <div
+      data-testid="assistant-widget"
+      data-widget-revealed={revealed ? "true" : "false"}
+      // Hidden over the hero: fade/lift it out and stop it swallowing clicks on
+      // the video (`inert` also drops it from the tab order for keyboard users).
+      inert={!revealed}
+      className={cn(
+        "fixed right-4 bottom-4 z-40 print:hidden transition-all duration-300 ease-in-out",
+        revealed
+          ? "translate-y-0 opacity-100 pointer-events-auto"
+          : "translate-y-4 opacity-0 pointer-events-none"
+      )}
+    >
       {open && (
         <section
           id={panelId}

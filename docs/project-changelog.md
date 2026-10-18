@@ -1,5 +1,16 @@
 # Project Changelog
 
+## 2026-10-18
+
+### Changed
+- **[Feature] Đồng bộ ẩn/hiện ghost chatbot FAB với header theo scroll** (task "Defer Floating Chatbot Visibility - Sync Chatbot Widget with Scroll-Triggered Header Reveal State")
+  - **Hook chung** NEW `src/components/layout/use-hero-reveal.ts`: trích logic ngưỡng 50% chiều cao hero từ `header.tsx` thành `useHeroReveal()` (trả `revealed`; trang khác luôn `true`; rAF coalesced scroll/resize, SSR-safe). Header và widget cùng bind một hook nên trạng thái không bao giờ lệch.
+  - **Header** `src/components/layout/header.tsx`: bỏ `useState`/`useEffect` cục bộ, dùng `useHeroReveal()` (giữ nguyên `data-header-home`/`data-header-revealed` + `-translate-y-full`/`translate-y-0`).
+  - **Chatbot** `src/components/assistant/assistant-widget.tsx`: bind `useHeroReveal()`. Đầu hero → `opacity-0 pointer-events-none translate-y-4` + `inert` (rời tab order, không chặn click nền video); cuộn qua 50% → `opacity-100 pointer-events-auto translate-y-0`; chuyển tiếp `transition-all duration-300 ease-in-out`; thêm `data-widget-revealed`.
+  - **Tests**: `i-ai-assistant.mjs` +2 check (I1a ẩn ở đầu hero · I1b hiện đồng bộ sau khi cuộn) **17/17**; các flow VI/EN/mobile gọi `revealHomeHeader` trước khi click trigger.
+  - Verified: `npx tsc --noEmit` 0 · `npx eslint src tests` 0 · `npm test` **41/41 file** · `npm run test:browser` `i-ai-assistant` **17/17**, `v-home-hero-header-search` **47/47** (0 hồi quy; `u-icon-switcher-price` U2 fail pre-existing do homepage đã prune `section.py-8`).
+  - Docs impact: minor (changelog này).
+
 ## 2026-10-15
 
 ### Changed

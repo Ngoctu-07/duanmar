@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
+import { useHeroReveal } from "@/components/layout/use-hero-reveal";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { HoverTooltip } from "@/components/ui/hover-tooltip";
@@ -26,6 +27,13 @@ export function Header() {
   const mt = useTranslations("myTrips");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  // Homepage-only: the header stays transparent/hidden over the full-viewport
+  // hero and slides down once the visitor scrolls past 50% of the hero height.
+  // Off the homepage it is always visible. Shared with the assistant widget so
+  // both chrome elements reveal on the exact same scroll state.
+  const isHome = pathname === "/";
+  const revealed = useHeroReveal();
 
   // Hash hrefs (e.g. /support#how-to-book) match their base route so the
   // 5-step booking guide stays highlighted while reading /support.
@@ -51,7 +59,13 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full overflow-x-clip border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 print:hidden">
+    <header
+      data-header-home={isHome ? "true" : "false"}
+      data-header-revealed={revealed ? "true" : "false"}
+      className={`sticky top-0 z-50 w-full overflow-x-clip border-b bg-background/95 backdrop-blur transition-transform duration-300 will-change-transform supports-[backdrop-filter]:bg-background/60 print:hidden ${
+        revealed ? "translate-y-0" : "-translate-y-full"
+      }`}
+    >
       <div className="container mx-auto flex h-16 min-w-0 items-center justify-between px-3 sm:px-4">
         <div className="flex items-center gap-1">
           <Link href="/" aria-label="DuanMar" onClick={handleHomeClick} className="flex items-center gap-2">

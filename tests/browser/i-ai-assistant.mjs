@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { revealHomeHeader } from "../helpers/header-reveal.mjs";
 
 /**
  * Plan 260929-2335 — AI Tour Assistant widget + API contract.
@@ -123,6 +124,48 @@ try {
   await page.goto(`${BASE}/vi`, { waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
 
+  // Hero top: the ghost FAB defers with the header — hidden, out of the tab
+  // order, and transparent to clicks so it never blocks the video hero.
+  const deferred = await page.evaluate(() => {
+    const widget = document.querySelector('[data-testid="assistant-widget"]');
+    const style = widget ? getComputedStyle(widget) : null;
+    return {
+      revealed: widget?.getAttribute("data-widget-revealed"),
+      opacity: style?.opacity,
+      pointerEvents: style?.pointerEvents,
+      inert: widget?.hasAttribute("inert"),
+    };
+  });
+  check(
+    "I1a hero top: widget deferred with header (invisible + click-through)",
+    deferred.revealed === "false" &&
+      deferred.opacity === "0" &&
+      deferred.pointerEvents === "none" &&
+      deferred.inert === true,
+    JSON.stringify(deferred)
+  );
+
+  // Scrolling past 50% of the hero reveals the FAB together with the nav bar.
+  await revealHomeHeader(page);
+  const shown = await page.evaluate(() => {
+    const widget = document.querySelector('[data-testid="assistant-widget"]');
+    const style = widget ? getComputedStyle(widget) : null;
+    return {
+      revealed: widget?.getAttribute("data-widget-revealed"),
+      opacity: style?.opacity,
+      pointerEvents: style?.pointerEvents,
+      inert: widget?.hasAttribute("inert"),
+    };
+  });
+  check(
+    "I1b past hero: widget shown in sync with header",
+    shown.revealed === "true" &&
+      shown.opacity === "1" &&
+      shown.pointerEvents === "auto" &&
+      shown.inert === false,
+    JSON.stringify(shown)
+  );
+
   const trigger = await page.evaluate(() => {
     const btn = document.querySelector('[data-testid="assistant-trigger"]');
     return btn
@@ -224,6 +267,7 @@ try {
   // ---------- 3. EN locale ----------
   await page.goto(`${BASE}/en`, { waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
+  await revealHomeHeader(page);
   await page.click('[data-testid="assistant-trigger"]');
   await page.waitForSelector('[data-testid="assistant-panel"]', { timeout: 5000 });
   const enGreeting = await page.evaluate(
@@ -247,6 +291,7 @@ try {
   await page.setViewport({ width: 375, height: 812 });
   await page.goto(`${BASE}/vi`, { waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
+  await revealHomeHeader(page);
   await page.click('[data-testid="assistant-trigger"]');
   await page.waitForSelector('[data-testid="assistant-panel"]', { timeout: 5000 });
   const mobile = await page.evaluate(() => {
