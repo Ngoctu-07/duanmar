@@ -5,6 +5,7 @@ import {
   cleanupReviewRefs,
   setPageVisitorCookie,
 } from "../helpers/reviews-api.mjs";
+import { fetchContactSettings, expectedContactChannels } from "../helpers/cms-expectations.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -198,7 +199,14 @@ try {
 
   const contactPostsBefore = postCount();
   const nodes = await page.$$eval('a[data-testid="contact-node"]', (els) => els.map((a) => a.getAttribute("href")));
-  check("N12 5 contact nodes incl tel + mailto", nodes.length === 5 && nodes.some((h) => h.startsWith("tel:")) && nodes.some((h) => h.startsWith("mailto:")), JSON.stringify(nodes));
+  // CMS contactSettings win; empty → i18n nodes. Derive the expected list live.
+  const contactSettings = await fetchContactSettings().catch(() => null);
+  const expected = expectedContactChannels(contactSettings, vi.contact.nodes);
+  check(
+    `N12 ${expected.length} contact nodes incl tel + mailto`,
+    nodes.length === expected.length && nodes.some((h) => h.startsWith("tel:")) && nodes.some((h) => h.startsWith("mailto:")),
+    JSON.stringify(nodes)
+  );
   const heading = await page.$eval('form[data-testid="contact-form"]', (form) => ({
     firstTag: form.firstElementChild?.tagName ?? "",
     text: (form.firstElementChild?.textContent ?? "").trim(),

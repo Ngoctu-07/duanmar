@@ -1,71 +1,78 @@
-import { defineType, defineField, defineArrayMember } from "sanity";
+import { defineType, defineField } from "sanity";
+
+/**
+ * Absolute-URL field for a single social channel inside `contactSettings`.
+ * Optional + http(s)-only so an empty value hides the channel everywhere.
+ */
+const contactUrlField = (name: string, title: string) =>
+  defineField({
+    name,
+    title,
+    type: "url",
+    description: "Full profile URL. Leave empty to hide this channel everywhere.",
+    validation: (rule) =>
+      rule.uri({ allowRelative: false, scheme: ["https", "http"] }),
+  });
+
+/**
+ * Optional explicit display handle paired with a social URL. Shown as the
+ * visible Contact-page card text (the URL stays the link target, never the
+ * label). Leave empty to fall back to the sanitized domain / platform name.
+ */
+const contactHandleField = (name: string, title: string, example: string) =>
+  defineField({
+    name,
+    title,
+    type: "string",
+    description: `Display handle on the Contact page, e.g. "${example}". Empty → sanitized domain / platform name.`,
+  });
 
 /**
  * Platform-wide site settings (global singleton, see `structure.ts`).
- * `socialLinks` drives the Contact Section cards and the Footer contact column —
- * each entry shows `displayText` and links out to `targetUrl` when set.
+ *
+ * `contactSettings` is the single source of truth for both the Footer contact
+ * column and the Contact page grid — 7 explicit channels (phone, email and five
+ * social URLs). Any empty field is omitted from both surfaces automatically, so
+ * an unfilled channel never leaves a blank slot.
  */
 export default defineType({
   name: "siteConfiguration",
   title: "Site Configuration",
   type: "document",
-  fieldsets: [
-    { name: "popup", title: "Promo Popup (per-locale)" },
-    { name: "contact", title: "Social & Contact Links" },
-  ],
+  fieldsets: [{ name: "popup", title: "Promo Popup (per-locale)" }],
   fields: [
     defineField({
-      name: "socialLinks",
-      title: "Social & contact links",
-      type: "array",
+      name: "contactSettings",
+      title: "Contact Settings",
+      type: "object",
       description:
-        "Platform handles shown in the Contact Section and Footer. Leave targetUrl empty to show the handle as plain text (no dead link).",
-      fieldset: "contact",
-      of: [
-        defineArrayMember({
-          name: "socialLink",
-          title: "Social link",
-          type: "object",
-          fields: [
-            defineField({
-              name: "platform",
-              title: "Platform",
-              type: "string",
-              description: "Where this handle points — used as the row label.",
-              options: {
-                layout: "dropdown",
-                list: [
-                  { title: "Facebook", value: "facebook" },
-                  { title: "Instagram", value: "instagram" },
-                  { title: "TikTok", value: "tiktok" },
-                  { title: "YouTube", value: "youtube" },
-                  { title: "LinkedIn", value: "linkedin" },
-                  { title: "X (Twitter)", value: "x" },
-                  { title: "Other", value: "other" },
-                ],
-              },
-              validation: (rule) => rule.required(),
-            }),
-            defineField({
-              name: "displayText",
-              title: "Display text / handle",
-              type: "string",
-              description: 'Visible label on the site, e.g. "DuanMar" or "@duanmar.official".',
-              validation: (rule) => rule.required(),
-            }),
-            defineField({
-              name: "targetUrl",
-              title: "Target URL",
-              type: "url",
-              description:
-                "Destination opened in a new tab. Optional — when empty the display text renders as plain text.",
-              validation: (rule) => rule.uri({ allowRelative: false, scheme: ["https", "http"] }),
-            }),
-          ],
-          preview: {
-            select: { title: "displayText", subtitle: "platform" },
-          },
+        "Single source of truth for the Footer contact column and the Contact page grid. Empty channels are hidden on both. Optional *Handle fields set the Contact-page label only (Footer always shows plain platform labels).",
+      options: { collapsible: true, collapsed: false },
+      fields: [
+        defineField({
+          name: "phone",
+          title: "Phone",
+          type: "string",
+          description:
+            'Primary phone, e.g. "+84 28 3822 0000". Rendered as a tel: link.',
         }),
+        defineField({
+          name: "email",
+          title: "Email",
+          type: "string",
+          description:
+            'Primary email, e.g. "info@vietnam-tourism.com". Rendered as a mailto: link.',
+        }),
+        contactUrlField("facebookUrl", "Facebook URL"),
+        contactHandleField("facebookHandle", "Facebook Handle", "DuanMar Official"),
+        contactUrlField("tiktokUrl", "TikTok URL"),
+        contactHandleField("tiktokHandle", "TikTok Handle", "@d.n.mar1"),
+        contactUrlField("instagramUrl", "Instagram URL"),
+        contactHandleField("instagramHandle", "Instagram Handle", "@duanmar.travel"),
+        contactUrlField("threadsUrl", "Threads URL"),
+        contactHandleField("threadsHandle", "Threads Handle", "@duanmar._"),
+        contactUrlField("youtubeUrl", "YouTube URL"),
+        contactHandleField("youtubeHandle", "YouTube Handle", "@DuanMarTravel"),
       ],
     }),
     defineField({

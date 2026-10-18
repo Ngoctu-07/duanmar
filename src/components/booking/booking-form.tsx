@@ -11,6 +11,7 @@ import { BookingDateSection } from "./booking-date-section";
 import { BookingDifficultySection } from "./booking-difficulty-section";
 import { BookingPricingSection } from "./booking-pricing-section";
 import { BookingSummary } from "./booking-summary";
+import type { CryptoConfig } from "@/lib/crypto-payment";
 import {
   isValidGuests,
   travelDateErrorAfterGuestsChange,
@@ -39,6 +40,8 @@ interface BookingFormProps {
   isSpecialTour?: boolean;
   /** CMS capacity (`null` = none configured); device bookings merge in after mount. */
   capacity?: TourCapacity | null;
+  /** Validated Web3 (MetaMask) config — `null` keeps the crypto rail but marks it unconfigured. */
+  cryptoConfig?: CryptoConfig | null;
 }
 
 export function BookingForm({
@@ -48,6 +51,7 @@ export function BookingForm({
   locale,
   isSpecialTour,
   capacity,
+  cryptoConfig = null,
 }: BookingFormProps) {
   const t = useTranslations("booking");
   const currency = getCurrency(locale);
@@ -131,6 +135,7 @@ export function BookingForm({
         locale={locale}
         currency={currency}
         isSpecialTour={isSpecialTour === true}
+        cryptoConfig={cryptoConfig}
       />
     );
   }

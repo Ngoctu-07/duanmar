@@ -46,6 +46,16 @@ check("projects aboutUsVideoPoster with url + dimensions", () => {
   assert.ok(HOMEPAGE_QUERY.includes("metadata{dimensions{width, height}}"));
 });
 
+check("projects hero promoVideo file asset url", () => {
+  assert.ok(HOMEPAGE_QUERY.includes("promoVideo"));
+  assert.ok(HOMEPAGE_QUERY.includes("asset->{url}"));
+});
+
+check("projects promoVideoUrl + promoVideoPoster", () => {
+  assert.ok(HOMEPAGE_QUERY.includes("promoVideoUrl"));
+  assert.ok(HOMEPAGE_QUERY.includes("promoVideoPoster"));
+});
+
 check("hero projection untouched", () => {
   for (const field of ["title", "heroTitle", "heroSubtitle", "heroImage"]) {
     assert.ok(HOMEPAGE_QUERY.includes(field), `${field} missing`);
@@ -77,6 +87,13 @@ check("schema defines aboutUsVideo (file), stream url, poster (image)", () => {
   assert.ok(schemaSource.includes('accept: "video/mp4,video/webm"'));
   assert.ok(schemaSource.includes('name: "aboutUsVideoStreamUrl"')
     && schemaSource.includes('type: "url"'));
+});
+
+check("schema defines hero promoVideo (file), url, poster (image)", () => {
+  for (const field of ["promoVideo", "promoVideoUrl", "promoVideoPoster"]) {
+    assert.ok(schemaSource.includes(`name: "${field}"`), `${field} missing in schema`);
+  }
+  assert.ok(schemaSource.includes('name: "promoVideoUrl"') && schemaSource.includes('type: "url"'));
 });
 
 check("teamGallery fully purged from query + schema (plan 260929-2135)", () => {

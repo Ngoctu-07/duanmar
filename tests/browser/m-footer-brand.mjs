@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { fetchContactSettings, expectedContactChannels } from "../helpers/cms-expectations.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -8,8 +9,6 @@ const msg = {
   vi: JSON.parse(readFileSync(new URL("../../src/messages/vi.json", import.meta.url), "utf8")),
   en: JSON.parse(readFileSync(new URL("../../src/messages/en.json", import.meta.url), "utf8")),
 };
-const NODE_KEYS = ["phone", "email", "facebook", "instagram", "tiktok"];
-const SOCIALS = ["facebook", "instagram", "tiktok"];
 
 const { getBrowser, getPage, closeBrowser } = await import(
   pathToFileURL(
@@ -113,21 +112,30 @@ try {
       viCols.links[1].map((l) => l.label).join() === [vi.common.domesticTours, vi.common.internationalTours].join(),
     JSON.stringify(viCols.links[1])
   );
-  const viNodes = NODE_KEYS.map((k) => vi.contact.nodes[k].href);
-  check("F4 Col B 5 links in order", viCols.links[2].length === 5, JSON.stringify(viCols.links[2].map((l) => l.label)));
+  const viNodes = vi.contact.nodes;
+  const contactSettings = await fetchContactSettings().catch(() => null);
+  const viExpected = expectedContactChannels(contactSettings, viNodes);
+  const enExpected = expectedContactChannels(contactSettings, msg.en.contact.nodes);
+  const nonSocial = viExpected.filter((c) => c.kind !== "social").length;
+  const socialCount = viExpected.length - nonSocial;
   check(
-    "F5 Col B hrefs byte-equal contact.nodes",
-    JSON.stringify(viCols.links[2].map((l) => l.href)) === JSON.stringify(viNodes),
+    `F4 Col B ${viExpected.length} links in order (CMS-driven)`,
+    viCols.links[2].length === viExpected.length,
+    JSON.stringify(viCols.links[2].map((l) => l.label))
+  );
+  check(
+    "F5 Col B hrefs byte-equal contactSettings",
+    JSON.stringify(viCols.links[2].map((l) => l.href)) === JSON.stringify(viExpected.map((c) => c.href)),
     JSON.stringify(viCols.links[2].map((l) => l.href))
   );
-  // CMS socialLinks can shorten the rendered anchor list (drift) — never index past it,
-  // F4 already reports the count mismatch and the run must continue to F7-F12.
-  const viSocials = viCols.links[2].slice(2);
+  // CMS contactSettings can shorten the rendered anchor list (empty → omitted) — never
+  // index past it; F4 already reports the count mismatch and the run must continue to F7-F12.
+  const viSocials = viCols.links[2].slice(nonSocial);
   check(
     "F6 socials _blank+noopener, tel/mailto same-tab",
-    viSocials.length === SOCIALS.length &&
+    viSocials.length === socialCount &&
       viSocials.every((l) => l.target === "_blank" && /noopener/.test(l.rel ?? "") && /noreferrer/.test(l.rel ?? "")) &&
-      viCols.links[2].slice(0, 2).every((l) => l.target === null),
+      viCols.links[2].slice(0, nonSocial).every((l) => l.target === null),
     JSON.stringify(viCols.links[2].map((l) => [l.target, l.rel]))
   );
   check(
@@ -182,8 +190,8 @@ try {
     JSON.stringify(enCols.links[3])
   );
   check(
-    "F5 EN Col B hrefs byte-equal contact.nodes",
-    JSON.stringify(enCols.links[2].map((l) => l.href)) === JSON.stringify(NODE_KEYS.map((k) => en.contact.nodes[k].href)),
+    "F5 EN Col B hrefs byte-equal contactSettings",
+    JSON.stringify(enCols.links[2].map((l) => l.href)) === JSON.stringify(enExpected.map((c) => c.href)),
     JSON.stringify(enCols.links[2].map((l) => l.href))
   );
   await (await page.$("footer")).screenshot({ path: `${OUT}/m-brand-03-footer-en.png` });

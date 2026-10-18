@@ -18,6 +18,8 @@ export interface BookingConfirmationPayload {
   total: number;
   currency: "VND" | "USD";
   paymentMethod: PaymentMethod;
+  /** Web3 rail only — on-chain transaction hash for order verification. */
+  txHash?: string;
   notes: string;
   locale: "en" | "vi";
 }

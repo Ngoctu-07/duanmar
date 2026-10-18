@@ -5,7 +5,11 @@ import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { DESTINATIONS_QUERY } from "@/sanity/queries/destinations";
 import { PROMOTIONS_QUERY } from "@/sanity/queries/promotions";
 import { filterLivePromotions, pickPromotionText, type PromotionRecord } from "@/lib/promotions";
-import { resolveLocaleString, type LocaleString } from "@/lib/bilingual-string";
+import {
+  resolveLocaleString,
+  resolveLocalizedField,
+  type LocaleString,
+} from "@/lib/bilingual-string";
 import { getNewsList, type NewsItem } from "@/lib/news-content-provider";
 import {
   SearchClient,
@@ -37,6 +41,7 @@ interface DestinationRow {
   name: LocaleString;
   slug: { current: string };
   description: LocaleString | null;
+  descriptionEn?: string | null;
   region: string | null;
 }
 
@@ -124,7 +129,11 @@ function buildEntries(
       "destination",
       `/explore/destinations/${destination.slug.current}`,
       resolveLocaleString(destination.name, locale) ?? destination.slug.current,
-      resolveLocaleString(destination.description, locale) ?? "",
+      resolveLocalizedField(
+        destination.description,
+        destination.descriptionEn,
+        locale
+      ) ?? "",
       destination.region ?? ""
     );
   }

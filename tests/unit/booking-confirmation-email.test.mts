@@ -81,12 +81,31 @@ check("C3 all payload fields hydrated in HTML", () => {
   assert.match(html, /1[.,]500[.,]000/); // locale-format VND total
 });
 
-check("C4 guests + both payment methods bilingual", () => {
+check("C4 guests + all payment methods bilingual", () => {
   const momo = renderConfirmationEmail(payload).html;
   assert.ok(momo.includes("Số lượng khách"));
   assert.ok(momo.includes("Guests"));
   const bank = renderConfirmationEmail({ ...payload, paymentMethod: "bank" }).html;
   assert.ok(bank.includes("Bank Transfer / Chuyển khoản ngân hàng"));
+  const crypto = renderConfirmationEmail({
+    ...payload,
+    paymentMethod: "crypto_metamask",
+  }).html;
+  assert.ok(crypto.includes("Crypto Wallet (MetaMask) / Ví Crypto (MetaMask)"));
+});
+
+check("C4b Web3 rail renders the transaction-hash row", () => {
+  const txHash = "0x" + "b".repeat(64);
+  const { html } = renderConfirmationEmail({
+    ...payload,
+    paymentMethod: "crypto_metamask",
+    txHash,
+  });
+  assert.ok(html.includes("Transaction Hash"));
+  assert.ok(html.includes("Mã giao dịch"));
+  assert.ok(html.includes(txHash));
+  // Fiat rail must NOT show a hash row.
+  assert.ok(!renderConfirmationEmail(payload).html.includes("Transaction Hash"));
 });
 
 check("C5 mandatory footer disclaimer + closing + sign-off (both languages)", () => {
@@ -134,6 +153,8 @@ check("V2 invalid fields rejected", () => {
     ["zero guests", { ...base, guests: 0 }],
     ["bad reference", { ...base, reference: "ORDER-1" }],
     ["bad paymentMethod", { ...base, paymentMethod: "cash" }],
+    ["legacy crypto typo", { ...base, paymentMethod: "crypto" }],
+    ["bad txHash", { ...base, paymentMethod: "crypto_metamask", txHash: "0x123" }],
     ["bad locale", { ...base, locale: "fr" }],
     ["negative total", { ...base, total: -1 }],
     ["bad travelDate", { ...base, travelDate: "05/10/2026" }],
@@ -152,6 +173,26 @@ check("V3 optional notes omitted → valid, empty string", () => {
   const result = validateBookingConfirmation(withoutNotes);
   assert.equal(result.ok, true);
   if (result.ok) assert.equal(result.payload.notes, "");
+});
+
+check("V4 crypto rail: valid hash kept, omitted txHash allowed", () => {
+  const txHash = "0x" + "c".repeat(64);
+  const withHash = validateBookingConfirmation({
+    ...payload,
+    paymentMethod: "crypto_metamask",
+    txHash,
+  });
+  assert.equal(withHash.ok, true);
+  if (withHash.ok) {
+    assert.equal(withHash.payload.paymentMethod, "crypto_metamask");
+    assert.equal(withHash.payload.txHash, txHash);
+  }
+  const withoutHash = validateBookingConfirmation({
+    ...payload,
+    paymentMethod: "crypto_metamask",
+  });
+  assert.equal(withoutHash.ok, true);
+  if (withoutHash.ok) assert.equal(withoutHash.payload.txHash, undefined);
 });
 
 // ---- delay queue ----

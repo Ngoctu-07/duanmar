@@ -8,6 +8,9 @@ export const HOMEPAGE_QUERY = defineQuery(`
     heroSubtitle,
     heroSlogan{ vi, en },
     heroImage { ${imageFragment} },
+    promoVideo { asset->{url} },
+    promoVideoUrl,
+    promoVideoPoster { asset->{url, metadata{dimensions{width, height}}} },
     aboutUsVideo { asset->{url} },
     aboutUsVideoStreamUrl,
     aboutUsVideoPoster { asset->{url, metadata{dimensions{width, height}}} },
@@ -26,6 +29,7 @@ export const FEATURED_DESTINATIONS_QUERY = defineQuery(`
     country->{ "code": code, "vi": name.vi, "en": name.en },
     isSpecialTour,
     description,
+    descriptionEn,
     image { ${imageFragment} },
     galleryImages[] { ${imageFragment} }
   }

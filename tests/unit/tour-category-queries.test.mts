@@ -10,6 +10,7 @@ const {
 const { FEATURED_DESTINATIONS_QUERY } = await import(
   "../../src/sanity/queries/homepage.ts"
 );
+const { parse } = await import("groq-js");
 
 let passed = 0;
 let failed = 0;
@@ -111,6 +112,18 @@ check("card/chip queries project country->{vi,en} + category (locale rendering)"
     assert.ok(q.includes('"vi": name.vi'), `${name}: vi name missing`);
     assert.ok(q.includes('"en": name.en'), `${name}: en name missing`);
     assert.ok(/\bcategory\b/.test(q), `${name}: category missing (domestic fallback)`);
+  }
+});
+
+check("card queries project the English description (locale switch)", () => {
+  for (const [name, q] of Object.entries({
+    DESTINATIONS_QUERY,
+    DESTINATIONS_BY_CATEGORY_QUERY,
+    FEATURED_DESTINATIONS_QUERY,
+  })) {
+    assert.ok(q.includes("description"), `${name}: base description missing`);
+    assert.ok(q.includes("descriptionEn"), `${name}: descriptionEn missing`);
+    parse(q); // groq-js: projection stays syntactically valid
   }
 });
 

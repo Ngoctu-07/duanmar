@@ -2,6 +2,13 @@
 
 ## 2026-10-18
 
+### Fixed
+- **[Bugfix] FAQ #5 email pill đồng bộ với Studio CMS `contactSettings.email`** (task "Sync FAQ Contact Email with Studio CMS & Upscale 'DECODE TRAVEL' Hero Typography (+10%)")
+  - **Root cause**: `src/app/[locale]/support/page.tsx` hardcode `SUPPORT_EMAIL = "duanmar@hcmussh.edu.vn"` (email cũ) → pill email ở câu hỏi #5 ("Tôi có thể liên hệ hỗ trợ trực tiếp qua những kênh nào?") lệch khỏi email liên hệ chính trong Studio.
+  - **Fix**: đọc `siteConfiguration.contactSettings.email` qua `fetchPublished(SITE_CONFIGURATION_QUERY, …)` (tag `sanity:siteconfig`), mặc định `Duanmartravel@gmail.com` khi CMS trống; href dựng bằng `toMailtoHref` (sanitize) → luôn `mailto:` hợp lệ. Thêm `data-testid="support-email-link"` cho test.
+  - **Tests**: NEW unit `tests/unit/support-faq-email.test.mts` (bind `contactSettings.email`, default `Duanmartravel@gmail.com`, đã gỡ `hcmussh`, `toMailtoHref` đúng, FAQ index 4 = câu "kênh/channels" cả 2 locale).
+  - Verified: `npx tsc --noEmit` 0 · `npx eslint src tests` 0 · `npm test` **41/41 file** · live `/vi/support` & `/en/support` render `href="mailto:Duanmartravel@gmail.com"`. Docs impact: minor (changelog này).
+
 ### Changed
 - **[Feature] Đồng bộ ẩn/hiện ghost chatbot FAB với header theo scroll** (task "Defer Floating Chatbot Visibility - Sync Chatbot Widget with Scroll-Triggered Header Reveal State")
   - **Hook chung** NEW `src/components/layout/use-hero-reveal.ts`: trích logic ngưỡng 50% chiều cao hero từ `header.tsx` thành `useHeroReveal()` (trả `revealed`; trang khác luôn `true`; rAF coalesced scroll/resize, SSR-safe). Header và widget cùng bind một hook nên trạng thái không bao giờ lệch.
@@ -10,6 +17,83 @@
   - **Tests**: `i-ai-assistant.mjs` +2 check (I1a ẩn ở đầu hero · I1b hiện đồng bộ sau khi cuộn) **17/17**; các flow VI/EN/mobile gọi `revealHomeHeader` trước khi click trigger.
   - Verified: `npx tsc --noEmit` 0 · `npx eslint src tests` 0 · `npm test` **41/41 file** · `npm run test:browser` `i-ai-assistant` **17/17**, `v-home-hero-header-search` **47/47** (0 hồi quy; `u-icon-switcher-price` U2 fail pre-existing do homepage đã prune `section.py-8`).
   - Docs impact: minor (changelog này).
+- **[Feature] Hero wordmark "DECODE TRAVEL" → font condensed mảnh (Bebas Neue) + cỡ lớn hơn / giãn chữ rộng hơn** (task "Sync FAQ Contact Email with Studio CMS & Upscale 'DECODE TRAVEL' Hero Typography (+10%)")
+  - **Font** `src/app/layout.tsx`: thêm `Bebas_Neue` (next/font/google, weight 400, `--font-display`, `display:"swap"`) vào `<html>`; `src/app/globals.css` `@theme inline` map `--font-display` → tiện ích `font-display`.
+  - **Hero** `src/components/homepage/hero-section.tsx`: H1 `data-testid="hero-display"` = `font-display font-normal uppercase leading-none tracking-[0.12em] whitespace-nowrap text-[clamp(3rem,15vw,20rem)]` (bỏ `font-extrabold` vì Bebas Neue 1 weight; min 3rem giữ không clip ở 320px). Mục tiêu kéo chữ gần tràn viền hơn: cap tối đa nâng 14rem → 20rem, tracking 0.1em → 0.12em.
+  - Verified: `npm run test:browser` `v-home-hero-header-search.mjs` **47/47** — đo thực tế fill ≈ **94%** viewport ở 320→1920px (1 dòng, `getClientRects().length === 1`, không clip 2 mép, không tràn trang), ≥2048px cap 20rem. `s-bilingual-slogans` **18/18**, `l-navbar` 26/26, `m-footer-brand` 29/29, `o-footer-refinement` 19/19, `y-homepage-prune` 19/19, `a-ux-microinteractions` 26/26.
+  - Docs impact: minor (changelog này).
+- **[Feature] Hero overlay → một dòng chữ khổng lồ "DECODE TRAVEL" (bỏ subtitle)** (task "Replace Hero Section Text with Giant Full-Width Typography 'DECODE TRAVEL' & Remove Subtitle")
+  - **Hero** `src/components/homepage/hero-section.tsx`: xoá hoàn toàn `<p data-testid="hero-slogan">` (subtitle) và prop `slogan`; H1 giờ là wordmark khổng lồ full-width `data-testid="hero-display"` — `font-extrabold uppercase tracking-tighter leading-none whitespace-nowrap`, cỡ chữ fluid `text-[clamp(2.5rem,11vw,14rem)]`, màu trắng + `text-shadow` nhẹ để đọc rõ trên video; vẫn căn giữa bằng flex (`items-center justify-center`). Ảnh fallback dùng `t("heroDisplay")` cho alt.
+  - **Trang chủ** `src/app/[locale]/page.tsx`: bỏ resolve `heroSlogan` + import `pickBilingual` + prop `slogan` (CMS field `heroSlogan`/`heroSubtitle` + projection giữ nguyên, không còn dùng ở hero).
+  - **i18n** `home.heroDisplay` = "DECODE TRAVEL" (en + vi).
+  - **Tests**: `v-home-hero-header-search.mjs` cập nhật V3 (H1 = wordmark, không còn subtitle) + thêm V12 kiểm tra responsive @320/375/768/1280/1920/2560 (font-size = clamp, uppercase/nowrap/extrabold, một dòng, không tràn ngang, không bị cắt) **41/41**; viết lại `s-bilingual-slogans.mjs` (footer slogan giữ nguyên, hero chỉ còn wordmark = H1 + khẳng định subtitle đã gỡ) **18/18**; cập nhật unit `bilingual-slogan.test.mts`.
+  - Verified: `npx tsc --noEmit` 0 · `npx eslint src tests` 0 · `npm test` **40/40 file** · `npm run test:browser` **26/36** (10 fail pre-existing, 0 hồi quy). Đo thực tế: 320px→40px (rộng 309px, vừa khít), 1280px→140.8px, ≥2048px→capped 224px (14rem) — 1 dòng, không clip ở mọi breakpoint.
+  - Docs impact: minor (changelog này)
+
+- **[Feature] Full-viewport promo video hero + scroll-revealed header + minimalist standalone search** (task "Promotional Video Hero, Scroll-Triggered Navigation Header & Minimalist Search")
+  - **Schema** `homepage`: thêm `promoVideo` (file mp4/webm) · `promoVideoUrl` (url) · `promoVideoPoster` (image) cạnh `heroImage` (nay là poster/fallback). **Query** `HOMEPAGE_QUERY`: project `promoVideo { asset->{url} }`, `promoVideoUrl`, `promoVideoPoster { asset->{url, metadata{dimensions{width, height}}} }`.
+  - **Hero** `src/components/homepage/hero-section.tsx`: viết lại thành hero toàn màn hình `id="home-hero"` (`h-screen -mt-16` để tràn dưới thanh header trong suốt) — video nền autoplay/muted/loop/playsInline (file > URL > `heroImage` > gradient), overlay `bg-black/40`, giữ nguyên `h1` + `[data-testid="hero-slogan"]` liền sau H1; thêm nút cuộn xuống `[data-testid="hero-scroll-down"]` (ChevronDown animate-bounce) cuộn mượt qua màn hình đầu.
+  - **Header** `src/components/layout/header.tsx`: chỉ trên trang chủ (`pathname === "/"`), header trong suốt + trượt hẳn lên (`-translate-y-full`) khi ở đầu trang, trượt xuống (`translate-y-0`, `transition-transform duration-300`) khi `scrollY ≥ 50%` chiều cao hero (rAF scroll/resize listener). Trang khác luôn hiện. Thêm `data-header-home` / `data-header-revealed` cho test.
+  - **Search** NEW `src/components/homepage/home-search.tsx`: section độc lập giữa hero và "Điểm đến nổi bật" — chỉ một input viền mỏng (`border-black/30 dark:border-white/30`, nền trong suốt), KHÔNG nút CTA; Enter (hoặc submit form) chuyển tới trang kết quả. `src/lib/tour-search.ts`: thêm `buildSearchHref(query)` → `/search?q=…`.
+  - **Trang chủ** `src/app/[locale]/page.tsx`: resolve `heroVideoSrc` (`promoVideo` file → URL) + `heroPosterSrc`, truyền vào hero, render `<HomeSearch />` trước `FeaturedDestinations`. **i18n** `home.scrollDown` + `home.heroVideoAria` (en+vi).
+  - **Tests**: NEW browser `v-home-hero-header-search.mjs` **17/17** (hero full viewport + H1/slogan + fallback không video, header ẩn ở đầu trang → hiện sau 50% → luôn hiện ở trang khác, search chỉ viền/không nút, Enter → `/vi/search?q=`, nút cuộn); NEW helper `tests/helpers/header-reveal.mjs` (`revealHomeHeader`) + cập nhật `a-ux-microinteractions` (C1 đổi thành hero CTA đã bỏ + có search), `h-theme-toggle`, `l-navbar`, `g-header`, `j-about-contact`, `r-entry-popup-cms`, `u-icon-switcher-price` (cuộn hiện header trước khi click/hover); mở rộng `homepage-about-video-query.test.mts`, nới regex `bilingual-slogan.test.mts`.
+  - Verified: `npx tsc --noEmit` 0 · `npx eslint src tests` 0 · `npm test` **40/40 file** · `npm run test:browser` **26/36** (10 fail pre-existing, 0 hồi quy; `v-home-hero-header-search` pass).
+  - Docs impact: minor (changelog này)
+
+## 2026-10-17
+
+### Fixed
+- **[Bugfix] Homepage tour cards stayed Vietnamese after switching EN** (task "Fix Global Locale Resolution Bug — Synchronize Tour Descriptions on Homepage Cards with Active Language")
+  - **Root cause**: detail page đã đọc `descriptionEn`, nhưng mọi query nuôi card listing chỉ project `description` (VI base) → `DestinationCard` (client, `useLocale()`) resolve `{vi}` fallback nên EN luôn hiện tiếng Việt dù đã đổi ngôn ngữ.
+  - **Query**: thêm `descriptionEn` vào `FEATURED_DESTINATIONS_QUERY` (homepage), `DESTINATIONS_QUERY` (explore list + `/tours` search + search page + assistant grounding), `DESTINATIONS_BY_CATEGORY_QUERY` (`/tours/domestic|international`).
+  - **NEW helper** `resolveLocalizedField(base, english, locale)` trong `src/lib/bilingual-string.ts`: EN → `english` (trim, non-empty) else fallback base; locale khác → base. Dùng chung cho card, detail page, search entries, assistant grounding, tour-search haystack.
+  - **Render** `DestinationCard`: `description` (VI) + `descriptionEn` (EN, graceful fallback) — `useLocale()` reactive nên đổi ngôn ngữ re-render tại chỗ, không cần hard refresh/không cần vào detail.
+  - **Tests**: mở rộng `locale-resolvers.test.mts` (+5 `resolveLocalizedField`) **12/12**, `tour-category-queries.test.mts` (+projection `descriptionEn` + groq-js parse) **16/16** · NEW browser `t-locale-tour-descriptions.mjs` **7/7** (VI→EN→VI, window marker sống sót = 0 hard refresh, EN text ≠ VI text).
+  - Verified: eslint 0 · `npx tsc --noEmit` 0 · `npm test` **38/38** · live: `/vi` cards = mô tả tiếng Việt, `/en` cards = bản dịch tiếng Anh (`descriptionEn`).
+  - Docs impact: minor (changelog này)
+
+### Changed
+- **[Feature] Contact Settings CMS refactor + standardized 7-channel dynamic contact grid** (task "Refactor Contact Settings CMS Schema & Standardize 7-Channel Dynamic Contact Grid")
+  - **Schema** `siteConfiguration`: thêm 7 field contact tường minh trong fieldset `contact` — `contactPhone`/`contactEmail` (string) + `facebookUrl`/`instagramUrl`/`tiktokUrl`/`threadsUrl`/`youtubeUrl` (url, helper `contactUrlField`, optional + http(s)-only). `socialLinks` cũ giữ nguyên nhưng chuyển sang fieldset `footerSocial` (legacy, chỉ còn nuôi Footer).
+  - **Query** `SITE_CONFIGURATION_QUERY`: project 7 field mới (dataset chưa nhập → null → i18n fallback).
+  - **NEW lib** `src/lib/contact-channels.ts`: `resolveContactChannels` dựng view-model theo thứ tự hợp đồng phone → email → facebook → instagram → tiktok → threads → youtube; `toTelHref`/`toMailtoHref` chuẩn hoá `tel:`/`mailto:`, `socialHandle` bỏ protocol; `SOCIAL_CHANNEL_FIELDS` map key→field; **conditional render** — kênh không có giá trị CMS lẫn i18n fallback bị bỏ (không để card trống/dead link).
+  - **NEW icons** `src/components/contact/contact-channel-icons.tsx`: 7 glyph SVG nét mảnh 24×24 (`fill="none"`, stroke 1.75, `currentColor`) — Phone, Mail, Facebook, Instagram, TikTok, Threads, YouTube; card dùng `text-link` (= `#7F1D1D` light, `#dd8578` dark) → icon đỏ tối giản.
+  - **Contact page** `src/app/[locale]/contact/page.tsx`: lưới thống nhất `grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`; mỗi card = icon đỏ + label (platform title, hết placeholder "Dự Án Mar") + value/handle; email card trùng ("Other") biến mất (page không còn render `socialLinks`); `tel:`/`mailto:` same-tab, social `target="_blank" rel="noopener noreferrer"`.
+  - **Tests**: NEW unit `contact-channels.test.mts` **8/8**; cập nhật `social-links.test.mts` (schema 7 field + contract trang contact) **20/20**, `site-configuration-query.test.mts` **10/10**.
+  - Verified: eslint 0 · `npx tsc --noEmit` 0 · `npm test` **38/38** · `/vi/contact` + `/en/contact` 200, 5 node (phone/email/facebook/instagram/tiktok) đúng href type, threads/youtube rỗng bị ẩn (fallback).
+  - Docs impact: minor (changelog này)
+
+- **[Feature] Unify Footer + Contact on a single `contactSettings`; fix TikTok/Threads SVG icons; retire legacy `socialLinks`** (task "Fix Social SVG Icons, Deprecate Legacy CMS Schema, Unify Footer & Contact Configuration")
+  - **Icons** `src/components/contact/contact-channel-icons.tsx`: TikTok note glyph scale 1.14× quanh tâm viewBox (`<g transform="translate(12 12) scale(1.14) translate(-12 -12)">`) — cân đối với Facebook/Instagram; Threads thay bằng path filled canonical Simple Icons (@ spiral) thay vì nét mảnh bị méo/rỗng.
+  - **Schema** `siteConfiguration`: xoá hoàn toàn `socialLinks` array + fieldset `footerSocial`; gộp 7 field rời (`contactPhone`/`contactEmail`/`*Url`) vào object `contactSettings { phone, email, facebookUrl, tiktokUrl, instagramUrl, threadsUrl, youtubeUrl }` → một nguồn dữ liệu duy nhất cho cả Footer lẫn Contact page (field rỗng bị ẩn ở cả hai).
+  - **Query** `SITE_CONFIGURATION_QUERY`: project `contactSettings { ... }`, bỏ `socialLinks`.
+  - **Lib** `src/lib/contact-channels.ts`: thay `resolveContactChannels`/`ContactChannelInput`/`SOCIAL_CHANNEL_FIELDS`/`socialChannelLabel` bằng `buildContactChannels(settings, fallbacks)` + hằng `CONTACT_CHANNELS`; thứ tự hợp đồng mới **phone → email → facebook → tiktok → instagram → threads → youtube**; nhận raw payload (`unknown`, chống junk), CMS wins → i18n fallback → ẩn.
+  - `src/lib/social-links.ts`: bỏ dead code `SocialLink`/`normalizeSocialLinks`/`resolveSocialLinks`; giữ `classifyHref` + `platformTitle` (+ key `threads`).
+  - **Footer + layout**: `src/components/layout/footer.tsx` + `src/app/[locale]/layout.tsx` nhận prop `contactSettings` (thay `socialLinks`), render 7 link chữ thuần (label) qua `SocialAnchor` bằng chung builder; `src/app/[locale]/contact/page.tsx` dùng cùng `buildContactChannels` (icon + label + value).
+  - **Tests**: NEW unit `contact-channel-icons.test.mts` **5/5**; cập nhật `social-links.test.mts` **19/19**, `contact-channels.test.mts` **9/9**, `site-configuration-query.test.mts` **10/10**; browser `j-about-contact.mjs` (J3 order), `m-footer-brand.mjs` (F4/F5/F6 order).
+  - Verified: eslint 0 · `npx tsc --noEmit` 0 · `npm test` **39/39** · live `/vi` footer = 5 link label đúng thứ tự, `/vi/contact` = 5 node; browser `m-footer-brand` **29/29**, `j-about-contact` 0 FAIL, `n-lightbox-contact` N12 ok; Threads/YouTube ẩn khi CMS rỗng.
+  - Note: dataset cũ còn field legacy nhưng không có `SANITY_WRITE_TOKEN` → không migrate; field lạ bị Studio bỏ qua, cần nhập lại dữ liệu trong tab **Contact Settings**.
+  - Docs impact: minor (changelog này)
+
+- **[Feature] Third checkout rail: Crypto Wallet / MetaMask (ERC-20 stablecoin) + universal QR deposit fallback** (task "Add Crypto Wallet / MetaMask Payment Method")
+  - **NEW lib** `src/lib/crypto-payment.ts`: `CRYPTO_METHOD="crypto_metamask"`; validate config (`resolveCryptoConfig`) + địa chỉ EVM/tx hash (`isEvmAddress`/`isTransactionHash`); quy đổi VND→USD (`toUsdAmount` — thiếu `NEXT_PUBLIC_CRYPTO_VND_PER_USD` → `unconfigured`, không bịa tỷ giá) + token units (`toTokenUnits`); dựng calldata `transfer(address,uint256)` (`buildErc20TransferData` với `erc20Abi`/`encodeFunctionData` của **viem**), EIP-681 URI, `buildCryptoQuote`; luồng EIP-1193 thô `getInjectedProvider`/`requestAccounts`/`ensureChain` (`wallet_switchEthereumChain`→`wallet_addEthereumChain`)/`sendErc20Transfer`; map lỗi ví (`classifyProviderError`); `explorerTxUrl`. Chains 137/56/8453/1.
+  - **NEW panel** `src/components/booking/crypto-payment-panel.tsx`: connect → switch/add chain → `eth_sendTransaction`; khối deposit tĩnh (QR `qrcode`, copy địa chỉ, network/token/amount) làm fallback cho mobile/không có extension; `Dialog` "formatted payment modal"; khi ví trả hash mới `onPaid(method, txHash)` (KHÔNG dùng mock webhook 3s như fiat).
+  - **Payment section** `booking-payment-section.tsx`: radio thứ 3 (`sm:grid-cols-3`), render panel khi `crypto_metamask`, fiat giữ mock QR + timer; `onPaid(method, txHash?)`. `booking-summary.tsx`/`booking-form.tsx`: luồn prop `cryptoConfig`, lưu `txHash` vào record + POST `/api/booking-confirmation`. `src/lib/payment.ts`: `PaymentMethod = FiatPaymentMethod | "crypto_metamask"`, `PAYMENT_METHODS` 3 rail, guard `isFiatPaymentMethod`.
+  - **Server-side config** `checkout/page.tsx`: `resolveCryptoConfig({...process.env.NEXT_PUBLIC_CRYPTO_*})` (Next chỉ inline member tĩnh `process.env.NEXT_PUBLIC_*`) truyền xuống client. `.env.example`: block `NEXT_PUBLIC_CRYPTO_WALLET_ADDRESS` (required), `_CHAIN_ID` (137), `_TOKEN_ADDRESS` (USDT Polygon `0xc2132D05...`), `_TOKEN_SYMBOL` (USDT), `_TOKEN_DECIMALS` (6), `_VND_PER_USD`.
+  - **Persist/Email**: `booking-history.ts` (`TripBooking.txHash?`, validator nhận `crypto_metamask`, txHash phải khớp `isTransactionHash`) · `booking-email-validation.ts` + `email-types.ts` + `confirmation-email-template.ts` (label "Crypto (MetaMask)" + dòng txHash có điều kiện) + `api/booking-confirmation/route.ts` (log txHash) · `messages/{en,vi}.json` +26 key `booking.crypto*` + `methodCrypto`.
+  - **Deps**: thêm `viem@^2.57.7` (chỉ dùng encode/ABI/parse; KHÔNG wagmi/ethers, ví tự trả gas).
+  - **Tests**: NEW unit `crypto-payment.test.mts` **22/22**; `payment-logic.test.ts` (3 rail + `isFiatPaymentMethod`) **9/9**; `booking-confirmation-email.test.mts` (C4 3 method + C4b dòng txHash + case invalid) **15/15**; `booking-logic.test.ts` (B4 crypto record + txHash) **17/17**; NEW browser `o-crypto-payment.mjs` **18/18** (inject EIP-1193 mock qua `page.evaluateOnNewDocument`: 3 radio → panel/QR/address → connect→send→txHash + `eth_sendTransaction` calldata `0xa9059cbb`, record localStorage; fallback không ví → notice + QR). Cập nhật `c-payment.mjs` (3 radio, slug từ `resolveTourPricingFixture`, `text-green-400`).
+  - Verified: `npx tsc --noEmit` 0 · `npx eslint src tests` 0 · `npm test` **40/40 file** · browser `o-crypto-payment` **18/18**, `c-payment` pass.
+  - Docs impact: minor (changelog này)
+
+- **[Feature] Tách Target URL khỏi Display Handle trong Contact CMS — nhãn social sạch trên Contact page** (task "Separate Target URLs from Display Handles in Contact CMS Schema")
+  - **Schema** `contactSettings`: thêm 5 field handle optional cạnh mỗi URL (`facebookHandle`/`tiktokHandle`/`instagramHandle`/`threadsHandle`/`youtubeHandle`, helper `contactHandleField`) — chỉ định label hiển thị trên Contact page, URL vẫn là href.
+  - **Query** `SITE_CONFIGURATION_QUERY`: project cả 5 handle.
+  - **Lib** `src/lib/contact-channels.ts`: `ContactSettings` + `handleField` trong `ChannelSpec`; thay `socialHandle` (bỏ protocol, giữ path/query → gây tràn) bằng `socialDomain` (chỉ host, strip `www.`); `value` social = **handle → sanitized domain → platform name**, KHÔNG bao giờ là URL thô. URL chỉ nằm ở `href`.
+  - **Contact page** `src/app/[locale]/contact/page.tsx`: card hiển thị `channel.value` (handle/domain) + testid `contact-label`/`contact-value`; `<a>` giữ `target="_blank" rel="noopener noreferrer"` cho http(s). Footer KHÔNG đổi — vẫn render `label` (platform name) như cũ (`handle` không lọt vào `label`).
+  - **Tests**: `contact-channels.test.mts` **11/11** (socialDomain, precedence handle→domain→platform, footer isolation, unsafe URL → platform name); `site-configuration-query.test.mts` **10/10** (12 projection field URL+handle); browser `j-about-contact.mjs` (+ J3 visible value = handle/domain + không có URL/query thô).
+  - Verified: `npx tsc --noEmit` 0 · `npx eslint src tests` 0 · `npm test` **40/40 file** · browser `j-about-contact`/`n-lightbox-contact`/`m-footer-brand` pass; live `/vi/contact` value = `instagram.com`, `tiktok.com`… (không còn URL dài).
+  - Docs impact: minor (changelog này)
 
 ## 2026-10-15
 

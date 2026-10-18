@@ -108,9 +108,9 @@ check("layout resolves footerSlogan for the active locale and passes it down", (
   if (!/<Footer[^>]*slogan=\{footerSlogan\}/.test(layoutSource)) throw new Error("slogan prop not wired");
 });
 
-check("homepage resolves heroSlogan (CMS → legacy → i18n) and passes it down", () => {
-  if (!homePageSource.includes("pickBilingual(homepageData?.heroSlogan, locale)")) throw new Error("resolution missing");
-  if (!/<HeroSection hero=\{homepageData\} slogan=\{heroSlogan\}/.test(homePageSource)) throw new Error("slogan prop not wired");
+check("homepage no longer resolves/passes the bilingual hero slogan", () => {
+  if (homePageSource.includes("heroSlogan")) throw new Error("heroSlogan still resolved in page.tsx");
+  if (/\bslogan=\{/.test(homePageSource)) throw new Error("slogan prop still passed to HeroSection");
 });
 
 check("footer renders the slogan prop with i18n fallback + testid", () => {
@@ -120,16 +120,19 @@ check("footer renders the slogan prop with i18n fallback + testid", () => {
   if (footerSource.includes("Discover the beauty")) throw new Error("hardcoded EN slogan still in footer");
 });
 
-check("hero renders the slogan prop with i18n fallback + testid", () => {
-  if (!heroSource.includes('data-testid="hero-slogan"')) throw new Error("testid missing");
-  if (!heroSource.includes("slogan ?? t(\"heroSubtitle\")")) throw new Error("fallback missing");
+check("hero renders the giant display wordmark and no subtitle slogan", () => {
+  if (heroSource.includes('data-testid="hero-slogan"')) throw new Error("hero subtitle element still present");
+  if (!heroSource.includes('data-testid="hero-display"')) throw new Error("hero-display testid missing");
+  if (!heroSource.includes('t("heroDisplay")')) throw new Error("heroDisplay copy not wired");
   if (heroSource.includes("Trải nghiệm vẻ đẹp")) throw new Error("hardcoded VI slogan still in hero");
   if (heroSource.includes("Experience the beauty")) throw new Error("hardcoded EN slogan still in hero");
 });
 
-check("i18n fallback strings still present in both locales", () => {
+check("i18n display + fallback strings present in both locales", () => {
   if (!messagesVi.footer.tagline || !messagesEn.footer.tagline) throw new Error("footer.tagline missing");
   if (!messagesVi.home.heroSubtitle || !messagesEn.home.heroSubtitle) throw new Error("home.heroSubtitle missing");
+  if (messagesVi.home.heroDisplay !== "DECODE TRAVEL" || messagesEn.home.heroDisplay !== "DECODE TRAVEL")
+    throw new Error("home.heroDisplay missing/mismatched");
 });
 
 console.log(`${passed}/${passed + failed} assertions passed`);

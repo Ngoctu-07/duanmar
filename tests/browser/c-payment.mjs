@@ -1,6 +1,9 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { expectedBreakdown, fetchTourPricing } from "../helpers/cms-expectations.mjs";
+import {
+  expectedBreakdown,
+  resolveTourPricingFixture,
+} from "../helpers/cms-expectations.mjs";
 import { dismissPromo } from "../helpers/promo.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
@@ -44,12 +47,17 @@ try {
     await sleep(80);
   };
 
-  await page.goto("http://localhost:3000/vi/booking/checkout?tour=hcm", { waitUntil: "networkidle2", timeout: 60000 });
+  // Never hardcode a slug — a CMS reseed can drop one. resolveTourPricingFixture
+  // guarantees both published tourPricing tiers and a live destination page.
+  const fixture = await resolveTourPricingFixture();
+  if (!fixture) throw new Error("no published tourPricing fixture found");
+  const { slug, doc: cmsDoc } = fixture;
+
+  await page.goto(`http://localhost:3000/vi/booking/checkout?tour=${slug}`, { waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
 
   // --- D6: tiered pricing live on the checkout form — totals derived from the
   // published CMS doc (freshness contract; plan 260927-1645)
-  const cmsDoc = await fetchTourPricing("hcm");
   const pricing = async () => norm(await page.$eval("#booking-pricing-heading", (el) => el.closest("section").textContent));
   await setInput("#booking-guests", "1");
   let text = await pricing();
@@ -102,7 +110,7 @@ try {
   check("D5 summary shows numeric total", Boolean(totalRow) && norm(totalRow).includes(bd2.totalText), norm(totalRow ?? ""));
 
   const radios = await page.$$('input[name="payment-method"]');
-  check("D7 two payment methods", radios.length === 2, `count=${radios.length}`);
+  check("D7 three payment methods", radios.length === 3, `count=${radios.length}`);
   check("D7 QR hidden before selection", !(await page.$('img[alt="Mã QR thanh toán"]')));
 
   // --- MoMo
@@ -118,14 +126,14 @@ try {
   const statusEl = await page.$('p[aria-live="polite"]');
   let status = statusEl ? (await statusEl.evaluate((el) => el.textContent.trim())) : "";
   let cls = statusEl ? (await statusEl.evaluate((el) => el.className)) : "";
-  check("D7 initial status Pending + muted", status === "Đang chờ thanh toán" && cls.includes("text-muted-foreground") && !cls.includes("text-green-700"), `${status} | ${cls}`);
+  check("D7 initial status Pending + muted", status === "Đang chờ thanh toán" && cls.includes("text-muted-foreground") && !cls.includes("text-green-400"), `${status} | ${cls}`);
   const paymentBlock = await page.$('section:has(#booking-payment-heading)');
   if (paymentBlock) await paymentBlock.screenshot({ path: `${OUT}/d7-payment-pending.png` });
 
   await sleep(3400);
   status = await page.$eval('p[aria-live="polite"]', (el) => el.textContent.trim());
   cls = await page.$eval('p[aria-live="polite"]', (el) => el.className);
-  check("D7 status → Payment successful (bold green)", status === "Thanh toán thành công" && cls.includes("font-bold") && cls.includes("text-green-700"), `${status} | ${cls}`);
+  check("D7 status → Payment successful (bold green)", status === "Thanh toán thành công" && cls.includes("font-bold") && cls.includes("text-green-400"), `${status} | ${cls}`);
   if (paymentBlock) await paymentBlock.screenshot({ path: `${OUT}/d7-payment-success.png` });
 
   // --- switch to Bank: payload changes, status restarts

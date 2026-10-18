@@ -1,6 +1,7 @@
 /**
- * CMS social/contact links (`siteConfiguration.socialLinks`) view model +
- * fail-closed href classification shared by the Contact Section and Footer.
+ * Shared helpers for contact/social channels: brand labels (`platformTitle`)
+ * and fail-closed href classification (`classifyHref`) used by the Contact page,
+ * the Footer and `contact-channels.ts`.
  *
  * Security contract: only absolute `http(s)` destinations open in a new tab
  * (`target="_blank" rel="noopener noreferrer"`); `tel:`/`mailto:`/site-relative
@@ -9,24 +10,16 @@
  * of a dead or dangerous link.
  */
 
-export type SocialLink = {
-  /** Sanity array member key (stable React key when present). */
-  _key?: string;
-  /** Platform slug, e.g. `facebook` — never empty (`other` default). */
-  platform: string;
-  /** Visible handle/label, e.g. `DuanMar` or `@duanmar.official`. */
-  displayText: string;
-  /** Raw CMS destination; empty/invalid → unlinked text. */
-  targetUrl?: string | null;
-};
-
 export type ClassifiedHref = { href: string; external: boolean };
 
 /** Brand names are locale-independent — no EN/VI message keys needed. */
 const PLATFORM_TITLES: Record<string, string> = {
+  phone: "Phone",
+  email: "Email",
   facebook: "Facebook",
   instagram: "Instagram",
   tiktok: "TikTok",
+  threads: "Threads",
   youtube: "YouTube",
   linkedin: "LinkedIn",
   x: "X (Twitter)",
@@ -70,48 +63,4 @@ export function classifyHref(raw?: string | null): ClassifiedHref | null {
   }
 
   return null;
-}
-
-/** Coerce the raw GROQ payload into usable entries (drops malformed rows). */
-export function normalizeSocialLinks(raw: unknown): SocialLink[] {
-  if (!Array.isArray(raw)) return [];
-
-  const links: SocialLink[] = [];
-  for (const item of raw) {
-    if (!item || typeof item !== "object") continue;
-    const record = item as Record<string, unknown>;
-
-    const displayText =
-      typeof record.displayText === "string" ? record.displayText.trim() : "";
-    if (!displayText) continue;
-
-    const platform =
-      typeof record.platform === "string" && record.platform.trim()
-        ? record.platform.trim().toLowerCase()
-        : "other";
-    const targetUrl =
-      typeof record.targetUrl === "string" && record.targetUrl.trim()
-        ? record.targetUrl.trim()
-        : null;
-
-    links.push({
-      _key: typeof record._key === "string" ? record._key : undefined,
-      platform,
-      displayText,
-      targetUrl,
-    });
-  }
-  return links;
-}
-
-/**
- * CMS entries win when the editor filled any in; otherwise the i18n fallback
- * nodes keep rendering (empty CMS field must never blank the section).
- */
-export function resolveSocialLinks(
-  cmsPayload: unknown,
-  fallback: SocialLink[]
-): SocialLink[] {
-  const fromCms = normalizeSocialLinks(cmsPayload);
-  return fromCms.length > 0 ? fromCms : fallback;
 }

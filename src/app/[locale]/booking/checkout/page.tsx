@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { BookingForm } from "@/components/booking/booking-form";
 import { mapPricingTiers } from "@/lib/pricing";
 import { mapTourCapacity } from "@/lib/tour-capacity";
+import { resolveCryptoConfig } from "@/lib/crypto-payment";
 import { resolveLocaleString } from "@/lib/bilingual-string";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { DESTINATION_BY_SLUG_QUERY } from "@/sanity/queries/destinations";
@@ -43,6 +44,17 @@ export default async function CheckoutPage({
   const capacity = mapTourCapacity(pricingDoc);
   const tourName = resolveLocaleString(destination.name, locale) ?? tour;
 
+  // Web3 rail config, resolved server-side so the public env vars are inlined
+  // at build (Next only inlines static `process.env.NEXT_PUBLIC_*` reads).
+  const cryptoConfig = resolveCryptoConfig({
+    walletAddress: process.env.NEXT_PUBLIC_CRYPTO_WALLET_ADDRESS,
+    chainId: process.env.NEXT_PUBLIC_CRYPTO_CHAIN_ID,
+    tokenAddress: process.env.NEXT_PUBLIC_CRYPTO_TOKEN_ADDRESS,
+    tokenSymbol: process.env.NEXT_PUBLIC_CRYPTO_TOKEN_SYMBOL,
+    tokenDecimals: process.env.NEXT_PUBLIC_CRYPTO_TOKEN_DECIMALS,
+    vndPerUsd: process.env.NEXT_PUBLIC_CRYPTO_VND_PER_USD,
+  });
+
   return (
     <div className="container mx-auto max-w-2xl px-4 py-16">
       <Link
@@ -64,6 +76,7 @@ export default async function CheckoutPage({
           locale={locale}
           capacity={capacity}
           isSpecialTour={destination.isSpecialTour === true}
+          cryptoConfig={cryptoConfig}
         />
       </div>
     </div>

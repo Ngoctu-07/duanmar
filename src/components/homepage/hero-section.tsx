@@ -2,75 +2,100 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
-import { buildToursHref } from "@/lib/tour-search";
-import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 
 interface HeroProps {
   hero?: {
-    heroTitle?: string;
     heroImage?: { asset?: { url: string } };
   };
-  /** Per-locale slogan resolved on the server (page.tsx); null → i18n fallback. */
-  slogan?: string | null;
+  /** Hero promo video (uploaded file > stream URL); null → hero image fallback. */
+  videoSrc?: string | null;
+  /** Poster frame shown before playback / on video error. */
+  posterSrc?: string | null;
 }
 
-export function HeroSection({ hero, slogan }: HeroProps) {
+/**
+ * Full-viewport homepage hero. Renders the configured promo video (autoplay,
+ * muted, looping, inline) as the background, degrading to the hero image or a
+ * gradient when no video is available.
+ *
+ * The overlay is a single giant brand wordmark ("DECODE TRAVEL") that stretches
+ * full-width with fluid viewport typography — no subtitle — plus a scroll-down
+ * affordance that advances past the fold.
+ *
+ * Note: the header is transparent/hidden over this section (see header.tsx),
+ * so `-mt-16` pulls the hero up under the sticky bar to fill the viewport.
+ */
+export function HeroSection({ hero, videoSrc, posterSrc }: HeroProps) {
   const t = useTranslations("home");
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [failed, setFailed] = useState(false);
 
-  // Submit (button click or Enter) → tour listing filtered by the typed query.
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    router.push(buildToursHref(searchQuery));
+  const imageSrc = hero?.heroImage?.asset?.url ?? null;
+  const showVideo = Boolean(videoSrc) && !failed;
+
+  const handleScrollDown = () => {
+    const heroEl = document.getElementById("home-hero");
+    const bottom = heroEl
+      ? heroEl.getBoundingClientRect().bottom + window.scrollY
+      : window.innerHeight;
+    window.scrollTo({ top: bottom, behavior: "smooth" });
   };
 
   return (
-    <section className="relative h-[600px] bg-gradient-to-br from-primary/10 via-background to-secondary/10">
-      {hero?.heroImage?.asset?.url && (
-        <div className="absolute inset-0 z-0">
-          <Image
-            src={hero.heroImage.asset.url}
-            alt={hero.heroTitle || t("heroTitle")}
-            fill
-            className="object-cover opacity-30"
-            priority
-            sizes="100vw"
-          />
-        </div>
+    <section
+      id="home-hero"
+      data-testid="home-hero"
+      className="relative -mt-16 flex h-screen min-h-[560px] w-full items-center justify-center overflow-hidden bg-black"
+    >
+      {showVideo ? (
+        <video
+          data-testid="hero-video"
+          src={videoSrc ?? undefined}
+          poster={posterSrc ?? imageSrc ?? undefined}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          onError={() => setFailed(true)}
+          aria-label={t("heroVideoAria")}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : imageSrc ? (
+        <Image
+          src={imageSrc}
+          alt={t("heroDisplay")}
+          fill
+          priority
+          sizes="100vw"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-background to-secondary/40" />
       )}
-      <div className="container mx-auto flex h-full items-center justify-center px-4 relative z-10">
-        <div className="text-center space-y-6 max-w-3xl">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-            {hero?.heroTitle || t("heroTitle")}
-          </h1>
-          <p data-testid="hero-slogan" className="text-lg md:text-xl text-muted-foreground">
-            {slogan ?? t("heroSubtitle")}
-          </p>
 
-          <form onSubmit={handleSubmit} className="max-w-xl mx-auto space-y-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-5 w-5 stroke-[1.5] -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder={t("searchPlaceholder")}
-                aria-label={t("searchPlaceholder")}
-                className="w-full h-12 pl-10 pr-4 rounded-lg border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Button type="submit" size="lg" className="px-7 py-3.5 text-sm">
-                {t("exploreNow")}
-              </Button>
-            </div>
-          </form>
-        </div>
+      <div className="absolute inset-0 bg-black/40" aria-hidden />
+
+      <div className="relative z-10 flex w-full items-center justify-center px-2">
+        <h1
+          data-testid="hero-display"
+          style={{ textShadow: "0 2px 24px rgba(0,0,0,0.65), 0 1px 3px rgba(0,0,0,0.8)" }}
+          className="w-full text-center font-display font-normal uppercase leading-none tracking-[0.12em] whitespace-nowrap text-white text-[clamp(3rem,15vw,20rem)]"
+        >
+          {t("heroDisplay")}
+        </h1>
       </div>
+
+      <button
+        type="button"
+        onClick={handleScrollDown}
+        aria-label={t("scrollDown")}
+        data-testid="hero-scroll-down"
+        className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2 animate-bounce rounded-full p-2 text-white/80 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+      >
+        <ChevronDown className="h-7 w-7 stroke-[1.5]" />
+      </button>
     </section>
   );
 }

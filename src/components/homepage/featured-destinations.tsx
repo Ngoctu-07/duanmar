@@ -19,7 +19,7 @@ export function FeaturedDestinations({
   const t = useTranslations("home");
 
   return (
-    <section className="py-16 bg-background">
+    <section data-testid="featured-destinations" className="py-16 bg-background">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-12">
           {t("featuredDestinations")}

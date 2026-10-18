@@ -20,6 +20,7 @@ import {
   resolveLocaleBlocks,
   resolveLocaleList,
   resolveLocaleString,
+  resolveLocalizedField,
   type LocaleBlocks,
   type LocaleString,
 } from "@/lib/bilingual-string";
@@ -49,11 +50,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const destination = await getDestination(slug);
   if (!destination) return {};
   const tourName = resolveLocaleString(destination.name, locale) ?? slug;
-  const cleanMeta = (value: unknown): string | null =>
-    typeof value === "string" && value.trim() !== "" ? value : null;
-  const tourDescription =
-    (locale === "en" ? cleanMeta(destination.descriptionEn) : null) ??
-    resolveLocaleString(destination.description, locale);
+  const tourDescription = resolveLocalizedField(
+    destination.description,
+    destination.descriptionEn,
+    locale
+  );
   return {
     title: `${tourName} | DuanMar`,
     description: tourDescription?.slice(0, 160),
@@ -89,12 +90,12 @@ export default async function DestinationDetailPage({ params }: PageProps) {
   const tiers = mapPricingTiers(pricingDoc, locale);
   // Base fields are the primary Vietnamese source (VI renders them
   // directly); EN renders descriptionEn/itineraryEn with base fallback.
-  const cleanText = (value: unknown): string | null =>
-    typeof value === "string" && value.trim() !== "" ? value : null;
   const tourName = resolveLocaleString(destination.name, locale) ?? slug;
-  const tourDescription =
-    (locale === "en" ? cleanText(destination.descriptionEn) : null) ??
-    resolveLocaleString(destination.description, locale);
+  const tourDescription = resolveLocalizedField(
+    destination.description,
+    destination.descriptionEn,
+    locale
+  );
   interface RawItineraryDay {
     dayTitle: LocaleString;
     meals?: LocaleString | null;

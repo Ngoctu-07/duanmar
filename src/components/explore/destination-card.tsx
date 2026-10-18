@@ -8,7 +8,11 @@ import { Link } from "@/i18n/navigation";
 import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
 import { TourAttributeBadges } from "@/components/explore/tour-attribute-badges";
 import { pickCoverImage } from "@/lib/destination-gallery";
-import { resolveLocaleString, type LocaleString } from "@/lib/bilingual-string";
+import {
+  resolveLocaleString,
+  resolveLocalizedField,
+  type LocaleString,
+} from "@/lib/bilingual-string";
 
 export interface Destination {
   _id: string;
@@ -18,6 +22,8 @@ export interface Destination {
   category?: "domestic" | "international";
   country?: { vi: string; en: string; code?: string } | null;
   description?: LocaleString;
+  /** Explicit English overview (base `description` is the VI source). */
+  descriptionEn?: string | null;
   isSpecialTour?: boolean;
   image?: { asset?: { url: string }; alt?: string };
   galleryImages?: { asset?: { url: string }; alt?: string }[];
@@ -51,7 +57,12 @@ export function DestinationCard({
     (destination.category === "domestic" ? t("vietnam") : destination.region);
   // Bilingual tour fields with vi fallback (legacy plain strings pass through).
   const tourName = resolveLocaleString(destination.name, locale) ?? "";
-  const tourDescription = resolveLocaleString(destination.description ?? null, locale);
+  // EN renders the explicit descriptionEn; empty/missing → base description.
+  const tourDescription = resolveLocalizedField(
+    destination.description ?? null,
+    destination.descriptionEn,
+    locale
+  );
   return (
     <Card className="group relative overflow-hidden cursor-pointer transition-shadow hover:shadow-lg">
       {/* Full-card stretched hit area: clicking anywhere on the card

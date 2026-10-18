@@ -1,6 +1,8 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { revealHomeHeader } from "../helpers/header-reveal.mjs";
+import { fetchContactSettings, expectedContactChannels } from "../helpers/cms-expectations.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -72,6 +74,7 @@ try {
 
   await page.setViewport({ width: 375, height: 812 });
   await sleep(300);
+  await revealHomeHeader(page);
   await page.click('button[data-slot="sheet-trigger"]');
   await sleep(600);
   const sheet = await page.$('[role="dialog"]');
@@ -139,17 +142,47 @@ try {
     await sections[0].screenshot({ path: `${OUT}/j2-about-section.png` });
   }
 
-  // --- J3 contact page: 5 oversized contact nodes, correct href types
+  // --- J3 contact page: oversized contact nodes, correct href types
   await page.goto("http://localhost:3000/vi/contact", { waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
+  // CMS contactSettings win; empty → i18n nodes. Derive expectations live so a
+  // Studio edit (e.g. adding Threads) doesn't invalidate this test.
+  const contactSettings = await fetchContactSettings().catch(() => null);
+  const expectedChannels = expectedContactChannels(contactSettings, contact.nodes);
   const nodes = await page.$$('a[data-testid="contact-node"]');
-  check("J3 five contact nodes", nodes.length === 5, `count=${nodes.length}`);
+  check(
+    `J3 ${expectedChannels.length} contact nodes (CMS-driven)`,
+    nodes.length === expectedChannels.length,
+    `count=${nodes.length} expected=${expectedChannels.length}`
+  );
   const hrefs = await page.$$eval('a[data-testid="contact-node"]', (els) =>
     els.map((el) => el.getAttribute("href"))
   );
-  const expected = ["tel:", "mailto:", "facebook.com", "instagram.com", "tiktok.com"];
-  expected.forEach((needle, i) =>
-    check(`J3 node ${i} href has ${needle}`, (hrefs[i] || "").includes(needle), hrefs[i] || "missing")
+  // Order contract: phone → email → facebook → tiktok → instagram → threads → youtube.
+  expectedChannels.forEach((ch, i) => {
+    check(`J3 node ${i} (${ch.key}) href`, hrefs[i] === ch.href, `${hrefs[i]} vs ${ch.href}`);
+    const ok =
+      ch.kind === "phone"
+        ? (hrefs[i] || "").startsWith("tel:")
+        : ch.kind === "email"
+          ? (hrefs[i] || "").startsWith("mailto:")
+          : /^https?:\/\//.test(hrefs[i] || "");
+    check(`J3 node ${i} (${ch.key}) href type`, ok, hrefs[i] || "missing");
+  });
+  // Visible label = CMS handle (else sanitized domain / platform name) — the raw
+  // URL must never be the anchor text.
+  const values = await page.$$eval('[data-testid="contact-value"]', (els) =>
+    els.map((el) => el.textContent.trim())
+  );
+  check(
+    "J3 visible values match handle/domain expectations",
+    JSON.stringify(values) === JSON.stringify(expectedChannels.map((c) => c.value)),
+    JSON.stringify(values)
+  );
+  check(
+    "J3 no raw URLs / query strings as visible text",
+    values.every((t) => !/https?:\/\//i.test(t) && !t.includes("?") && t.length < 50),
+    JSON.stringify(values)
   );
   for (const [i, el] of nodes.entries()) {
     const box = await el.boundingBox();

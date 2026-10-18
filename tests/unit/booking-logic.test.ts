@@ -237,5 +237,53 @@ check("B3: listBookings keeps records without difficulty (standard tours)", () =
   }
 });
 
+check("B4: Web3 rail — crypto_metamask + txHash validated, junk filtered", () => {
+  const store = new Map<string, string>();
+  const previous = (globalThis as { window?: unknown }).window;
+  (globalThis as { window?: unknown }).window = {
+    localStorage: {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => void store.set(key, value),
+      removeItem: (key: string) => void store.delete(key),
+    },
+  };
+  try {
+    const record = {
+      reference: "VN-CRYPTO",
+      slug: "hcm",
+      tourName: "Saigon",
+      travelDate: "2026-10-02",
+      fullName: "A",
+      email: "a@b.co",
+      phone: "0912345678",
+      notes: "",
+      guests: 2,
+      pricePerGuest: 150000,
+      total: 300000,
+      currency: "VND",
+      locale: "vi",
+      paidAt: "2026-09-28T00:00:00.000Z",
+      paymentMethod: "crypto_metamask",
+      txHash: "0x" + "d".repeat(64),
+    };
+    store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([record]));
+    assert.equal(listBookings().length, 1, "crypto record with hash kept");
+    // Hash is optional (pending confirmation) → still kept.
+    const noHash: Record<string, unknown> = { ...record };
+    delete noHash.txHash;
+    store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([noHash]));
+    assert.equal(listBookings().length, 1, "crypto record without hash kept");
+    // Malformed hash → filtered like any other bad field.
+    store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([{ ...record, txHash: "0x123" }]));
+    assert.equal(listBookings().length, 0, "bad txHash filtered");
+    // Unknown method enum → filtered.
+    store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([{ ...record, paymentMethod: "cash" }]));
+    assert.equal(listBookings().length, 0, "unknown payment method filtered");
+  } finally {
+    if (previous === undefined) delete (globalThis as { window?: unknown }).window;
+    else (globalThis as { window?: unknown }).window = previous;
+  }
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

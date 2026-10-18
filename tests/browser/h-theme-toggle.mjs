@@ -5,6 +5,7 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { revealHomeHeader } from "../helpers/header-reveal.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -64,6 +65,7 @@ try {
   const darkBg = s.bg;
 
   // --- Switch to light: class removed, white background, active states flip.
+  await revealHomeHeader(page);
   await page.click('[data-testid="theme-switcher-light"]');
   await page.waitForFunction(
     () => !document.documentElement.classList.contains("dark"),
@@ -87,6 +89,7 @@ try {
     JSON.stringify({ dark: s.dark, bg: s.bg }));
 
   // --- Switch back to dark.
+  await revealHomeHeader(page);
   await page.click('[data-testid="theme-switcher-dark"]');
   await page.waitForFunction(
     () => document.documentElement.classList.contains("dark"),

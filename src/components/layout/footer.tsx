@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { BrandWordmark } from "@/components/layout/brand-wordmark";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { SocialAnchor } from "@/components/contact/social-anchor";
-import { resolveSocialLinks } from "@/lib/social-links";
+import { buildContactChannels, type ContactFallbacks } from "@/lib/contact-channels";
 
 const tourLinks = [
   { key: "domesticTours", href: "/tours/domestic" },
@@ -25,12 +25,10 @@ const policyLinks = [
   { labelKey: "faqs", href: "/support" },
 ] as const;
 
-// Phone/Email always come from i18n (tel:/mailto: — not CMS-managed).
-const contactKeys = ["phone", "email"] as const;
-// Same order/set as contact.nodes — i18n fallback when the CMS list is empty.
-const socialFallbackKeys = ["facebook", "instagram", "tiktok"] as const;
+// Phone/Email i18n nodes (tel:/mailto:) + social nodes used as CMS fallbacks.
+const fallbackKeys = ["phone", "email", "facebook", "tiktok", "instagram"] as const;
 
-type ContactNode = { label: string; value: string; href: string };
+type ContactNode = { label?: string; value?: string; href?: string };
 
 /** Column heading token — synced with the homepage "Stories & Inspiration" title. */
 function ColumnHeading({ children }: { children: ReactNode }) {
@@ -42,10 +40,10 @@ const linkClass =
   "text-xs lg:text-sm opacity-80 transition-opacity hover:opacity-100 focus-visible:opacity-100";
 
 export function Footer({
-  socialLinks,
+  contactSettings,
   slogan,
 }: {
-  socialLinks?: unknown;
+  contactSettings?: unknown;
   /** CMS `siteConfiguration.footerSlogan` already resolved for the active locale. */
   slogan?: string | null;
 }) {
@@ -53,26 +51,15 @@ export function Footer({
   const tf = useTranslations("footer");
   const tc = useTranslations("contact");
 
-  const nodeFor = (key: string) =>
-    (tc.raw(`nodes.${key}`) ?? { label: key, value: "", href: "" }) as ContactNode;
+  const nodeFor = (key: string): ContactNode =>
+    (tc.raw(`nodes.${key}`) ?? {}) as ContactNode;
 
-  // CMS `socialLinks` (Studio) win; empty CMS → i18n nodes keep the column intact.
-  const contactItems = [
-    ...contactKeys.map((key) => {
-      const node = nodeFor(key);
-      return { id: key, label: node.label, href: node.href };
-    }),
-    ...resolveSocialLinks(socialLinks, [
-      ...socialFallbackKeys.map((key) => {
-        const node = nodeFor(key);
-        return { platform: key, displayText: node.label, targetUrl: node.href };
-      }),
-    ]).map((link) => ({
-      id: link._key ?? link.platform,
-      label: link.displayText,
-      href: link.targetUrl ?? "",
-    })),
-  ];
+  const contactFallbacks: ContactFallbacks = Object.fromEntries(
+    fallbackKeys.map((key) => [key, nodeFor(key)])
+  );
+
+  // CMS `contactSettings` win; empty CMS → i18n nodes keep the column intact.
+  const contactItems = buildContactChannels(contactSettings, contactFallbacks);
 
   return (
     <footer
@@ -108,8 +95,8 @@ export function Footer({
           <div>
             <ColumnHeading>{tf("contact")}</ColumnHeading>
             <ul className="space-y-1.5 lg:space-y-2">
-              {contactItems.map((item, index) => (
-                <li key={`${item.id}-${index}`}>
+              {contactItems.map((item) => (
+                <li key={item.key}>
                   <SocialAnchor
                     targetUrl={item.href}
                     displayText={item.label}

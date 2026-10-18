@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { Mail, Phone } from "lucide-react";
 import { ContactForm } from "@/components/contact/contact-form";
 import { SocialAnchor } from "@/components/contact/social-anchor";
+import { ContactChannelIcon } from "@/components/contact/contact-channel-icons";
 import { SITE_CONFIGURATION_QUERY } from "@/sanity/queries/site-configuration";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
-import { platformTitle, resolveSocialLinks, type SocialLink } from "@/lib/social-links";
+import {
+  buildContactChannels,
+  CONTACT_CHANNELS,
+  type ContactFallbackNode,
+  type ContactFallbacks,
+} from "@/lib/contact-channels";
 import {
   Card,
   CardContent,
@@ -19,39 +24,37 @@ export const metadata: Metadata = {
   description: "Get in touch with DuanMar — Vietnam tourism office",
 };
 
-/** Phone/Email are i18n constants (tel:/mailto:); order is a code-level contract. */
-const NODE_KEYS = ["phone", "email"] as const;
-type NodeKey = (typeof NODE_KEYS)[number];
-
-/** i18n social fallback when `siteConfiguration.socialLinks` is empty. */
-const SOCIAL_FALLBACK_KEYS = ["facebook", "instagram", "tiktok"] as const;
-
-const NODE_ICONS: Partial<Record<NodeKey, typeof Phone>> = {
-  phone: Phone,
-  email: Mail,
-};
-
+/** Phone/Email i18n node keys (fallback labels + tel:/mailto: defaults). */
 const CARD_CLASS =
-  "flex items-center gap-3 rounded-xl border border-border px-5 py-4 transition-colors hover:bg-muted";
-
-type I18nNode = { label: string; value: string; href: string };
+  "flex items-center gap-3 rounded-xl border border-border px-5 py-4 text-foreground transition-colors hover:bg-muted";
 
 export default async function ContactPage() {
   const t = await getTranslations("contact");
-  const nodeFor = (key: string) =>
-    (t.raw(`nodes.${key}`) ?? { label: key, value: "", href: "" }) as I18nNode;
+  // threads/youtube may have no i18n node yet (CMS-only channels) → return {} on
+  // a missing key instead of letting next-intl throw MISSING_MESSAGE.
+  const nodeFor = (key: string): ContactFallbackNode => {
+    try {
+      const node = t.raw(`nodes.${key}`);
+      return node && typeof node === "object" ? (node as ContactFallbackNode) : {};
+    } catch {
+      return {};
+    }
+  };
 
   const siteConfig = await fetchPublished(SITE_CONFIGURATION_QUERY, {}, {
     tags: ["sanity:siteconfig"],
   });
 
-  // CMS handles (Studio → Site Configuration) win; empty CMS → i18n nodes.
-  const socials: SocialLink[] = resolveSocialLinks(siteConfig?.socialLinks, [
-    ...SOCIAL_FALLBACK_KEYS.map((key) => {
-      const node = nodeFor(key);
-      return { platform: key, displayText: node.value || node.label, targetUrl: node.href };
-    }),
-  ]);
+  const fallbacks: ContactFallbacks = Object.fromEntries(
+    CONTACT_CHANNELS.map(({ key }) => [key, nodeFor(key)])
+  );
+
+  // Explicit CMS channels win; empty CMS fields fall back to i18n nodes.
+  // Order is the code-level contract: phone → email → facebook → … → youtube.
+  // Social cards show the CMS display handle (or sanitized domain) as the
+  // visible label — the raw target URL is only used as the anchor href. The
+  // Footer intentionally ignores handles and keeps plain platform labels.
+  const channels = buildContactChannels(siteConfig?.contactSettings, fallbacks);
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -62,46 +65,25 @@ export default async function ContactPage() {
         </p>
       </header>
 
-      <ul className="mb-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {NODE_KEYS.map((key) => {
-          const node = nodeFor(key);
-          const Icon = NODE_ICONS[key];
-          return (
-            <li key={key}>
-              <SocialAnchor
-                data-testid="contact-node"
-                data-node={key}
-                targetUrl={node.href}
-                className={CARD_CLASS}
-              >
-                {Icon && <Icon className="size-5 shrink-0 text-link" aria-hidden />}
-                <span className="min-w-0">
-                  <span className="block text-sm text-muted-foreground">
-                    {node.label}
-                  </span>
-                  <span className="block truncate text-xl font-semibold">
-                    {node.value}
-                  </span>
-                </span>
-              </SocialAnchor>
-            </li>
-          );
-        })}
-
-        {socials.map((social, index) => (
-          <li key={social._key ?? `${social.platform}-${index}`}>
+      <ul className="mb-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {channels.map((channel) => (
+          <li key={channel.key}>
             <SocialAnchor
               data-testid="contact-node"
-              data-node={social.platform}
-              targetUrl={social.targetUrl}
+              data-node={channel.key}
+              targetUrl={channel.href}
               className={CARD_CLASS}
             >
+              <ContactChannelIcon
+                channelKey={channel.key}
+                className="size-6 shrink-0 text-link"
+              />
               <span className="min-w-0">
-                <span className="block text-sm text-muted-foreground">
-                  {platformTitle(social.platform)}
+                <span data-testid="contact-label" className="block text-sm text-muted-foreground">
+                  {channel.label}
                 </span>
-                <span className="block truncate text-xl font-semibold">
-                  {social.displayText}
+                <span data-testid="contact-value" className="block truncate text-lg font-semibold">
+                  {channel.value}
                 </span>
               </span>
             </SocialAnchor>

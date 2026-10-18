@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { revealHomeHeader } from "../helpers/header-reveal.mjs";
 
 /**
  * Plan 260929-2207 — header tooltips, full-card click, CTA scale.
@@ -75,6 +76,7 @@ try {
     // hover reveals
     const searchLink = await page.$('header a[href*="/search"]');
     if (searchLink) {
+      await revealHomeHeader(page);
       await searchLink.hover();
       await sleep(300);
       const op = await page.evaluate(() => {
@@ -146,7 +148,7 @@ try {
         const cs = getComputedStyle(el);
         return { pt: cs.paddingTop, pl: cs.paddingLeft, fs: cs.fontSize, text: el.textContent.trim() };
       };
-      return { hero: style(hero), contact: style(contact) };
+      return { hero: style(hero), contact: style(contact), hasSearch: Boolean(document.querySelector('[data-testid="home-search"]')) };
     });
     // 83.33% of px-8 (32px) → 26.67px and text-lg (18px) → 15px; landed on the
     // nearest Tailwind steps (px-7 = 28px, text-sm = 14px). Horizontal padding
@@ -154,7 +156,8 @@ try {
     // fixed h-10/h-9 button.
     const at83 = (s) =>
       s && parseInt(s.pl) >= 24 && parseInt(s.pl) <= 30 && parseInt(s.fs) >= 14 && parseInt(s.fs) <= 16;
-    check(`C1 /${locale} hero Explore Now downscaled 83.33% (px 24–30, fs 14–16)`, at83(cta.hero), JSON.stringify(cta.hero));
+    // The hero CTA was removed in favour of the standalone minimalist search.
+    check(`C1 /${locale} hero CTA removed (standalone search section instead)`, cta.hero === null && cta.hasSearch === true, JSON.stringify({ hero: cta.hero, hasSearch: cta.hasSearch }));
     check(`C2 /${locale} Contact CTA downscaled 83.33% (px 24–30, fs 14–16)`, at83(cta.contact), JSON.stringify(cta.contact));
     if (locale === "vi") {
       await page.screenshot({ path: `${OUT}/a-cta-hero.png`, clip: { x: 0, y: 0, width: 1280, height: 700 } });

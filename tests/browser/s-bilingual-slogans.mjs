@@ -23,7 +23,6 @@ const check = (name, ok, detail = "") => {
 };
 
 const FOOTER = '[data-testid="footer-slogan"]';
-const HERO = '[data-testid="hero-slogan"]';
 
 const go = async (page, locale) => {
   await page.setCookie({ name: "NEXT_LOCALE", value: locale, url: "http://localhost:3000" });
@@ -34,15 +33,18 @@ const go = async (page, locale) => {
 const readSlogans = (page) =>
   page.evaluate(() => {
     const footerEl = document.querySelector('[data-testid="footer-slogan"]');
-    const heroEl = document.querySelector('[data-testid="hero-slogan"]');
+    const heroSloganEl = document.querySelector('[data-testid="hero-slogan"]');
+    const heroDisplayEl = document.querySelector('[data-testid="hero-display"]');
     const brand = document.querySelector("footer .grid > div:first-child");
     const h1 = document.querySelector("main h1");
     return {
       footer: footerEl?.textContent?.trim() ?? null,
-      hero: heroEl?.textContent?.trim() ?? null,
-      // structural placement: footer slogan under the logo block, hero slogan right after the H1
+      // the subtitle slogan element was removed in favour of the giant wordmark
+      heroSloganPresent: Boolean(heroSloganEl),
+      heroDisplay: heroDisplayEl?.textContent?.trim() ?? null,
+      // the giant display wordmark IS the page H1, centred in the hero overlay
+      heroDisplayIsH1: Boolean(heroDisplayEl && h1 && heroDisplayEl === h1),
       footerInBrand: Boolean(footerEl && brand && brand.contains(footerEl)),
-      heroAfterH1: Boolean(heroEl && h1 && h1.nextElementSibling === heroEl),
       probe: window.__sloganProbe ?? null,
       active:
         document.querySelector('header [role="group"] button[aria-current="true"]')?.textContent?.trim() ?? null,
@@ -69,21 +71,21 @@ try {
   await go(page, "vi");
   const vi = await readSlogans(page);
   check("S1 VI footer slogan rendered + non-empty", Boolean(vi.footer), JSON.stringify(vi.footer));
-  check("S1b VI hero slogan rendered + non-empty", Boolean(vi.hero), JSON.stringify(vi.hero));
-  check("S1c active locale is vi", vi.active === "vi", String(vi.active));
+  check("S1b VI hero subtitle slogan removed", vi.heroSloganPresent === false, String(vi.heroSloganPresent));
+  check("S1c VI hero giant wordmark = home.heroDisplay (is the H1)", vi.heroDisplay === msg.vi.home.heroDisplay && vi.heroDisplayIsH1, JSON.stringify({ text: vi.heroDisplay, isH1: vi.heroDisplayIsH1 }));
+  check("S1d active locale is vi", vi.active === "vi", String(vi.active));
   // CMS fields start empty → i18n fallback; an editor filling Studio flips the
   // expectation below to CMS text without breaking the run.
   const viFooterFallback = vi.footer === msg.vi.footer.tagline;
-  const viHeroFallback = vi.hero === msg.vi.home.heroSubtitle;
   check(
-    "S2 footer slogan sits in the brand block (under the logo), hero under the H1",
-    vi.footerInBrand && vi.heroAfterH1,
-    JSON.stringify({ footerInBrand: vi.footerInBrand, heroAfterH1: vi.heroAfterH1 })
+    "S2 footer slogan sits in the brand block (under the logo)",
+    vi.footerInBrand,
+    JSON.stringify({ footerInBrand: vi.footerInBrand })
   );
   check(
-    "S2b rendered VI text matches the i18n fallback while CMS fields are empty",
-    viFooterFallback && viHeroFallback,
-    `footerFallback=${viFooterFallback} heroFallback=${viHeroFallback}`
+    "S2b rendered VI footer text matches the i18n fallback while CMS fields are empty",
+    viFooterFallback,
+    `footerFallback=${viFooterFallback}`
   );
 
   // ---------- toggle VI → EN, no hard refresh ----------
@@ -99,28 +101,18 @@ try {
     FOOTER,
     vi.footer
   );
-  await page.waitForFunction(
-    (sel, prev) => document.querySelector(sel)?.textContent?.trim() !== prev,
-    { timeout: 20000 },
-    HERO,
-    vi.hero
-  );
   await dismissPromo(page);
   const en = await readSlogans(page);
 
   check("S3 URL switched to /en", page.url().includes("/en"), page.url());
   check("S4 no hard refresh (window marker survived)", en.probe !== null && en.probe === probeBefore, `${probeBefore} → ${en.probe}`);
   check("S5 footer slogan re-rendered in EN", Boolean(en.footer) && en.footer !== vi.footer, JSON.stringify({ vi: vi.footer, en: en.footer }));
-  check("S5b hero slogan re-rendered in EN", Boolean(en.hero) && en.hero !== vi.hero, JSON.stringify({ vi: vi.hero, en: en.hero }));
+  check("S5b EN hero giant wordmark present + still the H1", en.heroDisplay === msg.en.home.heroDisplay && en.heroDisplayIsH1, JSON.stringify(en.heroDisplay));
+  check("S5c hero subtitle slogan still absent in EN", en.heroSloganPresent === false);
   check(
-    "S6 EN text = i18n EN fallback when CMS is empty",
+    "S6 EN footer text = i18n EN fallback when CMS is empty",
     viFooterFallback ? en.footer === msg.en.footer.tagline : Boolean(en.footer),
     en.footer
-  );
-  check(
-    "S6b EN hero = i18n EN fallback when CMS is empty",
-    viHeroFallback ? en.hero === msg.en.home.heroSubtitle : Boolean(en.hero),
-    en.hero
   );
   check("S7 active locale is en", en.active === "en", String(en.active));
   check("S7b still soft navigation (no document reload)", en.navType === vi.navType, `${vi.navType} → ${en.navType}`);
@@ -136,7 +128,7 @@ try {
   await dismissPromo(page);
   const back = await readSlogans(page);
   check("S8 back to VI restores the original footer slogan", back.footer === vi.footer, JSON.stringify(back.footer));
-  check("S8b back to VI restores the original hero slogan", back.hero === vi.hero, JSON.stringify(back.hero));
+  check("S8b back to VI restores the giant wordmark", back.heroDisplay === vi.heroDisplay && back.heroDisplayIsH1, JSON.stringify(back.heroDisplay));
   check("S8c window marker still alive after both toggles", back.probe === probeBefore, String(back.probe));
 
   check("S9 zero pageerrors", pageErrors.length === 0, pageErrors.join("; "));

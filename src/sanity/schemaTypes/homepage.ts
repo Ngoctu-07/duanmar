@@ -37,6 +37,31 @@ export default defineType({
       name: "heroImage",
       title: "Hero Image",
       type: "image",
+      description:
+        "Poster / fallback frame for the full-viewport homepage hero (shown before the promo video plays or when no video is set).",
+      options: { hotspot: true },
+    }),
+    defineField({
+      name: "promoVideo",
+      title: "Hero Promo Video",
+      type: "file",
+      description:
+        "Full-viewport homepage hero background video (autoplay, muted, looping). Upload MP4/WebM — wins over the URL field.",
+      options: { accept: "video/mp4,video/webm" },
+    }),
+    defineField({
+      name: "promoVideoUrl",
+      title: "Hero Promo Video URL",
+      type: "url",
+      description:
+        "Direct link to an externally hosted hero video (mp4/webm). Used only when no file is uploaded.",
+    }),
+    defineField({
+      name: "promoVideoPoster",
+      title: "Hero Promo Video Poster",
+      type: "image",
+      description:
+        "Frame shown before the hero video starts (and as fallback if it fails to load). Falls back to the Hero Image.",
       options: { hotspot: true },
     }),
     defineField({

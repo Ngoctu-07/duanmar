@@ -83,3 +83,23 @@ export function resolveLocaleBlocks(value: LocaleBlocks, locale: string): Portab
   if (active.length > 0) return active;
   return (value.vi ?? []).length > 0 ? (value.vi ?? []) : (value.en ?? []);
 }
+
+/**
+ * Monolingual base field + explicit English companion field
+ * (`destination.description` + `descriptionEn`, `itinerary` + `itineraryEn`).
+ *
+ * EN locale → trimmed `english` when non-empty, else fall back to the base
+ * field. Any other locale → base field only (the base is the Vietnamese
+ * source). Never returns an empty string, so callers can chain `??`.
+ */
+export function resolveLocalizedField(
+  base: LocaleString,
+  english: string | null | undefined,
+  locale: string
+): string | null {
+  if (locale === "en") {
+    const translated = typeof english === "string" ? english.trim() : "";
+    if (translated) return translated;
+  }
+  return resolveLocaleString(base, locale);
+}

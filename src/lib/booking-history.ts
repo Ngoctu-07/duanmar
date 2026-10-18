@@ -1,5 +1,6 @@
 import type { PriceCurrency } from "@/lib/pricing";
 import type { PaymentMethod } from "@/lib/payment";
+import { isTransactionHash } from "@/lib/crypto-payment";
 
 /**
  * One paid booking as stored in localStorage (no auth/backend in this app).
@@ -26,6 +27,11 @@ export interface TripBooking {
   paidAt: string;
   /** Optional (absent on pre-260929 records) — method used at payment. */
   paymentMethod?: PaymentMethod;
+  /**
+   * Optional — present only for the Web3 rail (`crypto_metamask`): the on-chain
+   * transaction hash captured after broadcast, used for order verification.
+   */
+  txHash?: string;
 }
 
 export const BOOKINGS_STORAGE_KEY = "vn-my-trips:v1";
@@ -51,7 +57,10 @@ function isTripBooking(value: unknown): value is TripBooking {
     // Optional (absent on pre-260929 records) — enum-checked when present.
     (record.paymentMethod === undefined ||
       record.paymentMethod === "momo" ||
-      record.paymentMethod === "bank") &&
+      record.paymentMethod === "bank" ||
+      record.paymentMethod === "crypto_metamask") &&
+    // Optional — only the Web3 rail carries it; must be a valid hash when present.
+    (record.txHash === undefined || isTransactionHash(record.txHash)) &&
     isString("locale") &&
     isString("paidAt") &&
     (record.currency === "VND" || record.currency === "USD") &&

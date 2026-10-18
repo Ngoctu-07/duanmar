@@ -3,6 +3,7 @@ import {
   resolveLocaleBlocks,
   resolveLocaleList,
   resolveLocaleString,
+  resolveLocalizedField,
 } from "../../src/lib/bilingual-string.ts";
 
 let passed = 0;
@@ -63,6 +64,33 @@ check("blocks: legacy array passes through; empty active falls back to vi", () =
   assert.deepEqual(resolveLocaleBlocks({ vi: [viBlock], en: [] } as never, "en"), [viBlock]);
   assert.deepEqual(resolveLocaleBlocks({ vi: [], en: [enBlock] } as never, "vi"), [enBlock]);
   assert.deepEqual(resolveLocaleBlocks(null, "en"), []);
+});
+
+check("resolveLocalizedField: EN renders descriptionEn", () => {
+  assert.equal(
+    resolveLocalizedField("Mô tả tiếng Việt", "English overview", "en"),
+    "English overview"
+  );
+  assert.equal(resolveLocalizedField("Mô tả tiếng Việt", "  English  ", "en"), "English");
+});
+
+check("resolveLocalizedField: empty/missing EN falls back to base (never blank)", () => {
+  assert.equal(resolveLocalizedField("Mô tả", null, "en"), "Mô tả");
+  assert.equal(resolveLocalizedField("Mô tả", "", "en"), "Mô tả");
+  assert.equal(resolveLocalizedField("Mô tả", "   ", "en"), "Mô tả");
+  assert.equal(resolveLocalizedField(null, null, "en"), null);
+});
+
+check("resolveLocalizedField: VI (and unknown) renders the base only", () => {
+  assert.equal(resolveLocalizedField("Mô tả", "English", "vi"), "Mô tả");
+  assert.equal(resolveLocalizedField("Mô tả", "English", "fr"), "Mô tả");
+});
+
+check("resolveLocalizedField: bilingual base object still resolves per locale", () => {
+  const base = { vi: "Mô tả", en: "Overview" };
+  assert.equal(resolveLocalizedField(base, "English", "en"), "English");
+  assert.equal(resolveLocalizedField(base, null, "en"), "Overview");
+  assert.equal(resolveLocalizedField(base, "English", "vi"), "Mô tả");
 });
 
 console.log(`${passed}/${passed + failed} assertions passed`);

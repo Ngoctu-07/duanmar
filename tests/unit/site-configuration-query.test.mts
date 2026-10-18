@@ -44,6 +44,30 @@ check("projects per-locale promo assets popupImage_vi + popupImage_en (plan 2609
   assert.ok(SITE_CONFIGURATION_QUERY.includes("popupImage_en {"));
 });
 
+check("projects the nested contactSettings block with URL + handle pairs", () => {
+  assert.ok(SITE_CONFIGURATION_QUERY.includes("contactSettings {"));
+  for (const field of [
+    "phone",
+    "email",
+    "facebookUrl",
+    "facebookHandle",
+    "tiktokUrl",
+    "tiktokHandle",
+    "instagramUrl",
+    "instagramHandle",
+    "threadsUrl",
+    "threadsHandle",
+    "youtubeUrl",
+    "youtubeHandle",
+  ]) {
+    assert.ok(SITE_CONFIGURATION_QUERY.includes(field), `missing ${field}`);
+  }
+  assert.ok(
+    !SITE_CONFIGURATION_QUERY.includes("socialLinks"),
+    "legacy socialLinks projection must be gone"
+  );
+});
+
 check("query parses with groq-js (projection commas)", () => {
   parse(SITE_CONFIGURATION_QUERY);
 });

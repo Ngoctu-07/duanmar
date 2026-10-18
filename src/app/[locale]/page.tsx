@@ -1,4 +1,5 @@
 import { HeroSection } from "@/components/homepage/hero-section";
+import { HomeSearch } from "@/components/homepage/home-search";
 import { FeaturedDestinations } from "@/components/homepage/featured-destinations";
 import { AboutUsSection } from "@/components/homepage/about-us-section";
 import { StoriesSection } from "@/components/homepage/stories-section";
@@ -7,7 +8,6 @@ import { HOMEPAGE_QUERY, FEATURED_DESTINATIONS_QUERY } from "@/sanity/queries/ho
 import { ALL_TOUR_PRICING_QUERY } from "@/sanity/queries/tour-pricing";
 import { getLocale, getTranslations } from "next-intl/server";
 import { buildPriceRangeLabels } from "@/lib/pricing";
-import { pickBilingual } from "@/lib/bilingual-string";
 
 export default async function HomePage() {
   const [locale, priceT, homepageData, destinationsData, pricingDocs] =
@@ -21,11 +21,13 @@ export default async function HomePage() {
       fetchPublished(ALL_TOUR_PRICING_QUERY, {}, { tags: ["sanity:pricing:all"] }),
     ]);
   const priceRanges = buildPriceRangeLabels(pricingDocs, locale, priceT("label"));
-  // Bilingual CMS slogan → legacy heroSubtitle → i18n fallback inside the component.
-  const heroSlogan =
-    pickBilingual(homepageData?.heroSlogan, locale) ||
-    homepageData?.heroSubtitle?.trim() ||
+  // Hero media: uploaded promo file wins over the external stream URL; the
+  // poster (else the hero image) frames the video before playback.
+  const heroVideoSrc =
+    homepageData?.promoVideo?.asset?.url ??
+    homepageData?.promoVideoUrl ??
     null;
+  const heroPosterSrc = homepageData?.promoVideoPoster?.asset?.url ?? null;
   // About Us media: uploaded file wins over the external stream URL (plan 260929-1500).
   const aboutVideoSrc =
     homepageData?.aboutUsVideo?.asset?.url ??
@@ -35,7 +37,12 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroSection hero={homepageData} slogan={heroSlogan} />
+      <HeroSection
+        hero={homepageData}
+        videoSrc={heroVideoSrc}
+        posterSrc={heroPosterSrc}
+      />
+      <HomeSearch />
       <FeaturedDestinations destinations={destinationsData || []} priceRanges={priceRanges} />
       <AboutUsSection
         videoSrc={aboutVideoSrc}

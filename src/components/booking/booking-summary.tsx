@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { saveBooking } from "@/lib/booking-history";
 import type { PaymentMethod } from "@/lib/payment";
+import type { CryptoConfig } from "@/lib/crypto-payment";
 import type { PriceCurrency, PriceTier } from "@/lib/pricing";
 import { BookingPaymentSection } from "./booking-payment-section";
 import { buildTicketRows } from "./ticket-rows";
@@ -20,6 +21,8 @@ interface BookingSummaryProps {
   currency: PriceCurrency;
   /** Whether the tour requires a Challenge Level pick (persisted only then). */
   isSpecialTour?: boolean;
+  /** Validated Web3 (MetaMask) config — `null` hides the crypto rail. */
+  cryptoConfig?: CryptoConfig | null;
 }
 
 /**
@@ -37,6 +40,7 @@ export function BookingSummary({
   locale,
   currency,
   isSpecialTour,
+  cryptoConfig = null,
 }: BookingSummaryProps) {
   const t = useTranslations("booking");
   const [reference] = useState(() =>
@@ -54,7 +58,7 @@ export function BookingSummary({
     currency,
   });
 
-  const handlePaid = (paymentMethod: PaymentMethod) => {
+  const handlePaid = (paymentMethod: PaymentMethod, txHash?: string) => {
     const paidAt = new Date().toISOString();
     saveBooking({
       reference,
@@ -74,6 +78,8 @@ export function BookingSummary({
       locale,
       paidAt,
       paymentMethod,
+      // Web3 rail only: on-chain settlement proof for order verification.
+      ...(txHash && { txHash }),
     });
 
     // Fire-and-forget: the delayed confirmation email is enqueued server-side
@@ -94,6 +100,7 @@ export function BookingSummary({
           total,
           currency,
           paymentMethod,
+          ...(txHash && { txHash }),
           notes: values.notes.trim(),
           locale,
         }),
@@ -144,6 +151,7 @@ export function BookingSummary({
         locale={locale}
         currency={currency}
         reference={reference}
+        cryptoConfig={cryptoConfig}
         onPaid={handlePaid}
       />
 

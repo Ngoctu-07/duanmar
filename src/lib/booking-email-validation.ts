@@ -1,6 +1,7 @@
 import type { BookingConfirmationPayload } from "@/lib/email/email-types";
 import { EMAIL_PATTERN, PHONE_PATTERN } from "@/lib/contact-validation";
 import type { PaymentMethod } from "@/lib/payment";
+import { isTransactionHash } from "@/lib/crypto-payment";
 
 /**
  * Server-side validation for POST /api/booking-confirmation (plan 260929-2229).
@@ -72,8 +73,16 @@ export function validateBookingConfirmation(
   if (record.currency !== "VND" && record.currency !== "USD") {
     errors.currency = "invalid";
   }
-  if (record.paymentMethod !== "momo" && record.paymentMethod !== "bank") {
+  if (
+    record.paymentMethod !== "momo" &&
+    record.paymentMethod !== "bank" &&
+    record.paymentMethod !== "crypto_metamask"
+  ) {
     errors.paymentMethod = "invalid";
+  }
+  // Web3 rail only — optional, but must be a well-formed hash when present.
+  if (record.txHash !== undefined && record.txHash !== null) {
+    if (!isTransactionHash(record.txHash)) errors.txHash = "invalid";
   }
   if (record.locale !== "en" && record.locale !== "vi") {
     errors.locale = "invalid";
@@ -101,6 +110,9 @@ export function validateBookingConfirmation(
     total: record.total as number,
     currency: record.currency as "VND" | "USD",
     paymentMethod: record.paymentMethod as PaymentMethod,
+    ...(typeof record.txHash === "string" && record.txHash.trim().length > 0
+      ? { txHash: record.txHash.trim() }
+      : {}),
     notes: typeof record.notes === "string" ? record.notes.trim() : "",
     locale: record.locale as "en" | "vi",
   };

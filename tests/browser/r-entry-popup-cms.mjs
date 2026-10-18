@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { revealHomeHeader } from "../helpers/header-reveal.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -249,6 +250,7 @@ try {
     const gone = await page.evaluate(promoGone);
     check("R6 close button dismisses modal + overlay", gone, `gone=${gone}`);
 
+    await revealHomeHeader(page);
     const navOk = await page
       .click('header a[href="/vi/tours/domestic"]')
       .then(() => page.waitForFunction(() => location.pathname === "/vi/tours/domestic", { timeout: 15000 }))
@@ -411,6 +413,7 @@ try {
 
     await page.screenshot({ path: `${OUT}/r-entry-popup-01-disabled.png` });
 
+    await revealHomeHeader(page);
     const navOk = await page
       .click('header a[href="/vi/tours/domestic"]')
       .then(() => page.waitForFunction(() => location.pathname === "/vi/tours/domestic", { timeout: 15000 }))

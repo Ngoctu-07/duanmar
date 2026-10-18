@@ -8,6 +8,19 @@ export const SITE_CONFIGURATION_QUERY = defineQuery(`
     entryPopupImage { ${imageFragment} },
     popupImage_vi { ${imageFragment} },
     popupImage_en { ${imageFragment} },
-    socialLinks[]{ _key, platform, displayText, targetUrl }
+    contactSettings {
+      phone,
+      email,
+      facebookUrl,
+      facebookHandle,
+      tiktokUrl,
+      tiktokHandle,
+      instagramUrl,
+      instagramHandle,
+      threadsUrl,
+      threadsHandle,
+      youtubeUrl,
+      youtubeHandle
+    }
   }
 `);

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Sora } from "next/font/google";
+import { Inter, Sora, Bebas_Neue } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import "./globals.css";
 
@@ -11,6 +11,14 @@ const inter = Inter({
 const sora = Sora({
   subsets: ["latin", "latin-ext"],
   variable: "--font-brand",
+  display: "swap",
+});
+
+// Slender condensed display face for the giant hero wordmark ("DECODE TRAVEL").
+const bebasNeue = Bebas_Neue({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-display",
   display: "swap",
 });
 
@@ -32,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html className={`dark ${inter.variable} ${sora.variable}`} suppressHydrationWarning>
+    <html className={`dark ${inter.variable} ${sora.variable} ${bebasNeue.variable}`} suppressHydrationWarning>
       <body className="antialiased">
         <ThemeProvider>{children}</ThemeProvider>
       </body>

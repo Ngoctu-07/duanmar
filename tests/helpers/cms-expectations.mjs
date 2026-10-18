@@ -124,3 +124,114 @@ export function remainingOn(doc, iso, bookedByDate = {}) {
   if (typeof cap !== "number" || !Number.isFinite(cap) || cap <= 0) return null;
   return Math.max(0, cap - (bookedByDate[iso] ?? 0));
 }
+
+/** Published `siteConfiguration.contactSettings` (7 optional channels). */
+export async function fetchContactSettings() {
+  const doc = await sanityQuery('*[_type == "siteConfiguration"][0]{contactSettings}');
+  return doc?.contactSettings ?? null;
+}
+
+/** Render order contract — mirrors src/lib/contact-channels.ts CONTACT_CHANNELS. */
+export const CONTACT_CHANNEL_ORDER = [
+  "phone",
+  "email",
+  "facebook",
+  "tiktok",
+  "instagram",
+  "threads",
+  "youtube",
+];
+
+const CONTACT_FIELD = {
+  phone: "phone",
+  email: "email",
+  facebook: "facebookUrl",
+  tiktok: "tiktokUrl",
+  instagram: "instagramUrl",
+  threads: "threadsUrl",
+  youtube: "youtubeUrl",
+};
+const CONTACT_HANDLE_FIELD = {
+  facebook: "facebookHandle",
+  tiktok: "tiktokHandle",
+  instagram: "instagramHandle",
+  threads: "threadsHandle",
+  youtube: "youtubeHandle",
+};
+const CONTACT_PLATFORM = {
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  instagram: "Instagram",
+  threads: "Threads",
+  youtube: "YouTube",
+};
+const CONTACT_PHONE_KEYS = new Set(["phone"]);
+const CONTACT_EMAIL_KEYS = new Set(["email"]);
+
+const telHref = (value) => {
+  const digits = value.trim().replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
+  return /\d/.test(digits) ? `tel:${digits}` : null;
+};
+const mailtoHref = (value) => {
+  const trimmed = value.trim();
+  return trimmed.includes("@") && !/[\s<>"']/.test(trimmed) ? `mailto:${trimmed}` : null;
+};
+const httpHref = (value) => {
+  const trimmed = value.trim();
+  if (!/^https?:\/\//i.test(trimmed)) return null;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "https:" || parsed.protocol === "http:" ? trimmed : null;
+  } catch {
+    return null;
+  }
+};
+const socialDomain = (value) => {
+  const trimmed = value.trim();
+  if (!/^https?:\/\//i.test(trimmed)) return "";
+  try {
+    return new URL(trimmed).hostname.replace(/^www\./i, "");
+  } catch {
+    return "";
+  }
+};
+
+/**
+ * Expected ordered channels for the Footer / Contact-page surfaces: CMS value
+ * wins, else the i18n `contact.nodes.<key>` fallback; channels with neither are
+ * omitted. `value` mirrors the Contact-page label (handle → sanitized domain →
+ * platform name for social; raw number/address otherwise). Mirrors
+ * buildContactChannels — a mismatch means the render contract drifted, not that
+ * the CMS changed.
+ */
+export function expectedContactChannels(settings, nodes = {}) {
+  const cms = settings && typeof settings === "object" ? settings : {};
+  const out = [];
+  for (const key of CONTACT_CHANNEL_ORDER) {
+    const raw = typeof cms[CONTACT_FIELD[key]] === "string" ? cms[CONTACT_FIELD[key]].trim() : "";
+    const node = nodes?.[key] ?? {};
+    let href = null;
+    let value = "";
+    if (CONTACT_PHONE_KEYS.has(key) && raw) {
+      href = telHref(raw);
+      value = raw;
+    } else if (CONTACT_EMAIL_KEYS.has(key) && raw) {
+      href = mailtoHref(raw);
+      value = raw;
+    } else if (raw) {
+      href = httpHref(raw);
+      const handleField = CONTACT_HANDLE_FIELD[key];
+      const handle = handleField && typeof cms[handleField] === "string" ? cms[handleField].trim() : "";
+      value = handle || socialDomain(raw) || CONTACT_PLATFORM[key] || key;
+    }
+    const fallbackValue = typeof node.value === "string" ? node.value.trim() : "";
+    if (!value && fallbackValue) {
+      value = fallbackValue;
+      href = typeof node.href === "string" ? node.href : null;
+    }
+    if (!value) continue;
+    const kind = CONTACT_PHONE_KEYS.has(key) ? "phone" : CONTACT_EMAIL_KEYS.has(key) ? "email" : "social";
+    out.push({ key, kind, href, value });
+  }
+  return out;
+}

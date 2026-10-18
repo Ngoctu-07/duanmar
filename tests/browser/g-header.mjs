@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { revealHomeHeader } from "../helpers/header-reveal.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -41,6 +42,7 @@ try {
   // --- G6 mobile sheet
   await page.setViewport({ width: 390, height: 844 });
   await sleep(300);
+  await revealHomeHeader(page);
   await page.click('button[data-slot="sheet-trigger"]');
   await sleep(600);
   const sheet = await page.$('[role="dialog"]');

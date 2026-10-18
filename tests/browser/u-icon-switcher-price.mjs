@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { resolveTourPricingFixture } from "../helpers/cms-expectations.mjs";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { revealHomeHeader } from "../helpers/header-reveal.mjs";
 
 /**
  * Plan 260930-1705 — U1..U9 downscale authority (supersedes 1544 thresholds):
@@ -160,6 +161,7 @@ try {
   const u6menu = await readStyle(page, 'button[data-slot="sheet-trigger"] svg', ["strokeWidth"]);
   check("U6 sheet-trigger icon 24×24", u6menu && near(u6menu.w, 24) && near(u6menu.h, 24), JSON.stringify(u6menu));
   check("U6 sheet-trigger stroke ≤1.5 (S5)", u6menu && fs(u6menu.strokeWidth) <= 1.5, u6menu?.strokeWidth);
+  await revealHomeHeader(page);
   await page.click('button[data-slot="sheet-trigger"]');
   await sleep(700);
   const u6sheet = await page.evaluate(() => {

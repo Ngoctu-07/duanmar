@@ -36,7 +36,7 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <Header />
       <main className="min-h-screen">{children}</main>
-      <Footer socialLinks={siteConfig?.socialLinks ?? null} slogan={footerSlogan} />
+      <Footer contactSettings={siteConfig?.contactSettings ?? null} slogan={footerSlogan} />
       <PromoModal
         imageSrc={popupSrc}
         width={popupWidth}

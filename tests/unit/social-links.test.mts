@@ -4,12 +4,9 @@ import { readFileSync } from "node:fs";
 const { SITE_CONFIGURATION_QUERY } = await import(
   "../../src/sanity/queries/site-configuration.ts"
 );
-const {
-  classifyHref,
-  normalizeSocialLinks,
-  resolveSocialLinks,
-  platformTitle,
-} = await import("../../src/lib/social-links.ts");
+const { classifyHref, platformTitle } = await import(
+  "../../src/lib/social-links.ts"
+);
 const { parse } = await import("groq-js");
 
 const schema = readFileSync(
@@ -28,6 +25,10 @@ const contactSource = readFileSync(
   new URL("../../src/app/[locale]/contact/page.tsx", import.meta.url),
   "utf8"
 );
+const layoutSource = readFileSync(
+  new URL("../../src/app/[locale]/layout.tsx", import.meta.url),
+  "utf8"
+);
 
 let passed = 0;
 let failed = 0;
@@ -44,31 +45,39 @@ const check = (name: string, fn: () => void) => {
 
 /* --- schema --- */
 
-check("siteConfiguration schema defines socialLinks array of objects", () => {
-  assert.ok(schema.includes('name: "socialLinks"'));
-  assert.ok(schema.includes('name: "socialLink"'));
-  assert.ok(schema.includes("defineArrayMember"));
-  assert.ok(schema.includes('type: "array"'));
+check("siteConfiguration declares nested contactSettings object", () => {
+  assert.ok(schema.includes('name: "contactSettings"'));
+  assert.ok(schema.includes('type: "object"'));
+  assert.ok(schema.includes("contactUrlField"));
 });
 
-check("each platform entry has displayText + targetUrl + platform", () => {
-  assert.ok(schema.includes('name: "displayText"'));
-  assert.ok(schema.includes('name: "targetUrl"'));
-  assert.ok(schema.includes('name: "platform"'));
-  assert.ok(schema.includes('type: "url"'));
-  assert.ok(schema.includes('value: "facebook"'));
-  assert.ok(schema.includes('value: "tiktok"'));
-  assert.ok(schema.includes('value: "youtube"'));
+check("contactSettings holds the 7 explicit channel subfields", () => {
+  for (const field of [
+    '"phone"',
+    '"email"',
+    '"facebookUrl"',
+    '"tiktokUrl"',
+    '"instagramUrl"',
+    '"threadsUrl"',
+    '"youtubeUrl"',
+  ]) {
+    assert.ok(schema.includes(field), `missing ${field}`);
+  }
 });
 
-check("targetUrl is optional and restricted to http(s)", () => {
-  const block = schema.slice(schema.indexOf('name: "targetUrl"'));
+check("legacy socialLinks array is fully removed from the schema", () => {
+  assert.ok(!schema.includes("socialLinks"), "socialLinks must be deleted");
+  assert.ok(!schema.includes("defineArrayMember"), "array member import must be gone");
+  assert.ok(!schema.includes("footerSocial"), "legacy footer fieldset must be gone");
+});
+
+check("contact URL subfields stay optional + http(s)-only", () => {
+  assert.ok(schema.includes('scheme: ["https", "http"]'));
+  assert.ok(schema.includes("allowRelative: false"));
   assert.ok(
-    !block.slice(0, 400).includes("rule.required()"),
-    "targetUrl must stay optional so empty renders plain text"
+    !schema.includes("rule.required()"),
+    "every channel stays optional so empty ones are omitted"
   );
-  assert.ok(block.includes('scheme: ["https", "http"]'));
-  assert.ok(block.includes("allowRelative: false"));
 });
 
 check("schema stays registered in schemaTypes index", () => {
@@ -77,15 +86,22 @@ check("schema stays registered in schemaTypes index", () => {
 
 /* --- query --- */
 
-check("site config query projects socialLinks and parses with groq-js", () => {
+check("site config query projects the nested contactSettings block", () => {
   assert.equal(typeof SITE_CONFIGURATION_QUERY, "string");
   parse(SITE_CONFIGURATION_QUERY);
-  assert.ok(
-    SITE_CONFIGURATION_QUERY.includes(
-      "socialLinks[]{ _key, platform, displayText, targetUrl }"
-    ),
-    SITE_CONFIGURATION_QUERY
-  );
+  assert.ok(SITE_CONFIGURATION_QUERY.includes("contactSettings {"), SITE_CONFIGURATION_QUERY);
+  for (const field of [
+    "phone",
+    "email",
+    "facebookUrl",
+    "tiktokUrl",
+    "instagramUrl",
+    "threadsUrl",
+    "youtubeUrl",
+  ]) {
+    assert.ok(SITE_CONFIGURATION_QUERY.includes(field), `query missing ${field}`);
+  }
+  assert.ok(!SITE_CONFIGURATION_QUERY.includes("socialLinks"), "query must drop socialLinks");
   assert.ok(SITE_CONFIGURATION_QUERY.includes('_type == "siteConfiguration"'));
 });
 
@@ -135,45 +151,11 @@ check("empty/unsafe/garbage hrefs classify as null (no dead #)", () => {
   }
 });
 
-/* --- normalize / resolve --- */
-
-check("normalize drops malformed rows and trims/normalizes fields", () => {
-  assert.deepEqual(normalizeSocialLinks(null), []);
-  assert.deepEqual(normalizeSocialLinks("nope"), []);
-  const out = normalizeSocialLinks([
-    { platform: "TikTok", displayText: "  @duanmar.official ", targetUrl: " https://www.tiktok.com/@duanmar " },
-    { platform: "youtube", displayText: "DuanMar", targetUrl: "" },
-    { displayText: "no-platform" },
-    { platform: "facebook", displayText: "   " },
-    "junk",
-    null,
-  ]);
-  assert.equal(out.length, 3);
-  assert.deepEqual(out[0], {
-    _key: undefined,
-    platform: "tiktok",
-    displayText: "@duanmar.official",
-    targetUrl: "https://www.tiktok.com/@duanmar",
-  });
-  assert.equal(out[1].targetUrl, null, "empty targetUrl → null (unlinked)");
-  assert.equal(out[1].platform, "youtube");
-  assert.equal(out[2].platform, "other", "missing platform defaults to other");
-});
-
-check("resolveSocialLinks: CMS wins, empty/junk CMS falls back", () => {
-  const fallback = [
-    { platform: "facebook", displayText: "Facebook", targetUrl: "https://fb.com/x" },
-  ];
-  const cms = [{ platform: "x", displayText: "DuanMar", targetUrl: "https://x.com/d" }];
-  assert.deepEqual(resolveSocialLinks(cms, fallback), resolveSocialLinks(cms, fallback));
-  assert.equal(resolveSocialLinks(cms, fallback)[0].displayText, "DuanMar");
-  assert.deepEqual(resolveSocialLinks([], fallback), fallback);
-  assert.deepEqual(resolveSocialLinks(null, fallback), fallback);
-  assert.deepEqual(resolveSocialLinks([{}, { displayText: " " }], fallback), fallback);
-});
+/* --- platformTitle --- */
 
 check("platformTitle maps brands and title-cases unknowns", () => {
   assert.equal(platformTitle("tiktok"), "TikTok");
+  assert.equal(platformTitle("threads"), "Threads");
   assert.equal(platformTitle("youtube"), "YouTube");
   assert.equal(platformTitle("  github "), "Github");
   assert.equal(platformTitle(""), "");
@@ -256,23 +238,34 @@ check("children (contact card content) render inside the anchor", () => {
 
 /* --- surface contracts --- */
 
-check("Footer takes socialLinks prop and renders via SocialAnchor", () => {
-  assert.ok(footerSource.includes("socialLinks?: unknown"), "prop missing");
-  assert.ok(footerSource.includes("resolveSocialLinks("), "fallback helper missing");
+check("Footer takes contactSettings prop and renders via the shared builder", () => {
+  assert.ok(footerSource.includes("contactSettings?: unknown"), "prop missing");
+  assert.ok(footerSource.includes("buildContactChannels("), "shared builder missing");
   assert.ok(footerSource.includes("<SocialAnchor"), "anchor missing");
+  assert.ok(
+    !footerSource.includes("resolveSocialLinks"),
+    "legacy resolver must be gone"
+  );
   assert.ok(
     !footerSource.includes('href: "#"'),
     "footer must not emit dead # hrefs anymore"
   );
 });
 
-check("contact page fetches siteSettings and renders CMS-backed nodes", () => {
+check("layout passes contactSettings into the Footer", () => {
+  assert.ok(layoutSource.includes("contactSettings={siteConfig?.contactSettings"));
+  assert.ok(!layoutSource.includes("socialLinks"));
+});
+
+check("contact page renders the CMS-backed 7-channel grid via the shared builder", () => {
   assert.ok(contactSource.includes("SITE_CONFIGURATION_QUERY"));
   assert.ok(contactSource.includes('tags: ["sanity:siteconfig"]'));
-  assert.ok(contactSource.includes("resolveSocialLinks("));
+  assert.ok(contactSource.includes("buildContactChannels("));
+  assert.ok(contactSource.includes("CONTACT_CHANNELS"));
+  assert.ok(!contactSource.includes("SOCIAL_CHANNEL_FIELDS"));
   assert.ok(contactSource.includes("<SocialAnchor"));
   assert.ok(contactSource.includes('data-testid="contact-node"'));
-  assert.ok(contactSource.includes("platformTitle("));
+  assert.ok(contactSource.includes("<ContactChannelIcon"));
 });
 
 console.log(`\n${passed}/${passed + failed} checks passed`);

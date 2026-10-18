@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { ChevronDown, Mail, Phone } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { fetchPublished } from "@/sanity/lib/fetch-published";
+import { SITE_CONFIGURATION_QUERY } from "@/sanity/queries/site-configuration";
+import { toMailtoHref } from "@/lib/contact-channels";
 
 export const metadata: Metadata = {
   title: "Support & FAQs | DuanMar",
@@ -11,7 +14,8 @@ export const metadata: Metadata = {
 
 const HOTLINE_DISPLAY = "+84 813669240";
 const HOTLINE_HREF = "tel:+84813669240";
-const SUPPORT_EMAIL = "duanmar@hcmussh.edu.vn";
+/** Fallback when Studio `contactSettings.email` is empty (FAQ #5 email pill). */
+const DEFAULT_SUPPORT_EMAIL = "Duanmartravel@gmail.com";
 
 function HotlineLink() {
   return (
@@ -40,6 +44,18 @@ export default async function SupportPage() {
   const tb = await getTranslations("bookingSteps");
   const steps = tb.raw("steps") as BookingStep[];
   const bookingFaqs = tb.raw("faq") as BookingFaq[];
+
+  // FAQ #5 email pill follows the single Studio source of truth
+  // (`siteConfiguration.contactSettings.email`), defaulting when empty.
+  const siteConfig = await fetchPublished(
+    SITE_CONFIGURATION_QUERY,
+    {},
+    { tags: ["sanity:siteconfig"] }
+  );
+  const supportEmail =
+    (siteConfig?.contactSettings?.email ?? "").trim() || DEFAULT_SUPPORT_EMAIL;
+  const supportMailto =
+    toMailtoHref(supportEmail) ?? `mailto:${DEFAULT_SUPPORT_EMAIL}`;
 
   const howToJsonLd = {
     "@context": "https://schema.org",
@@ -142,11 +158,12 @@ export default async function SupportPage() {
                           <HotlineLink />
                         </span>
                         <a
-                          href={`mailto:${SUPPORT_EMAIL}`}
+                          href={supportMailto}
+                          data-testid="support-email-link"
                           className="inline-flex items-center gap-2 rounded-full border border-red-900/30 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-500 hover:underline"
                         >
                           <Mail className="h-4 w-4 stroke-[2.5]" />
-                          {SUPPORT_EMAIL}
+                          {supportEmail}
                         </a>
                       </div>
                     )}
