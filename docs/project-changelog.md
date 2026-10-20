@@ -2,6 +2,16 @@
 
 ## 2026-10-18
 
+### Added
+- **[Feature] Homepage editorial announcement section (CMS-driven, inverted layout)** (task "Add Modular Single Editorial Announcement Section with Left-Aligned Overlapping Images & Right-Aligned Content Driven by Studio CMS")
+  - **Studio** `src/sanity/schemaTypes/homepage-editorial-announcement.ts` (imported vào `homepage.ts`): object `editorialAnnouncement` gồm `announcement`, `heading`, `body` (text, giữ line-break), `ctaText`, `ctaLink` (string cho path nội bộ `/tours` hoặc URL tuyệt đối), `bgImage`, `foregroundImage` (hotspot). 5 field chuỗi/text khởi tạo `initialValue: ""`.
+  - **GROQ** `src/sanity/queries/homepage.ts`: project object + 2 ảnh qua `imageFragment`.
+  - **Component** `src/components/homepage/editorial-announcement-section.tsx`: grid 12 cột, collage trái 5 cột (`max-w-xs lg:max-w-sm`, `min-h-[360px]`, ảnh nền `w-[72%]`, ảnh foreground `w-[62%] absolute -bottom-6 -right-2`), nội dung phải 7 cột (divider `border-t`, tag uppercase, heading `font-heading`, body `text-sm`, CTA đỏ `#2F110F`). Palette literal `#121212` / `#D9D9D9`.
+  - **Placement** `src/app/[locale]/page.tsx`: chèn giữa `<FeaturedDestinations>` và `<AboutUsSection>`.
+  - **Defensive** `if (!data) return null;` + guard toàn bộ field rỗng → section tự ẩn; CTA dùng `classifyHref` fail-closed, link ngoài `target="_blank"` + `noopener noreferrer`.
+  - **Tests**: NEW `tests/unit/homepage-editorial-announcement.test.mts` (schema/query/placement/guard/layout/CTA security).
+  - Docs impact: minor (changelog này).
+
 ### Fixed
 - **[Bugfix] FAQ #5 email pill đồng bộ với Studio CMS `contactSettings.email`** (task "Sync FAQ Contact Email with Studio CMS & Upscale 'DECODE TRAVEL' Hero Typography (+10%)")
   - **Root cause**: `src/app/[locale]/support/page.tsx` hardcode `SUPPORT_EMAIL = "duanmar@hcmussh.edu.vn"` (email cũ) → pill email ở câu hỏi #5 ("Tôi có thể liên hệ hỗ trợ trực tiếp qua những kênh nào?") lệch khỏi email liên hệ chính trong Studio.
@@ -10,6 +20,28 @@
   - Verified: `npx tsc --noEmit` 0 · `npx eslint src tests` 0 · `npm test` **41/41 file** · live `/vi/support` & `/en/support` render `href="mailto:Duanmartravel@gmail.com"`. Docs impact: minor (changelog này).
 
 ### Changed
+- **[Feature] Footer canvas → brand red #7F1D1D + white typography recalibration** (task "Update Footer Background Color to Brand Red (#7F1D1D) While Retaining Behance Minimalist Grid Architecture")
+  - **Footer** `src/components/layout/footer.tsx`: `bg-zinc-900` → `bg-[#7F1D1D]` (trùng `--primary`), `text-zinc-400` → `text-white`; heading `text-white`; link `text-white/80 hover:text-white`; tagline/mô tả `text-white/70 text-xs`; legal links bottom `text-white/80`; divider trên `border-white/20`, bottom bar `border-white/15`.
+  - **LocaleSwitcher** `locale-switcher.tsx`: variant `tone="inverse"` chỉnh cho nền đỏ — `border-white/20`, button `text-white/70` → active `text-white bg-white/15` (bỏ opacity kép để giữ tương phản).
+  - **Layout giữ nguyên**: grid Behance 5 cột, Phone/Email + social động từ `contactSettings`, bottom utility bar Terms/Privacy/Cookie + language selector.
+  - **Tests**: `m2-footer-minimal` viết lại assertion palette (red == `--primary`, divider white/20 + white/15, label trắng + link white/80, contrast **6.91:1**) **17/17**; `o-footer-refinement` O2b/O3b đổi sang trắng/white-80 **17/17**; `m-footer-brand` **30/30**, `q-footer-grid-alignment` **16/16**, `s-bilingual-slogans` **18/18** không đổi.
+  - Verified: `npx tsc --noEmit` 0 · `npx eslint src tests` 0 · `npm test` **41/41 file**.
+  - Docs impact: minor (changelog này).
+- **[Feature] Footer → Behance minimalist dark architecture** (task "Refactor Footer to Replicate Behance Minimalist Design System")
+  - **Footer** `src/components/layout/footer.tsx`: viết lại theo kiểu Behance — `bg-zinc-900` + `border-t border-zinc-800`, shell `max-w-7xl px-6 py-12 lg:px-12`, grid `grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8`. Cột 1 brand (logo knockout 40 + wordmark trắng + tagline + Phone/Email từ `contactSettings`); cột 2 Tours (domestic/international/deals); cột 3 Information (how-to-book/blog/careers/accessibility/sitemap); cột 4 Connect (social text-only từ CMS, `_blank` + noopener noreferrer); cột 5 Policies.
+  - **Typography**: heading `text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4`; link `text-sm text-zinc-400 hover:text-white transition-colors duration-200`; wordmark `text-xl font-bold text-white`.
+  - **Bottom bar** `data-testid="footer-bottom"`: `mt-12 border-t border-zinc-800/60 pt-6 text-xs`, flex-col → sm:flex-row justify-between; copyright trái, legal links (Terms/Privacy/Cookie Settings) + language selector phải.
+  - **LocaleSwitcher** `src/components/layout/locale-switcher.tsx`: thêm prop `tone="inverse"` cho variant sáng-trên-tối ở footer; header giữ mặc định.
+  - **i18n**: thêm `footer.connect` + `footer.cookieSettings` (en+vi, parity giữ).
+  - **Tests**: rewrite 4 file footer browser theo contract mới — `m2-footer-red-knockout` → `m2-footer-minimal` (palette zinc-900/800, typography zinc-400, contrast 6.75:1, knockout logo untouched) **17/17**; `m-footer-brand` (grid 5 cột, CMS socials, bottom legal + locale) **30/30**; `o-footer-refinement` (hierarchy 12px/600 uppercase, link 14px, wordmark 20px, gap-8, responsive) **17/17**; `q-footer-grid-alignment` (max-w-7xl, px-6/lg:px-12, 5 equal cols, flush edges, md 4-col, mobile 2-col) **16/16**; `s-bilingual-slogans` **18/18** (slogan vẫn nằm trong brand block).
+  - Verified: `npx tsc --noEmit` 0 · `npx eslint src tests` 0 · `npm test` **41/41 file**.
+  - Docs impact: minor (changelog này).
+- **[Feature] Hero video overlay → dải gradient kiểu Contiki + search pill tròn** (task "Replicate Contiki Home-Hero Section & Integrate into Homepage")
+  - **Hero** `src/components/homepage/hero-section.tsx`: thay scrim phẳng `bg-black/40` bằng `bg-gradient-to-b from-black/50 via-black/20 to-black/70` — tối ở mép trên/dưới, nhạt ở giữa → wordmark khổng lồ + chrome cuộn vẫn đọc rõ trên mọi khung video, footage vẫn lộ.
+  - **Search** `src/components/homepage/home-search.tsx`: input viền mỏng đổi `rounded-lg` → `rounded-full` (pill) + `pr-4` → `pr-5`; giữ nguyên border-only, không nút CTA, Enter → `/search?q=`.
+  - **Giữ nguyên theo thiết kế hiện có** (user chốt): header vẫn ẩn trên hero + trượt xuống sau 50% chiều cao (không đổi sang overlay trong suốt); wordmark giữ `clamp(3rem,15vw,20rem)` + tracking `0.12em` (đã fill ≈94%, khớp mục tiêu ~95%+); video CMS giữ field `homepage.promoVideo`/`promoVideoUrl` (không đổi tên `homeSettings.heroVideo` để tránh migration).
+  - Verified: `npx tsc --noEmit` 0 · `npx eslint src tests` 0 · `npm test` **41/41 file** · live `/vi` render đúng gradient + pill.
+  - Docs impact: minor (changelog này).
 - **[Feature] Đồng bộ ẩn/hiện ghost chatbot FAB với header theo scroll** (task "Defer Floating Chatbot Visibility - Sync Chatbot Widget with Scroll-Triggered Header Reveal State")
   - **Hook chung** NEW `src/components/layout/use-hero-reveal.ts`: trích logic ngưỡng 50% chiều cao hero từ `header.tsx` thành `useHeroReveal()` (trả `revealed`; trang khác luôn `true`; rAF coalesced scroll/resize, SSR-safe). Header và widget cùng bind một hook nên trạng thái không bao giờ lệch.
   - **Header** `src/components/layout/header.tsx`: bỏ `useState`/`useEffect` cục bộ, dùng `useHeroReveal()` (giữ nguyên `data-header-home`/`data-header-revealed` + `-translate-y-full`/`translate-y-0`).

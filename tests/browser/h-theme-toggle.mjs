@@ -17,7 +17,11 @@ const { getBrowser, getPage, closeBrowser } = await import(
 );
 
   const ORIGIN = "http://localhost:3000";
-  const isWhite = (bg) => bg === "rgb(255, 255, 255)" || bg === "oklch(1 0 0)";
+  const isWhite = (bg) =>
+    bg === "rgb(255, 255, 255)" ||
+    bg === "oklch(1 0 0)" ||
+    bg === "lab(100 0 0)" ||
+    bg === "oklab(1 0 0)";
 const results = [];
 const errors = [];
 const check = (name, ok, detail = "") => {

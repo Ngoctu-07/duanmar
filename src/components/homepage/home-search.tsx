@@ -47,7 +47,7 @@ export function HomeSearch() {
             }}
             placeholder={t("searchPlaceholder")}
             aria-label={t("searchPlaceholder")}
-            className="h-12 w-full rounded-lg border border-black/30 bg-transparent pl-10 pr-4 text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none dark:border-white/30 dark:focus:border-white"
+            className="h-12 w-full rounded-full border border-black/30 bg-transparent pl-10 pr-5 text-foreground placeholder:text-muted-foreground focus:border-black focus:outline-none dark:border-white/30 dark:focus:border-white"
           />
         </div>
       </form>

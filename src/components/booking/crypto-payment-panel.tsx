@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import QRCode from "qrcode";
+import { QRCodeSVG } from "qrcode.react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   buildCryptoQuote,
+  buildEvmUri,
   chainName,
   CryptoPaymentError,
   ensureChain,
@@ -65,7 +66,6 @@ export function CryptoPaymentPanel({
   const [errorCode, setErrorCode] = useState<CryptoErrorCode | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const onTxHashRef = useRef(onTxHash);
   useEffect(() => {
@@ -77,19 +77,6 @@ export function CryptoPaymentPanel({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- window.ethereum is unavailable during SSR
     setProvider(getInjectedProvider(window as unknown as { ethereum?: Eip1193Provider }));
   }, []);
-
-  useEffect(() => {
-    if (!quote.ok) return;
-    let cancelled = false;
-    QRCode.toDataURL(quote.uri, { width: 240, margin: 1 })
-      .then((url) => {
-        if (!cancelled) setQrUrl(url);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [quote]);
 
   const copyAddress = async () => {
     if (!config) return;
@@ -128,37 +115,34 @@ export function CryptoPaymentPanel({
     }
   };
 
-  if (!quote.ok || !config) {
+  if (!config) {
     return (
       <p
-        data-testid="crypto-unconfigured"
+        data-testid="crypto-unavailable"
         className="mt-4 rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground"
       >
-        {quote.ok === false && quote.reason === "unconfigured"
-          ? t("cryptoNotConfigured")
-          : t("cryptoUnavailable")}
+        {t("cryptoUnavailable")}
       </p>
     );
   }
 
+  // Simple EVM payment URI — universally scannable by MetaMask, Trust Wallet,
+  // Coinbase Wallet and other mobile Web3 apps. The EIP-681 token-transfer URI
+  // (quote.uri) is still used for the actual MetaMask eth_sendTransaction
+  // payload, but the QR code carries the plain address so any wallet can scan it.
+  const qrValue = buildEvmUri(config.walletAddress, config.chainId);
   const txUrl = txHash ? explorerTxUrl(config.chainId, txHash) : null;
 
   const deposit = (
     <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
       <div className="rounded-lg bg-background p-2">
-        {qrUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- QR comes from a client-generated data URL
-          <img
-            data-testid="crypto-qr"
-            src={qrUrl}
-            alt={t("cryptoQrAlt")}
-            width={192}
-            height={192}
-            className="h-48 w-48"
-          />
-        ) : (
-          <div aria-hidden="true" className="h-48 w-48 animate-pulse rounded bg-muted" />
-        )}
+        <QRCodeSVG
+          data-testid="crypto-qr"
+          value={qrValue}
+          size={192}
+          bgColor="#ffffff"
+          fgColor="#000000"
+        />
       </div>
 
       <div className="flex-1 text-center sm:text-left">
@@ -182,23 +166,37 @@ export function CryptoPaymentPanel({
             {copied ? t("cryptoCopied") : t("cryptoCopy")}
           </Button>
         </div>
+
+        {/* Network & Token Badge — UI parity with MoMo / Bank QR blocks */}
+        <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+          <span
+            data-testid="crypto-network-badge"
+            className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+          >
+            {t("cryptoNetwork")}: {chainName(config.chainId)}
+          </span>
+          <span
+            data-testid="crypto-tokens-badge"
+            className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+          >
+            {t("cryptoTokens")}: USDT / USDC
+          </span>
+        </div>
+
         <dl className="mt-3 space-y-1 text-xs text-muted-foreground">
-          <div className="flex gap-1">
-            <dt className="font-medium">{t("cryptoNetwork")}:</dt>
-            <dd data-testid="crypto-network">{chainName(config.chainId)}</dd>
-          </div>
-          <div className="flex gap-1">
-            <dt className="font-medium">{t("cryptoTokens")}:</dt>
-            <dd data-testid="crypto-tokens">USDT / USDC</dd>
-          </div>
           <div className="flex gap-1">
             <dt className="font-medium">{t("cryptoAmount")}:</dt>
             <dd data-testid="crypto-amount" className="tabular-nums">
-              {quote.usdAmount} {config.tokenSymbol}
+              {quote.ok ? quote.usdAmount : "—"} {config.tokenSymbol}
             </dd>
           </div>
         </dl>
         <p className="mt-3 text-xs text-muted-foreground">{t("cryptoScanHint")}</p>
+        {!quote.ok && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t("cryptoAmountUnconfirmed")}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -215,7 +213,12 @@ export function CryptoPaymentPanel({
               type="button"
               data-testid="crypto-pay"
               onClick={pay}
-              disabled={phase === "connecting" || phase === "sending" || phase === "success"}
+              disabled={
+                !quote.ok ||
+                phase === "connecting" ||
+                phase === "sending" ||
+                phase === "success"
+              }
             >
               {phase === "connecting"
                 ? t("cryptoConnecting")

@@ -51,6 +51,7 @@
     "cryptoTokens": "Accepted tokens",
     "cryptoAmount": "Amount",
     "cryptoScanHint": "Scan the QR with a crypto wallet to pay, then send us the transaction hash.",
+    "cryptoAmountUnconfirmed": "Amount to be confirmed — scan the QR and send the exact total shown above.",
     "cryptoQrAlt": "Crypto payment QR code",
     "cryptoModalTitle": "Pay with crypto",
     "cryptoModalDescription": "Send the exact token amount to the deposit address on the network below. Transfers on the wrong network cannot be recovered.",
@@ -563,10 +564,12 @@
     "howToBook": "How to Book",
     "articles": "Articles",
     "policies": "Policies & Support",
+    "connect": "Connect",
     "privacyPolicy": "Privacy Policy",
     "terms": "Terms & Conditions",
     "refundPolicy": "Refund & Cancellation Policy",
-    "faqs": "FAQs"
+    "faqs": "FAQs",
+    "cookieSettings": "Cookie Settings"
   },
   "thingsToDo": {
     "title": "Things to Do",

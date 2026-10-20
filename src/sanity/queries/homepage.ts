@@ -15,7 +15,16 @@ export const HOMEPAGE_QUERY = defineQuery(`
     aboutUsVideoStreamUrl,
     aboutUsVideoPoster { asset->{url, metadata{dimensions{width, height}}} },
     narrativeStory_en,
-    narrativeStory_vi
+    narrativeStory_vi,
+    editorialAnnouncement {
+      announcement,
+      heading,
+      body,
+      ctaText,
+      ctaLink,
+      bgImage { ${imageFragment} },
+      foregroundImage { ${imageFragment} }
+    }
   }
 `);
 

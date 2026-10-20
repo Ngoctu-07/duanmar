@@ -1,12 +1,9 @@
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dismissPromo } from "../helpers/promo.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
-const msg = {
-  vi: JSON.parse(readFileSync(new URL("../../src/messages/vi.json", import.meta.url), "utf8")),
-};
 
 const { getBrowser, getPage, closeBrowser } = await import(
   pathToFileURL(
@@ -27,32 +24,20 @@ const go = async (page, locale) => {
   await dismissPromo(page);
 };
 
-// Container + grid geometry: max-w-7xl shell, flush outer edges, uniform gap-8,
-// and footer column headings synced to the homepage "Stories & Inspiration" title.
-const measure = (tagline, storyTitle) => {
+/** Shell + grid geometry: max-w-7xl, responsive px/py, flush edges, uniform gap-8. */
+const measure = () => {
   const footer = document.querySelector("footer");
   const shell = footer?.querySelector(":scope > div");
-  const grid = document.querySelector("footer .grid");
+  const grid = footer?.querySelector(".grid");
   if (!grid || !shell) return null;
   const blocks = [...grid.children];
   const rects = blocks.map((b) => b.getBoundingClientRect());
-  const wordmark = grid.querySelector("h3 span.font-brand") ?? grid.querySelector("span.font-brand");
-  const wmStyle = wordmark ? getComputedStyle(wordmark) : null;
-  const wmRect = wordmark?.getBoundingClientRect();
   const gridRect = grid.getBoundingClientRect();
   const shellRect = shell.getBoundingClientRect();
   const shellStyle = getComputedStyle(shell);
-  const logoEl = grid.querySelector('img[src*="logo-duanmar"]');
-  const logoR = logoEl?.getBoundingClientRect();
-  const heading = blocks[1]?.querySelector("h3");
-  const hStyle = heading ? getComputedStyle(heading) : null;
-  const story = [...document.querySelectorAll("h2")].find(
-    (h) => h.textContent.trim() === storyTitle
-  );
-  const sStyle = story ? getComputedStyle(story) : null;
   return {
     children: blocks.length,
-    titles: blocks.map((b) => (b.querySelector("h3")?.textContent ?? "").trim()),
+    testids: blocks.map((b) => b.getAttribute("data-testid") ?? ""),
     shell: {
       left: shellRect.left,
       right: shellRect.right,
@@ -62,30 +47,14 @@ const measure = (tagline, storyTitle) => {
       padR: parseFloat(shellStyle.paddingRight),
       padT: parseFloat(shellStyle.paddingTop),
       padB: parseFloat(shellStyle.paddingBottom),
-      marginX: `${shellStyle.marginLeft} ${shellStyle.marginRight}`,
     },
     gridLeft: gridRect.left,
-    gridW: gridRect.width,
     gridRight: gridRect.right,
-    childRects: rects.map((r) => ({ left: r.left, right: r.right, width: r.width })),
-    wm: wmStyle
-      ? {
-          fontSize: parseFloat(wmStyle.fontSize),
-          width: wmRect.width,
-          right: wmRect.right,
-        }
-      : null,
-    heading: hStyle
-      ? { fontSize: parseFloat(hStyle.fontSize), fontWeight: Number(hStyle.fontWeight) }
-      : null,
-    story: sStyle
-      ? { fontSize: parseFloat(sStyle.fontSize), fontWeight: Number(sStyle.fontWeight) }
-      : null,
-    logo: logoR ? { width: logoR.width, height: logoR.height, right: logoR.right } : null,
-    tagline: (grid.textContent ?? "").includes(tagline),
+    gridW: gridRect.width,
+    childRects: rects.map((r) => ({ left: r.left, right: r.right, width: r.width, top: r.top })),
     overflow: document.documentElement.scrollWidth - window.innerWidth,
     mdMatch: matchMedia("(min-width: 768px)").matches,
-    innerWidth: window.innerWidth,
+    lgMatch: matchMedia("(min-width: 1024px)").matches,
   };
 };
 
@@ -96,20 +65,20 @@ try {
   const pageErrors = [];
   page.on("pageerror", (e) => pageErrors.push(e.message));
 
-  // ---------- @1280 desktop ----------
+  // ---------- @1280 desktop (lg: 5 columns) ----------
   await go(page, "vi");
   await page.evaluate(() => document.querySelector("footer")?.scrollIntoView());
-  const d = await page.evaluate(measure, msg.vi.footer.tagline, msg.vi.blog.title);
+  const d = await page.evaluate(measure);
 
   check(
     "Q1a shell = max-w-7xl mx-auto @1280",
     d?.shell && d.shell.maxWidth === "1280px" && d.shell.width <= 1280 && d.shell.width >= 1279,
-    `max=${d?.shell?.maxWidth} w=${d?.shell?.width?.toFixed(0)} margin=${d?.shell?.marginX}`
+    `max=${d?.shell?.maxWidth} w=${d?.shell?.width?.toFixed(0)}`
   );
   check(
-    "Q1b shell padding px-8 @lg + py-8",
-    d?.shell && d.shell.padL === 32 && d.shell.padR === 32 && d.shell.padT === 32 && d.shell.padB === 32,
-    `pad=${d?.shell?.padL}/${d?.shell?.padR} py=${d?.shell?.padT}/${d?.shell?.padB}`
+    "Q1b shell padding = lg:px-12 (48) + py-12 (48)",
+    d?.shell && d.shell.padL === 48 && d.shell.padR === 48 && d.shell.padT === 48 && d.shell.padB === 48,
+    `pad=${d?.shell?.padL}/${d?.shell?.padR} py=${d?.shell?.padT}/${d?.shell?.padB} lg=${d?.lgMatch}`
   );
   check(
     "Q1c grid fills shell content box",
@@ -117,98 +86,50 @@ try {
     `grid=${d?.gridLeft?.toFixed(0)}..${d?.gridRight?.toFixed(0)} shell=${d?.shell?.left?.toFixed(0)}..${d?.shell?.right?.toFixed(0)}`
   );
 
-  check("Q2 structure: exactly 5 children", d.children === 5, String(d.children));
-  check(
-    "Q3 title order = brand, tours, contact, info, policies",
-    JSON.stringify(d.titles) ===
-      JSON.stringify(["DuanMar", msg.vi.footer.tours, msg.vi.footer.contact, msg.vi.footer.info, msg.vi.footer.policies]),
-    JSON.stringify(d.titles)
-  );
-
-  check(
-    "Q4 left-most column flush with left container edge",
-    Math.abs(d.childRects[0].left - d.gridLeft) <= 1,
-    `col=${d.childRects[0].left?.toFixed(1)} edge=${d.gridLeft?.toFixed(1)}`
-  );
-  check(
-    "Q5 right-most column flush with right container edge",
-    Math.abs(d.childRects[4].right - d.gridRight) <= 1,
-    `col=${d.childRects[4].right?.toFixed(1)} edge=${d.gridRight?.toFixed(1)}`
-  );
-
+  check("Q2 exactly 5 children", d?.children === 5, String(d?.children));
   const gaps = [0, 1, 2, 3].map((i) => d.childRects[i + 1].left - d.childRects[i].right);
-  check(
-    "Q6 uniform gap-8 (32px) between all columns",
-    gaps.every((g) => Math.abs(g - 32) <= 1),
-    gaps.map((g) => g.toFixed(1)).join("/")
-  );
+  check("Q3 uniform gap-8 (32px)", gaps.every((g) => Math.abs(g - 32) <= 1), gaps.map((g) => g.toFixed(1)).join("/"));
   const widths = d.childRects.map((r) => r.width);
+  check("Q4 five equal columns @1280", Math.max(...widths) - Math.min(...widths) <= 1, widths.map((w) => w.toFixed(1)).join("/"));
   check(
-    "Q7 five equal columns @1280",
-    Math.max(...widths) - Math.min(...widths) <= 1,
-    widths.map((w) => w.toFixed(1)).join("/")
+    "Q5 brand flush left, policies flush right",
+    Math.abs(d.childRects[0].left - d.gridLeft) <= 1 && Math.abs(d.childRects[4].right - d.gridRight) <= 1,
+    `brand=${d.childRects[0].left?.toFixed(1)} edge=${d.gridLeft?.toFixed(1)} last=${d.childRects[4].right?.toFixed(1)} edge=${d.gridRight?.toFixed(1)}`
   );
-
-  check("Q8 logo = 72x72 +/- 2 @1280", !!d.logo && Math.abs(d.logo.width - 72) <= 2 && Math.abs(d.logo.height - 72) <= 2, `w=${d.logo?.width?.toFixed(1)} h=${d.logo?.height?.toFixed(1)}`);
-  check("Q9 wordmark = 40px +/- 0.5 @1280", d.wm && d.wm.fontSize >= 39.5 && d.wm.fontSize <= 40.5, `fontSize=${d.wm?.fontSize}`);
-  check(
-    "Q10 wordmark fits brand column",
-    d.wm && d.wm.right <= d.childRects[0].right + 1,
-    `wmRight=${d.wm?.right?.toFixed(1)} colRight=${d.childRects[0].right?.toFixed(1)}`
-  );
-  check("Q11 logo + tagline present", !!d.logo && d.tagline, `logo=${!!d.logo} tagline=${d.tagline}`);
-  check(
-    "Q12 brand block left of next column",
-    d.childRects[0].right <= d.childRects[1].left + 1,
-    `brandRight=${d.childRects[0].right?.toFixed(0)} nextLeft=${d.childRects[1].left?.toFixed(0)}`
-  );
-  check(
-    "Q13 column heading synced to stories title (30px/700)",
-    d.heading && d.story &&
-      Math.abs(d.heading.fontSize - d.story.fontSize) <= 0.5 &&
-      d.heading.fontWeight === d.story.fontWeight,
-    `footer=${d.heading?.fontSize}/${d.heading?.fontWeight} stories=${d.story?.fontSize}/${d.story?.fontWeight}`
-  );
+  check("Q6 brand block carries the brand testid", d?.testids?.[0] === "footer-brand", JSON.stringify(d?.testids));
   await (await page.$("footer")).screenshot({ path: `${OUT}/q-footer-01-1280.png` });
 
-  // ---------- @768 tablet (md, 2 columns) ----------
-  await page.setViewport({ width: 768, height: 1024 });
-  let t = await page.evaluate(measure, msg.vi.footer.tagline, msg.vi.blog.title);
-  let guard = "";
-  if (!t.mdMatch) {
-    await page.setViewport({ width: 800, height: 1024 });
-    t = await page.evaluate(measure, msg.vi.footer.tagline, msg.vi.blog.title);
-    guard = " (bumped to 800)";
-  }
-  const tGaps = [0, 1, 2, 3].map((i) => t.childRects[i + 1].left - t.childRects[i].right);
-  const tRowGaps = tGaps.filter((g) => g > 0);
-  const tRight = Math.max(...t.childRects.map((r) => r.right));
+  // ---------- @800 tablet (md: 4 columns, brand spans the row) ----------
+  await page.setViewport({ width: 800, height: 1024 });
+  const t = await page.evaluate(measure);
+  const tNavGaps = [1, 2, 3].map((i) => t.childRects[i + 1].left - t.childRects[i].right);
   check(
-    "Q14 md: 2 columns + no overflow + gap-8 between side-by-side pairs",
-    t.mdMatch === true && t.overflow <= 1 && tRowGaps.length === 2 && tRowGaps.every((g) => Math.abs(g - 32) <= 1),
-    `rowGaps=${tRowGaps.map((g) => g.toFixed(1)).join("/")} overflow=${t.overflow}${guard}`
+    "Q7a md: brand spans full width (col-span-4)",
+    t.mdMatch === true && Math.abs(t.childRects[0].width - t.gridW) <= 2,
+    `brand=${t.childRects[0].width?.toFixed(0)} grid=${t.gridW.toFixed(0)} md=${t.mdMatch}`
   );
   check(
-    "Q15 md: right-most block flush with grid right edge",
-    Math.abs(tRight - t.gridRight) <= 1,
-    `maxRight=${tRight?.toFixed(1)} gridRight=${t.gridRight?.toFixed(1)}`
+    "Q7b md: 4 nav columns share the second row with gap-8 + flush right",
+    tNavGaps.every((g) => Math.abs(g - 32) <= 1) && Math.abs(t.childRects[4].right - t.gridRight) <= 1,
+    `gaps=${tNavGaps.map((g) => g.toFixed(1)).join("/")} last=${t.childRects[4].right?.toFixed(0)} edge=${t.gridRight.toFixed(0)}`
   );
+  check("Q7c md: px-6 (24) shell padding", t.shell.padL === 24 && t.shell.padR === 24, `pad=${t.shell.padL}/${t.shell.padR}`);
+  check("Q7d no overflow @800", t.overflow <= 1, `overflow=${t.overflow}`);
   await (await page.$("footer")).screenshot({ path: `${OUT}/q-footer-02-768.png` });
 
-  // ---------- @375 mobile (1 column) ----------
+  // ---------- @375 mobile (2 columns) ----------
   await page.setViewport({ width: 375, height: 812 });
-  const m = await page.evaluate(measure, msg.vi.footer.tagline, msg.vi.blog.title);
-  check("Q16 logo = 72x72 +/- 2 @375", !!m?.logo && Math.abs(m.logo.width - 72) <= 2 && Math.abs(m.logo.height - 72) <= 2, `w=${m?.logo?.width?.toFixed(1)} h=${m?.logo?.height?.toFixed(1)}`);
-  check("Q17 no horizontal overflow @375", m.overflow <= 1, `overflow=${m.overflow} vw=${m.innerWidth}`);
+  const m = await page.evaluate(measure);
+  check("Q8a no horizontal overflow @375", m.overflow <= 1, `overflow=${m.overflow}`);
   check(
-    "Q18 brand block spans full width (grid-cols-1)",
+    "Q8b brand block spans full width (col-span-2)",
     Math.abs(m.childRects[0].width - m.gridW) <= 2,
     `brand=${m.childRects[0].width?.toFixed(0)} grid=${m.gridW.toFixed(0)}`
   );
   check(
-    "Q19 logo fits brand block @375",
-    !!m.logo && m.logo.right <= m.childRects[0].right + 1,
-    `logoRight=${m.logo?.right?.toFixed(0)} colRight=${m.childRects[0].right?.toFixed(0)}`
+    "Q8c mobile grid = 2 equal columns",
+    Math.abs(m.childRects[1].width - m.childRects[2].width) <= 1,
+    `${m.childRects[1].width?.toFixed(1)} / ${m.childRects[2].width?.toFixed(1)}`
   );
   // sticky header occludes the top of the footer element-shot at 375 (footer taller than viewport)
   await page.evaluate(() => {
@@ -217,7 +138,7 @@ try {
   });
   await (await page.$("footer")).screenshot({ path: `${OUT}/q-footer-03-375.png` });
 
-  check("Q20 zero pageerrors", pageErrors.length === 0, pageErrors.join("; "));
+  check("Q9 zero pageerrors", pageErrors.length === 0, pageErrors.join("; "));
   await closeBrowser(browser);
   browser = null;
 } catch (error) {

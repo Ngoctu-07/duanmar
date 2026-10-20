@@ -7,7 +7,7 @@ import type { PortableTextBlock } from "next-sanity";
 
 /**
  * Homepage "About Us" band: 50/50 split — text + Contact CTA on the left,
- * promo video on the right. Sits directly below Featured Destinations.
+ * promo video on the right. Sits below the editorial announcement section.
  * Media comes from the `homepage` CMS doc (file upload > stream URL).
  * Narrative paragraph = CMS Portable Text (no hardcoded copy).
  */
