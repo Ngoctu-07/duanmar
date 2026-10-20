@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { BrandWordmark } from "@/components/layout/brand-wordmark";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { SocialAnchor } from "@/components/contact/social-anchor";
 import { buildContactChannels, type ContactFallbacks } from "@/lib/contact-channels";
 
@@ -13,8 +14,10 @@ const tourLinks = [
 
 const infoLinks = [
   { labelKey: "howToBook", href: "/support" },
-  { labelKey: "articles", href: "/blog" },
+  { labelKey: "blog", href: "/blog" },
   { labelKey: "careers", href: "/about/careers" },
+  { labelKey: "accessibility", href: "/accessibility" },
+  { labelKey: "sitemapHtml", href: "/sitemap" },
 ] as const;
 
 // E-commerce travel policies → deepest matching section of the pages that exist today.
@@ -25,19 +28,30 @@ const policyLinks = [
   { labelKey: "faqs", href: "/support" },
 ] as const;
 
+// Bottom utility bar legal links (Behance-style).
+const legalLinks = [
+  { labelKey: "terms", href: "/privacy#terms" },
+  { labelKey: "privacyPolicy", href: "/privacy#privacy-policy" },
+  { labelKey: "cookieSettings", href: "/privacy#privacy-policy" },
+] as const;
+
 // Phone/Email i18n nodes (tel:/mailto:) + social nodes used as CMS fallbacks.
 const fallbackKeys = ["phone", "email", "facebook", "tiktok", "instagram"] as const;
 
 type ContactNode = { label?: string; value?: string; href?: string };
 
-/** Column heading token — synced with the homepage "Stories & Inspiration" title. */
+/** Behance-style column label: tiny, uppercase, wide-tracked, white on the red canvas. */
 function ColumnHeading({ children }: { children: ReactNode }) {
-  return <h3 className="mb-2 text-sm font-bold lg:mb-4 lg:text-3xl">{children}</h3>;
+  return (
+    <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-white">
+      {children}
+    </h3>
+  );
 }
 
-// Compact body link: text-xs on mobile, text-sm on lg + subtle opacity, full white on hover/focus.
+// Muted body link: white/80 at rest, full white on hover/focus.
 const linkClass =
-  "text-xs lg:text-sm opacity-80 transition-opacity hover:opacity-100 focus-visible:opacity-100";
+  "text-sm text-white/80 transition-colors duration-200 hover:text-white focus-visible:text-white focus-visible:outline-none";
 
 export function Footer({
   contactSettings,
@@ -60,28 +74,51 @@ export function Footer({
 
   // CMS `contactSettings` win; empty CMS → i18n nodes keep the column intact.
   const contactItems = buildContactChannels(contactSettings, contactFallbacks);
+  // Brand column shows the primary phone/email; the Connect column shows socials.
+  const primaryContacts = contactItems.filter((item) => item.kind !== "social");
+  const socialChannels = contactItems.filter((item) => item.kind === "social");
 
   return (
     <footer
       id="site-footer"
       data-testid="site-footer"
-      className="bg-primary text-white print:hidden"
+      className="border-t border-white/20 bg-[#7F1D1D] text-white print:hidden"
     >
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-5">
-          <div className="col-span-2 md:col-span-1">
-            <BrandLogo size={72} variant="knockout" className="mb-3" />
-            <h3 className="mb-3">
-              <BrandWordmark className="text-3xl md:text-[2.5rem] font-bold tracking-tight leading-none" />
-            </h3>
-            <p data-testid="footer-slogan" className="text-xs lg:text-sm">
+      <div className="mx-auto max-w-7xl px-6 py-12 lg:px-12">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
+          <div data-testid="footer-brand" className="col-span-2 md:col-span-4 lg:col-span-1">
+            <Link
+              href="/"
+              aria-label="DuanMar"
+              className="inline-flex items-center gap-2.5"
+            >
+              <BrandLogo size={40} variant="knockout" />
+              <BrandWordmark className="text-xl font-bold tracking-tight text-white" />
+            </Link>
+            <p
+              data-testid="footer-slogan"
+              className="mt-4 max-w-xs text-xs leading-relaxed text-white/70"
+            >
               {slogan ?? tf("tagline")}
             </p>
+            {primaryContacts.length > 0 && (
+              <ul className="mt-5 space-y-2">
+                {primaryContacts.map((item) => (
+                  <li key={item.key}>
+                    <SocialAnchor
+                      targetUrl={item.href}
+                      displayText={item.value}
+                      className={`${linkClass} break-words`}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div>
             <ColumnHeading>{tf("tours")}</ColumnHeading>
-            <ul className="space-y-1.5 lg:space-y-2">
+            <ul className="space-y-2.5">
               {tourLinks.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className={linkClass}>
@@ -89,27 +126,17 @@ export function Footer({
                   </Link>
                 </li>
               ))}
-            </ul>
-          </div>
-
-          <div>
-            <ColumnHeading>{tf("contact")}</ColumnHeading>
-            <ul className="space-y-1.5 lg:space-y-2">
-              {contactItems.map((item) => (
-                <li key={item.key}>
-                  <SocialAnchor
-                    targetUrl={item.href}
-                    displayText={item.label}
-                    className={`${linkClass} break-words`}
-                  />
-                </li>
-              ))}
+              <li>
+                <Link href="/deals" className={linkClass}>
+                  {t("deals")}
+                </Link>
+              </li>
             </ul>
           </div>
 
           <div>
             <ColumnHeading>{tf("info")}</ColumnHeading>
-            <ul className="space-y-1.5 lg:space-y-2">
+            <ul className="space-y-2.5">
               {infoLinks.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className={linkClass}>
@@ -120,9 +147,26 @@ export function Footer({
             </ul>
           </div>
 
+          <div data-testid="footer-social">
+            <ColumnHeading>{tf("connect")}</ColumnHeading>
+            {socialChannels.length > 0 && (
+              <ul className="space-y-2.5">
+                {socialChannels.map((item) => (
+                  <li key={item.key}>
+                    <SocialAnchor
+                      targetUrl={item.href}
+                      displayText={item.label}
+                      className={linkClass}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
           <div>
             <ColumnHeading>{tf("policies")}</ColumnHeading>
-            <ul className="space-y-1.5 lg:space-y-2">
+            <ul className="space-y-2.5">
               {policyLinks.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className={linkClass}>
@@ -134,33 +178,24 @@ export function Footer({
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col items-center gap-2 border-t border-white/20 pt-4 text-xs sm:flex-row sm:justify-between sm:text-left lg:gap-3 lg:pt-6">
-          <p>&copy; {new Date().getFullYear()} DuanMar. {tf("rights")}</p>
-          <div className="flex flex-wrap justify-center gap-2 lg:gap-4">
-            <Link
-              href="/support"
-              className="hover:text-white/80 transition-colors"
-            >
-              {tf("support")}
-            </Link>
-            <Link
-              href="/privacy"
-              className="hover:text-white/80 transition-colors"
-            >
-              {tf("privacy")}
-            </Link>
-            <Link
-              href="/accessibility"
-              className="hover:text-white/80 transition-colors"
-            >
-              {tf("accessibility")}
-            </Link>
-            <Link
-              href="/sitemap"
-              className="hover:text-white/80 transition-colors"
-            >
-              {tf("sitemapHtml")}
-            </Link>
+        <div
+          data-testid="footer-bottom"
+          className="mt-12 flex flex-col items-center gap-4 border-t border-white/15 pt-6 text-xs text-white/70 sm:flex-row sm:justify-between"
+        >
+          <p>
+            &copy; {new Date().getFullYear()} DuanMar. {tf("rights")}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+            {legalLinks.map((link) => (
+              <Link
+                key={`${link.href}-${link.labelKey}`}
+                href={link.href}
+                className="text-white/80 transition-colors duration-200 hover:text-white"
+              >
+                {tf(link.labelKey)}
+              </Link>
+            ))}
+            <LocaleSwitcher tone="inverse" />
           </div>
         </div>
       </div>

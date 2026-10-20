@@ -1,4 +1,5 @@
 import { defineType, defineField } from "sanity";
+import { editorialAnnouncementField } from "./homepage-editorial-announcement";
 
 export default defineType({
   name: "homepage",
@@ -103,6 +104,7 @@ export default defineType({
         "Portable Text — multi-paragraph câu chuyện / sứ mệnh / lịch sử thương hiệu (VI). Empty → falls back to the EN block; both empty → the section renders no paragraph.",
       of: [{ type: "block" }],
     }),
+    editorialAnnouncementField,
   ],
   preview: {
     select: { title: "title" },

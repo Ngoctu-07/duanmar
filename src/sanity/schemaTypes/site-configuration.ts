@@ -87,6 +87,46 @@ export default defineType({
       ],
     }),
     defineField({
+      name: "paymentSettings",
+      title: "Payment Settings",
+      type: "object",
+      description:
+        "Web3 / crypto payment configuration. If the wallet address is empty, the crypto payment rail is hidden and a fallback message is shown instead.",
+      options: { collapsible: true, collapsed: false },
+      fields: [
+        defineField({
+          name: "cryptoWalletAddress",
+          title: "Crypto Wallet Address",
+          type: "string",
+          description:
+            'Business EVM deposit wallet address, e.g. "0x...". Used for MetaMask / Trust Wallet / Coinbase Wallet QR codes. Leave empty to disable crypto payments.',
+          validation: (rule) =>
+            rule.custom((value: string | undefined) => {
+              if (!value) return true;
+              if (!/^0x[0-9a-fA-F]{40}$/.test(value.trim())) {
+                return "Must be a valid EVM address (0x + 40 hex chars)";
+              }
+              return true;
+            }),
+        }),
+        defineField({
+          name: "metamaskWalletAddress",
+          title: "MetaMask Wallet Address",
+          type: "string",
+          description:
+            'Alternative MetaMask-specific deposit address. Falls back to "Crypto Wallet Address" when empty.',
+          validation: (rule) =>
+            rule.custom((value: string | undefined) => {
+              if (!value) return true;
+              if (!/^0x[0-9a-fA-F]{40}$/.test(value.trim())) {
+                return "Must be a valid EVM address (0x + 40 hex chars)";
+              }
+              return true;
+            }),
+        }),
+      ],
+    }),
+    defineField({
       name: "enableEntryPopup",
       title: "Enable Entry Popup",
       type: "boolean",

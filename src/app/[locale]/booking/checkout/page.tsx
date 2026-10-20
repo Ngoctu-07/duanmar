@@ -8,6 +8,7 @@ import { mapTourCapacity } from "@/lib/tour-capacity";
 import { resolveCryptoConfig } from "@/lib/crypto-payment";
 import { resolveLocaleString } from "@/lib/bilingual-string";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
+import { SITE_CONFIGURATION_QUERY } from "@/sanity/queries/site-configuration";
 import { DESTINATION_BY_SLUG_QUERY } from "@/sanity/queries/destinations";
 import { TOUR_PRICING_BY_SLUG_QUERY } from "@/sanity/queries/tour-pricing";
 
@@ -29,12 +30,15 @@ export default async function CheckoutPage({
   const { tour } = await searchParams;
   if (!tour) notFound();
 
-  const [destination, pricingDoc, t] = await Promise.all([
+  const [destination, pricingDoc, siteConfig, t] = await Promise.all([
     fetchPublished(DESTINATION_BY_SLUG_QUERY, { slug: tour }, {
       tags: [`sanity:destination:${tour}`],
     }),
     fetchPublished(TOUR_PRICING_BY_SLUG_QUERY, { slug: tour }, {
       tags: [`sanity:pricing:${tour}`],
+    }),
+    fetchPublished(SITE_CONFIGURATION_QUERY, {}, {
+      tags: ["sanity:siteconfig"],
     }),
     getTranslations("booking"),
   ]);
@@ -44,10 +48,16 @@ export default async function CheckoutPage({
   const capacity = mapTourCapacity(pricingDoc);
   const tourName = resolveLocaleString(destination.name, locale) ?? tour;
 
-  // Web3 rail config, resolved server-side so the public env vars are inlined
-  // at build (Next only inlines static `process.env.NEXT_PUBLIC_*` reads).
+  // CMS wallet address takes priority over env vars; falls back to env when
+  // the Studio field is missing or empty. This keeps the checkout page
+  // renderable even when Sanity is unreachable (fail-open via fetchPublished).
+  const cmsWalletAddress =
+    siteConfig?.paymentSettings?.cryptoWalletAddress ??
+    siteConfig?.paymentSettings?.metamaskWalletAddress ??
+    null;
+
   const cryptoConfig = resolveCryptoConfig({
-    walletAddress: process.env.NEXT_PUBLIC_CRYPTO_WALLET_ADDRESS,
+    walletAddress: cmsWalletAddress ?? process.env.NEXT_PUBLIC_CRYPTO_WALLET_ADDRESS,
     chainId: process.env.NEXT_PUBLIC_CRYPTO_CHAIN_ID,
     tokenAddress: process.env.NEXT_PUBLIC_CRYPTO_TOKEN_ADDRESS,
     tokenSymbol: process.env.NEXT_PUBLIC_CRYPTO_TOKEN_SYMBOL,

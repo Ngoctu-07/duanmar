@@ -51,6 +51,7 @@
     "cryptoTokens": "Token chấp nhận",
     "cryptoAmount": "Số tiền",
     "cryptoScanHint": "Quét mã QR bằng ví crypto để thanh toán, sau đó gửi lại mã giao dịch cho chúng tôi.",
+    "cryptoAmountUnconfirmed": "Số tiền cần xác nhận — quét mã QR và gửi chính xác tổng tiền đã hiển thị ở trên.",
     "cryptoQrAlt": "Mã QR thanh toán crypto",
     "cryptoModalTitle": "Thanh toán bằng crypto",
     "cryptoModalDescription": "Gửi đúng số token tới địa chỉ nhận trên mạng lưới bên dưới. Giao dịch sai mạng lưới không thể khôi phục.",
@@ -563,10 +564,12 @@
     "howToBook": "Cách đặt tour",
     "articles": "Bài viết",
     "policies": "Chính sách & Hỗ trợ",
+    "connect": "Kết nối",
     "privacyPolicy": "Chính sách bảo mật",
     "terms": "Điều khoản & Điều kiện",
     "refundPolicy": "Chính sách hoàn hủy",
-    "faqs": "Câu hỏi thường gặp"
+    "faqs": "Câu hỏi thường gặp",
+    "cookieSettings": "Cài đặt cookie"
   },
   "thingsToDo": {
     "title": "Trải nghiệm",

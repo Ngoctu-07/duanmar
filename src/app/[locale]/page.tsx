@@ -1,6 +1,7 @@
 import { HeroSection } from "@/components/homepage/hero-section";
 import { HomeSearch } from "@/components/homepage/home-search";
 import { FeaturedDestinations } from "@/components/homepage/featured-destinations";
+import { EditorialAnnouncementSection } from "@/components/homepage/editorial-announcement-section";
 import { AboutUsSection } from "@/components/homepage/about-us-section";
 import { StoriesSection } from "@/components/homepage/stories-section";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
@@ -44,6 +45,9 @@ export default async function HomePage() {
       />
       <HomeSearch />
       <FeaturedDestinations destinations={destinationsData || []} priceRanges={priceRanges} />
+      <EditorialAnnouncementSection
+        data={homepageData?.editorialAnnouncement ?? null}
+      />
       <AboutUsSection
         videoSrc={aboutVideoSrc}
         posterSrc={aboutPosterSrc}

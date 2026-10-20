@@ -27,41 +27,67 @@ const go = async (page, locale) => {
   await dismissPromo(page);
 };
 
-// geometry of the footer grid: wordmark type + nav-cluster compactness
+/**
+ * Behance-style hierarchy: tiny uppercase white column labels, white/80 text-sm
+ * body links, a compact white wordmark, and a thin translucent white divider.
+ */
 const measure = (tagline) => {
-  const grid = document.querySelector("footer .grid");
+  const paint = (...layers) => {
+    const c = document.createElement("canvas"); c.width = c.height = 1;
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    for (const color of layers) { ctx.fillStyle = color; ctx.fillRect(0, 0, 1, 1); }
+    return [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+  };
+  const footer = document.querySelector("footer");
+  const grid = footer.querySelector(".grid");
   if (!grid) return null;
+  const bg = getComputedStyle(footer).backgroundColor;
   const blocks = [...grid.children];
   const rects = blocks.map((b) => b.getBoundingClientRect());
-  const wordmark = grid.querySelector("h3 span.font-brand") ?? grid.querySelector("span.font-brand");
-  const headerWordmark = document.querySelector("header span.font-brand:not([aria-hidden])");
-  const wmStyle = wordmark ? getComputedStyle(wordmark) : null;
-  const wmRect = wordmark?.getBoundingClientRect();
-  const gridRect = grid.getBoundingClientRect();
+  const heading = grid.querySelector("h3");
+  const link = grid.children[1]?.querySelector("a");
+  const wordmark = grid.querySelector("span.font-brand");
+  const bottom = footer.querySelector('[data-testid="footer-bottom"]');
+  const hs = heading ? getComputedStyle(heading) : null;
+  const ls = link ? getComputedStyle(link) : null;
+  const ws = wordmark ? getComputedStyle(wordmark) : null;
   return {
     children: blocks.length,
-    titles: blocks.map((b) => (b.querySelector("h3")?.textContent ?? "").trim()),
-    gridW: gridRect.width,
-    gridRight: gridRect.right,
+    headings: [...grid.querySelectorAll("h3")].map((h) => h.textContent.trim()),
+    gridW: grid.getBoundingClientRect().width,
     childRects: rects.map((r) => ({ left: r.left, right: r.right, width: r.width })),
-    wm: wmStyle
+    heading: hs
       ? {
-          fontSize: parseFloat(wmStyle.fontSize),
-          letterSpacing: parseFloat(wmStyle.letterSpacing),
-          lineHeight: parseFloat(wmStyle.lineHeight),
-          fontWeight: Number(wmStyle.fontWeight),
-          width: wmRect.width,
-          right: wmRect.right,
+          size: parseFloat(hs.fontSize),
+          weight: Number(hs.fontWeight),
+          transform: hs.textTransform,
+          trackingEm: parseFloat(hs.letterSpacing) / parseFloat(hs.fontSize),
+          color: paint(bg, hs.color),
         }
       : null,
-    headerFontSize: headerWordmark ? parseFloat(getComputedStyle(headerWordmark).fontSize) : 0,
+    link: ls
+      ? { size: parseFloat(ls.fontSize), color: paint(bg, ls.color), transition: ls.transitionDuration }
+      : null,
+    wordmark: ws
+      ? { size: parseFloat(ws.fontSize), weight: Number(ws.fontWeight), color: paint(ws.color) }
+      : null,
+    bottom: bottom
+      ? {
+          borderWidth: getComputedStyle(bottom).borderTopWidth,
+          links: [...bottom.querySelectorAll("a")].map((a) => a.getAttribute("href")),
+          localeButtons: [...bottom.querySelectorAll('[role="group"] button')].map((b) => b.textContent.trim()),
+        }
+      : null,
+    tagline: (grid.textContent ?? "").includes(tagline),
     overflow: document.documentElement.scrollWidth - window.innerWidth,
     mdMatch: matchMedia("(min-width: 768px)").matches,
-    innerWidth: window.innerWidth,
-    logo: grid.querySelector('img[src*="logo-duanmar"]') !== null,
-    tagline: (grid.textContent ?? "").includes(tagline),
+    lgMatch: matchMedia("(min-width: 1024px)").matches,
   };
 };
+
+const WHITE = [255, 255, 255];
+const WHITE_80 = [229, 210, 210];
+const near = (rgb, expected, tol = 3) => rgb.every((v, i) => Math.abs(v - expected[i]) <= tol);
 
 let browser = null;
 try {
@@ -74,42 +100,40 @@ try {
   await go(page, "vi");
   await page.evaluate(() => document.querySelector("footer")?.scrollIntoView());
   const d = await page.evaluate(measure, msg.vi.footer.tagline);
-  check("O1a footer .grid has exactly 5 children", d?.children === 5, String(d?.children));
+
+  check("O1a footer grid has exactly 5 children", d?.children === 5, String(d?.children));
   check(
-    "O1b title order unchanged",
-    JSON.stringify(d?.titles) === JSON.stringify(["DuanMar", msg.vi.footer.tours, msg.vi.footer.contact, msg.vi.footer.info, msg.vi.footer.policies]),
-    JSON.stringify(d?.titles)
+    "O1b label order = tours, info, connect, policies",
+    JSON.stringify(d?.headings) ===
+      JSON.stringify([msg.vi.footer.tours, msg.vi.footer.info, msg.vi.footer.connect, msg.vi.footer.policies]),
+    JSON.stringify(d?.headings)
   );
 
   check(
-    "O2a wordmark = 40px (83% of 48px) @1280",
-    d?.wm && d.wm.fontSize >= 39.5 && d.wm.fontSize <= 40.5,
-    `fontSize=${d?.wm?.fontSize}`
+    "O2a labels = 12px / 600 / uppercase / wide tracking",
+    d?.heading && d.heading.size === 12 && d.heading.weight === 600 && d.heading.transform === "uppercase" && d.heading.trackingEm >= 0.04 && d.heading.trackingEm <= 0.08,
+    JSON.stringify(d?.heading)
   );
-  check("O2b footer wordmark >= header wordmark", d?.wm && d.wm.fontSize >= d.headerFontSize, `footer=${d?.wm?.fontSize} header=${d?.headerFontSize}`);
+  check("O2b labels = white", d?.heading && near(d.heading.color, WHITE), JSON.stringify(d?.heading?.color));
 
-  check("O3a letter-spacing negative", d?.wm && d.wm.letterSpacing < 0, `letterSpacing=${d?.wm?.letterSpacing}`);
-  check(
-    "O3b line-height <= 1.15x font-size",
-    d?.wm && d.wm.lineHeight <= d.wm.fontSize * 1.15,
-    `lh=${d?.wm?.lineHeight} fs=${d?.wm?.fontSize}`
-  );
-  check("O3c font-weight >= 600", d?.wm && d.wm.fontWeight >= 600, `weight=${d?.wm?.fontWeight}`);
+  check("O3a body links = text-sm (14px)", d?.link && d.link.size === 14, `size=${d?.link?.size}`);
+  check("O3b body links = white/80", d?.link && near(d.link.color, WHITE_80), JSON.stringify(d?.link?.color));
+  check("O3c body links transition on hover", d?.link && d.link.transition !== "0s", String(d?.link?.transition));
 
-  check("O4a wordmark wider than 150px", d?.wm && d.wm.width > 150, `width=${d?.wm?.width?.toFixed(1)}`);
   check(
-    "O4b wordmark fits its column (no spill)",
-    d?.wm && d.wm.right <= d.childRects[0].right + 1 && d.wm.right <= d.gridRight + 1,
-    `wmRight=${d?.wm?.right?.toFixed(1)} colRight=${d?.childRects[0].right?.toFixed(1)} gridRight=${d?.gridRight?.toFixed(1)}`
+    "O4 wordmark = white / text-xl (20px) / bold",
+    d?.wordmark && d.wordmark.size === 20 && d.wordmark.weight >= 700 && near(d.wordmark.color, [255, 255, 255]),
+    JSON.stringify(d?.wordmark)
   );
 
-  const gaps1280 = [1, 2].map((i) => d.childRects[i + 1].left - d.childRects[i].right);
-  check("O5a nav gaps = gap-8 (32px) @1280", gaps1280.every((g) => g <= 33), gaps1280.map((g) => g.toFixed(1)).join("/"));
-  const cluster1280 = d.childRects[3].right - d.childRects[1].left;
+  const gaps = [0, 1, 2, 3].map((i) => d.childRects[i + 1].left - d.childRects[i].right);
+  check("O5 uniform gap-8 (32px) @1280", gaps.every((g) => Math.abs(g - 32) <= 1), gaps.map((g) => g.toFixed(1)).join("/"));
+  check("O6 brand + tagline present", d.tagline, `tagline=${d?.tagline}`);
+
   check(
-    "O5b nav cluster <= 65% of grid width @1280",
-    cluster1280 <= d.gridW * 0.65,
-    `cluster=${cluster1280.toFixed(0)} grid=${d.gridW.toFixed(0)} ratio=${((cluster1280 / d.gridW) * 100).toFixed(0)}%`
+    "O7 bottom bar: 1px divider + legal links + locale switch",
+    d?.bottom && d.bottom.borderWidth === "1px" && d.bottom.links.length === 3 && JSON.stringify(d.bottom.localeButtons) === JSON.stringify(["en", "vi"]),
+    JSON.stringify(d?.bottom)
   );
   await (await page.$("footer")).screenshot({ path: `${OUT}/o-footer-01-1280.png` });
 
@@ -118,48 +142,32 @@ try {
   let t = await page.evaluate(measure, msg.vi.footer.tagline);
   let guard = "";
   if (!t.mdMatch) {
-    // classic scrollbar can push clientWidth under 768 → bump viewport so md: applies
     await page.setViewport({ width: 800, height: 1024 });
     t = await page.evaluate(measure, msg.vi.footer.tagline);
     guard = " (bumped to 800)";
   }
-  const gaps768 = [1, 2].map((i) => t.childRects[i + 1].left - t.childRects[i].right);
+  const navRowGaps = [1, 2, 3].map((i) => t.childRects[i + 1].left - t.childRects[i].right);
   check(
-    "O6a md: matched + nav gaps <= 33px @768",
-    t.mdMatch === true && gaps768.every((g) => g <= 33),
-    `${gaps768.map((g) => g.toFixed(1)).join("/")} md=${t.mdMatch}${guard}`
+    "O8 md: brand spans full width, 4 nav columns in a row, gap-8",
+    t.mdMatch === true &&
+      Math.abs(t.childRects[0].width - t.gridW) <= 2 &&
+      navRowGaps.every((g) => Math.abs(g - 32) <= 1),
+    `brand=${t.childRects[0].width?.toFixed(0)} grid=${t.gridW.toFixed(0)} gaps=${navRowGaps.map((g) => g.toFixed(1)).join("/")}${guard}`
   );
-  check(
-    "O6b tablet no overflow + brand left of cluster",
-    t.overflow <= 1 && t.childRects[0].right <= t.childRects[1].left + 1,
-    `overflow=${t.overflow} brandRight=${t.childRects[0].right?.toFixed(0)} navLeft=${t.childRects[1].left?.toFixed(0)} vw=${t.innerWidth}`
-  );
+  check("O8b no overflow @768", t.overflow <= 1, `overflow=${t.overflow}`);
   await (await page.$("footer")).screenshot({ path: `${OUT}/o-footer-02-768.png` });
 
   // ---------- @375 mobile ----------
   await page.setViewport({ width: 375, height: 812 });
   const m = await page.evaluate(measure, msg.vi.footer.tagline);
-  check("O7a no horizontal overflow @375", m.overflow <= 1, `overflow=${m.overflow} vw=${m.innerWidth}`);
+  check("O9a no horizontal overflow @375", m.overflow <= 1, `overflow=${m.overflow}`);
   check(
-    "O7b brand block spans full width (grid-cols-1)",
+    "O9b brand block spans full width (2-col grid)",
     Math.abs(m.childRects[0].width - m.gridW) <= 2,
     `brand=${m.childRects[0].width?.toFixed(0)} grid=${m.gridW.toFixed(0)}`
   );
-  check(
-    "O7c mobile wordmark = 30px (83% of 36px)",
-    m.wm && m.wm.fontSize >= 29.5 && m.wm.fontSize <= 30.5,
-    `fontSize=${m?.wm?.fontSize}`
-  );
+  check("O9c wordmark stays 20px @375", m.wordmark && m.wordmark.size === 20, `size=${m?.wordmark?.size}`);
   await (await page.$("footer")).screenshot({ path: `${OUT}/o-footer-03-375.png` });
-
-  // ---------- brand + bottom bar regression ----------
-  check("O8a logo + tagline still present", d.logo && d.tagline, `logo=${d.logo} tagline=${d.tagline}`);
-  const bottomHrefs = await page.$$eval("footer .mt-8 a", (as) => as.map((a) => a.getAttribute("href")));
-  check(
-    "O8b bottom bar intact",
-    ["/vi/support", "/vi/privacy", "/vi/accessibility", "/vi/sitemap"].every((h) => bottomHrefs.includes(h)),
-    JSON.stringify(bottomHrefs)
-  );
 
   check("O10 zero pageerrors", pageErrors.length === 0, pageErrors.join("; "));
   await closeBrowser(browser);

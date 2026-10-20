@@ -169,6 +169,49 @@ export function buildEip681Uri(params: {
   )}&uint256=${amountBaseUnits.toString()}`;
 }
 
+/**
+ * Universally compatible EVM payment URI for QR codes.
+ *
+ * Produces `ethereum:${walletAddress}@${chainId}` when a chainId is provided,
+ * otherwise `ethereum:${walletAddress}`. This simple address URI is supported
+ * by MetaMask, Trust Wallet, Coinbase Wallet and other mobile Web3 apps,
+ * unlike the more specific ERC-20 transfer EIP-681 URI which some wallets
+ * do not recognize.
+ */
+export function buildEvmUri(walletAddress: string, chainId?: number): string {
+  const address = getAddress(walletAddress.trim());
+  return chainId ? `ethereum:${address}@${chainId}` : `ethereum:${address}`;
+}
+
+/** Shape of the CMS `paymentSettings` object returned by the site config query. */
+export interface CmsPaymentSettings {
+  cryptoWalletAddress?: string | null;
+  metamaskWalletAddress?: string | null;
+}
+
+/**
+ * Resolve a `CryptoConfig` from CMS payment settings (priority) with env var
+ * fallback. Returns `null` when no usable wallet address is found. Never
+ * throws — intended for server-side use in checkout page components.
+ */
+export function resolveCryptoConfigFromCms(
+  cms: CmsPaymentSettings | null,
+  env: CryptoEnv
+): CryptoConfig | null {
+  const walletAddress =
+    cms?.cryptoWalletAddress ??
+    cms?.metamaskWalletAddress ??
+    env.walletAddress ??
+    null;
+
+  if (!walletAddress || !isEvmAddress(walletAddress)) return null;
+
+  return resolveCryptoConfig({
+    ...env,
+    walletAddress,
+  });
+}
+
 export type CryptoQuote =
   | {
       ok: true;

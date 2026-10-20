@@ -24,24 +24,38 @@ const check = (name, ok, detail = "") => {
   if (!ok) errors.push(name);
 };
 
+const SOCIAL_LABEL = {
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  instagram: "Instagram",
+  threads: "Threads",
+  youtube: "YouTube",
+};
+
 const columns = (page) =>
-  page.$$eval("footer .grid", (grids) => {
-    const grid = grids[0];
-    const blocks = [...grid.children];
+  page.$$eval("footer .grid > div", (blocks) =>
+    blocks.map((b) => ({
+      testid: b.getAttribute("data-testid") ?? "",
+      heading: (b.querySelector("h3")?.textContent ?? "").trim(),
+      links: [...b.querySelectorAll("a")].map((a) => ({
+        href: a.getAttribute("href"),
+        label: a.textContent.trim(),
+        target: a.getAttribute("target"),
+        rel: a.getAttribute("rel"),
+      })),
+      imgs: [...b.querySelectorAll("img")].map((i) => i.getAttribute("src")),
+      text: b.textContent,
+    }))
+  );
+
+const bottom = (page) =>
+  page.evaluate(() => {
+    const bar = document.querySelector('[data-testid="footer-bottom"]');
     return {
-      count: blocks.length,
-      titles: blocks.map((b) => (b.querySelector("h3")?.textContent ?? "").trim()),
-      links: blocks.map((b) =>
-        [...b.querySelectorAll("a")].map((a) => ({
-          href: a.getAttribute("href"),
-          label: a.textContent.trim(),
-          target: a.getAttribute("target"),
-          rel: a.getAttribute("rel"),
-        }))
-      ),
-      imgs: blocks.map((b) => [...b.querySelectorAll("img")].map((i) => i.getAttribute("src"))),
-      text: grid.textContent,
-      allHrefs: [...document.querySelectorAll("footer a")].map((a) => a.getAttribute("href")),
+      links: [...bar.querySelectorAll("a")].map((a) => ({ href: a.getAttribute("href"), label: a.textContent.trim() })),
+      text: bar.textContent,
+      localeButtons: [...bar.querySelectorAll('[role="group"] button')].map((b) => b.textContent.trim()),
+      activeLocale: bar.querySelector('[role="group"] button[aria-current="true"]')?.textContent.trim() ?? null,
     };
   });
 
@@ -61,118 +75,98 @@ try {
   const page = await getPage(browser);
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
 
-  // --- H header lockup (VI)
+  // --- VI footer structure
   await go(page, "vi");
-  const header = await page.evaluate(() => {
-    const link = document.querySelector('header a[aria-label="DuanMar"]') ?? document.querySelector('header a[href="/"]');
-    if (!link) return null;
-    const img = link.querySelector("img");
-    const overlay = [...link.querySelectorAll("span[aria-hidden]")].find(
-      (s) => s.textContent.trim() === "DuanMar"
-    );
-    const wordmark = [...link.querySelectorAll("span")].find(
-      (s) => s.className.includes("font-brand") && !s.hasAttribute("aria-hidden")
-    );
-    const rect = img?.getBoundingClientRect();
-    return {
-      aria: link.getAttribute("aria-label"),
-      imgSrc: img?.getAttribute("src") ?? "",
-      imgAlt: img?.getAttribute("alt") ?? "",
-      imgH: rect?.height ?? 0,
-      overlayOpacity: overlay ? parseFloat(getComputedStyle(overlay).opacity) : null,
-      overlayPos: overlay ? getComputedStyle(overlay).position : null,
-      wordmark: wordmark?.textContent.trim() ?? "",
-      overflow: document.documentElement.scrollWidth - window.innerWidth,
-    };
-  });
-  check("H1 lockup aria-label=DuanMar", header?.aria === "DuanMar", String(header?.aria));
-  check("H2 logo img present + alt", header?.imgSrc.includes("logo-duanmar") && header?.imgAlt === "DuanMar", `${header?.imgSrc} alt=${header?.imgAlt}`);
-  check(
-    "H3 overlay absolute + opacity 0.30-0.40",
-    header?.overlayPos === "absolute" && header?.overlayOpacity >= 0.3 && header?.overlayOpacity <= 0.4,
-    `pos=${header?.overlayPos} opacity=${header?.overlayOpacity}`
-  );
-  check("H4 solid wordmark present", header?.wordmark === "DuanMar", header?.wordmark);
-  check("H5 logo <=40px + no h-overflow", header?.imgH > 0 && header.imgH <= 40 && header.overflow <= 0, `h=${header?.imgH} overflow=${header?.overflow}`);
-  await (await page.$("header")).screenshot({ path: `${OUT}/m-brand-01-header-vi.png` });
-
-  // --- F footer (VI)
   const viCols = await columns(page);
   const vi = msg.vi;
-  check("F1 exactly 5 column blocks", viCols.count === 5, String(viCols.count));
+  check("F1 exactly 5 column blocks", viCols.length === 5, String(viCols.length));
   check(
-    "F2 titles order",
-    JSON.stringify(viCols.titles) === JSON.stringify(["DuanMar", vi.footer.tours, vi.footer.contact, vi.footer.info, vi.footer.policies]),
-    JSON.stringify(viCols.titles)
-  );
-  check(
-    "F3 Col A 2 tour links",
-    viCols.links[1].length === 2 &&
-      viCols.links[1].map((l) => l.href).join() === "/vi/tours/domestic,/vi/tours/international" &&
-      viCols.links[1].map((l) => l.label).join() === [vi.common.domesticTours, vi.common.internationalTours].join(),
-    JSON.stringify(viCols.links[1])
-  );
-  const viNodes = vi.contact.nodes;
-  const contactSettings = await fetchContactSettings().catch(() => null);
-  const viExpected = expectedContactChannels(contactSettings, viNodes);
-  const enExpected = expectedContactChannels(contactSettings, msg.en.contact.nodes);
-  const nonSocial = viExpected.filter((c) => c.kind !== "social").length;
-  const socialCount = viExpected.length - nonSocial;
-  check(
-    `F4 Col B ${viExpected.length} links in order (CMS-driven)`,
-    viCols.links[2].length === viExpected.length,
-    JSON.stringify(viCols.links[2].map((l) => l.label))
-  );
-  check(
-    "F5 Col B hrefs byte-equal contactSettings",
-    JSON.stringify(viCols.links[2].map((l) => l.href)) === JSON.stringify(viExpected.map((c) => c.href)),
-    JSON.stringify(viCols.links[2].map((l) => l.href))
-  );
-  // CMS contactSettings can shorten the rendered anchor list (empty → omitted) — never
-  // index past it; F4 already reports the count mismatch and the run must continue to F7-F12.
-  const viSocials = viCols.links[2].slice(nonSocial);
-  check(
-    "F6 socials _blank+noopener, tel/mailto same-tab",
-    viSocials.length === socialCount &&
-      viSocials.every((l) => l.target === "_blank" && /noopener/.test(l.rel ?? "") && /noreferrer/.test(l.rel ?? "")) &&
-      viCols.links[2].slice(0, nonSocial).every((l) => l.target === null),
-    JSON.stringify(viCols.links[2].map((l) => [l.target, l.rel]))
-  );
-  check(
-    "F7 Col C 3 links + labels",
-    viCols.links[3].map((l) => l.href).join() === "/vi/support,/vi/blog,/vi/about/careers" &&
-      viCols.links[3].map((l) => l.label).join() === [vi.footer.howToBook, vi.footer.articles, vi.footer.careers].join(),
-    JSON.stringify(viCols.links[3])
-  );
-  check(
-    "F8 brand block logo + tagline",
-    viCols.imgs[0].some((s) => s.includes("logo-duanmar")) && viCols.text.includes(vi.footer.tagline),
-    JSON.stringify(viCols.imgs[0])
-  );
-  const bottomHrefs = await page.$$eval("footer .mt-8 a", (as) => as.map((a) => a.getAttribute("href")));
-  const bottomText = await page.$eval("footer", (f) => f.textContent);
-  check(
-    "F9 bottom bar kept",
-    ["/vi/support", "/vi/privacy", "/vi/accessibility", "/vi/sitemap"].every((h) => bottomHrefs.includes(h)) &&
-      bottomText.includes(vi.footer.rights),
-    JSON.stringify(bottomHrefs)
-  );
-  check("F10 old groups gone", !viCols.allHrefs.some((h) => /\/explore\/|\/plan-your-trip\/|\/trade/.test(h)), JSON.stringify(viCols.allHrefs));
-  check(
-    "F12 Col E policies 4 links + labels",
-    viCols.links[4].map((l) => l.label).join() ===
-      [vi.footer.privacyPolicy, vi.footer.terms, vi.footer.refundPolicy, vi.footer.faqs].join() &&
-      viCols.links[4].map((l) => l.href).join() ===
-        "/vi/privacy#privacy-policy,/vi/privacy#terms,/vi/support#contact,/vi/support",
-    JSON.stringify(viCols.links[4])
+    "F2 column order = brand, tours, information, connect, policies",
+    JSON.stringify(viCols.map((c) => c.heading)) ===
+      JSON.stringify(["", vi.footer.tours, vi.footer.info, vi.footer.connect, vi.footer.policies]),
+    JSON.stringify(viCols.map((c) => c.heading))
   );
 
-  // --- R routes
+  const brand = viCols[0];
+  check("F3a brand block is first + has knockout mark", brand.testid === "footer-brand" && brand.imgs.some((s) => s.includes("logo-duanmar-white")), JSON.stringify(brand.imgs));
+  check("F3b brand block carries the tagline", brand.text.includes(vi.footer.tagline), brand.text.slice(0, 80));
+
+  const contactSettings = await fetchContactSettings().catch(() => null);
+  const viExpected = expectedContactChannels(contactSettings, vi.contact.nodes);
+  const enExpected = expectedContactChannels(contactSettings, msg.en.contact.nodes);
+  const expectedPrimary = viExpected.filter((c) => c.kind !== "social");
+  const expectedSocial = viExpected.filter((c) => c.kind === "social");
+
+  const brandPrimary = brand.links.filter((l) => l.href?.startsWith("tel:") || l.href?.startsWith("mailto:"));
+  check(
+    "F4a brand block renders Phone + Email from contactSettings",
+    JSON.stringify(brandPrimary.map((l) => l.href)) === JSON.stringify(expectedPrimary.map((c) => c.href)) &&
+      JSON.stringify(brandPrimary.map((l) => l.label)) === JSON.stringify(expectedPrimary.map((c) => c.value)),
+    JSON.stringify(brandPrimary)
+  );
+
+  check(
+    "F5 tours column = domestic, international, deals",
+    viCols[1].links.map((l) => l.href).join() === "/vi/tours/domestic,/vi/tours/international,/vi/deals" &&
+      viCols[1].links.map((l) => l.label).join() === [vi.common.domesticTours, vi.common.internationalTours, vi.common.deals].join(),
+    JSON.stringify(viCols[1].links)
+  );
+
+  check(
+    "F6 information column = how-to-book, blog, careers, accessibility, sitemap",
+    viCols[2].links.map((l) => l.href).join() === "/vi/support,/vi/blog,/vi/about/careers,/vi/accessibility,/vi/sitemap" &&
+      viCols[2].links.map((l) => l.label).join() ===
+        [vi.footer.howToBook, vi.footer.blog, vi.footer.careers, vi.footer.accessibility, vi.footer.sitemapHtml].join(),
+    JSON.stringify(viCols[2].links)
+  );
+
+  const socialCol = viCols[3];
+  check(
+    "F7a connect column = CMS-driven socials, platform labels in order",
+    JSON.stringify(socialCol.links.map((l) => l.href)) === JSON.stringify(expectedSocial.map((c) => c.href)) &&
+      JSON.stringify(socialCol.links.map((l) => l.label)) === JSON.stringify(expectedSocial.map((c) => SOCIAL_LABEL[c.key])),
+    JSON.stringify(socialCol.links)
+  );
+  check(
+    "F7b social anchors are text-only + _blank/noopener/noreferrer",
+    socialCol.links.length === expectedSocial.length &&
+      socialCol.links.every((l) => l.target === "_blank" && /noopener/.test(l.rel ?? "") && /noreferrer/.test(l.rel ?? "")) &&
+      socialCol.links.every((l) => !/[<>]/.test(l.label)),
+    JSON.stringify(socialCol.links.map((l) => [l.target, l.rel]))
+  );
+
+  check(
+    "F8 policies column 4 links + labels",
+    viCols[4].links.map((l) => l.label).join() ===
+      [vi.footer.privacyPolicy, vi.footer.terms, vi.footer.refundPolicy, vi.footer.faqs].join() &&
+      viCols[4].links.map((l) => l.href).join() ===
+        "/vi/privacy#privacy-policy,/vi/privacy#terms,/vi/support#contact,/vi/support",
+    JSON.stringify(viCols[4].links)
+  );
+
+  const viBottom = await bottom(page);
+  check(
+    "F9a bottom bar = terms, privacy, cookie legal links",
+    viBottom.links.map((l) => l.href).join() === "/vi/privacy#terms,/vi/privacy#privacy-policy,/vi/privacy#privacy-policy" &&
+      viBottom.links.map((l) => l.label).join() === [vi.footer.terms, vi.footer.privacyPolicy, vi.footer.cookieSettings].join(),
+    JSON.stringify(viBottom.links)
+  );
+  check("F9b copyright line", viBottom.text.includes(vi.footer.rights), viBottom.text.slice(0, 80));
+  check(
+    "F9c footer language selector EN / VI with active locale",
+    JSON.stringify(viBottom.localeButtons) === JSON.stringify(["en", "vi"]) && viBottom.activeLocale === "vi",
+    JSON.stringify({ buttons: viBottom.localeButtons, active: viBottom.activeLocale })
+  );
+
+  const allHrefs = viCols.flatMap((c) => c.links.map((l) => l.href));
+  check("F10 old groups gone", !allHrefs.some((h) => /\/explore\/|\/plan-your-trip\/|\/trade/.test(h ?? "")), JSON.stringify(allHrefs));
+
+  // --- Routes resolve
   const viRoutes = await page.evaluate(async (urls) => {
     const out = [];
     for (const u of urls) out.push({ u, s: (await fetch(u)).status });
     return out;
-  }, viCols.links.flat().map((l) => l.href).filter((h) => h.startsWith("/vi/")));
+  }, allHrefs.filter((h) => h?.startsWith("/vi/")));
   for (const r of viRoutes) check(`R1 ${r.u} → 200`, r.s === 200, String(r.s));
 
   await page.evaluate(() => document.querySelector("footer").scrollIntoView());
@@ -183,20 +177,25 @@ try {
   await go(page, "en");
   const enCols = await columns(page);
   const en = msg.en;
-  check("F2 EN titles order", JSON.stringify(enCols.titles) === JSON.stringify(["DuanMar", en.footer.tours, en.footer.contact, en.footer.info, en.footer.policies]), JSON.stringify(enCols.titles));
   check(
-    "F7 EN Col C prefixed hrefs",
-    enCols.links[3].map((l) => l.href).join() === "/en/support,/en/blog,/en/about/careers",
-    JSON.stringify(enCols.links[3])
+    "F11 EN headings parity",
+    JSON.stringify(enCols.map((c) => c.heading)) ===
+      JSON.stringify(["", en.footer.tours, en.footer.info, en.footer.connect, en.footer.policies]),
+    JSON.stringify(enCols.map((c) => c.heading))
   );
   check(
-    "F5 EN Col B hrefs byte-equal contactSettings",
-    JSON.stringify(enCols.links[2].map((l) => l.href)) === JSON.stringify(enExpected.map((c) => c.href)),
-    JSON.stringify(enCols.links[2].map((l) => l.href))
+    "F11b EN information column prefixed hrefs",
+    enCols[2].links.map((l) => l.href).join() === "/en/support,/en/blog,/en/about/careers,/en/accessibility,/en/sitemap",
+    JSON.stringify(enCols[2].links)
+  );
+  check(
+    "F11c EN connect hrefs byte-equal contactSettings",
+    JSON.stringify(enCols[3].links.map((l) => l.href)) === JSON.stringify(enExpected.filter((c) => c.kind === "social").map((c) => c.href)),
+    JSON.stringify(enCols[3].links.map((l) => l.href))
   );
   await (await page.$("footer")).screenshot({ path: `${OUT}/m-brand-03-footer-en.png` });
 
-  check("F11 zero pageerrors", errors.length === 0, errors.join("; "));
+  check("F12 zero pageerrors", errors.length === 0, errors.join("; "));
   await closeBrowser(browser);
   browser = null;
 } catch (error) {

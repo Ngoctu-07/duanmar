@@ -75,7 +75,13 @@ export function HeroSection({ hero, videoSrc, posterSrc }: HeroProps) {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-background to-secondary/40" />
       )}
 
-      <div className="absolute inset-0 bg-black/40" aria-hidden />
+      {/* Contiki-style legibility scrim: darker at the top/bottom edges, lighter
+          through the middle, so the full-bleed wordmark and the top scroll chrome
+          stay readable over any video frame while the footage still shows through. */}
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70"
+        aria-hidden
+      />
 
       <div className="relative z-10 flex w-full items-center justify-center px-2">
         <h1

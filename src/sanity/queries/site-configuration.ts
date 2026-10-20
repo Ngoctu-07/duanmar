@@ -21,6 +21,10 @@ export const SITE_CONFIGURATION_QUERY = defineQuery(`
       threadsHandle,
       youtubeUrl,
       youtubeHandle
+    },
+    paymentSettings {
+      cryptoWalletAddress,
+      metamaskWalletAddress
     }
   }
 `);
