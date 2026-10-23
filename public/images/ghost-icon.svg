@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ghost">
+  <!-- Levitating ghost (redrawn): an elongated, flowing body rather than a
+       flat dome. Shoulders curve outward from the crown, the torso tapers
+       gently, and a three-lobe hem trails below the sides.
+       Symmetry: every x coordinate mirrors about 32 — sides 14/50, hem
+       notches 14/26/38/50, lobe bottoms 20/32/44, eyes 26/38, mouth 32.
+       Bounds: x ~13.4..50.6 / y 9..55.5, so the 64-unit viewBox keeps more
+       than 8 units of clear margin on every side and the FAB never trims it.
+       Face: deliberately small relative to the long torso — two oval eyes
+       (rx 2.4 / ry 2.9) and one open oval mouth (rx 3.1 / ry 3.6). -->
+  <path
+    fill="#8B0000"
+    d="M14 49C13.4 41 13.8 32.8 15.6 25.4C17.8 15.2 23.6 9 32 9C40.4 9 46.2 15.2 48.4 25.4C50.2 32.8 50.6 41 50 49C50 52.5 47.6 55.5 44 55.5C40.4 55.5 38 52.5 38 49C38 52.5 35.6 55.5 32 55.5C28.4 55.5 26 52.5 26 49C26 52.5 23.6 55.5 20 55.5C16.4 55.5 14 52.5 14 49Z"
+  />
+  <ellipse cx="26" cy="26.5" rx="2.4" ry="2.9" fill="#120A0A" />
+  <ellipse cx="38" cy="26.5" rx="2.4" ry="2.9" fill="#120A0A" />
+  <ellipse cx="32" cy="37" rx="3.1" ry="3.6" fill="#120A0A" />
+</svg>

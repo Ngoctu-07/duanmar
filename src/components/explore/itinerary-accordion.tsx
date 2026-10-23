@@ -14,23 +14,21 @@ interface ItineraryAccordionProps {
 }
 
 /**
- * Itinerary module for the right column of the tour detail page. Renders the
- * CMS `destination.itinerary[]` days as disclosure rows (see ItineraryDayRow
- * for the interaction); stays a server component so Portable Text — and the
+ * Itinerary module for the tour detail page: renders the CMS
+ * `destination.itinerary[]` days as disclosure rows (see ItineraryDayRow for the
+ * interaction); stays a server component so Portable Text — and the
  * `next-sanity` graph behind it — never reaches the client bundle.
  *
- * The page only mounts this when the tour has at least one day, so an empty
- * tour keeps the old single-column layout. `self-start` keeps the card hugging
- * its rows instead of stretching down the taller overview column.
+ * Mounted in the text column directly below the tour description (before the
+ * price block). The page only mounts this when the tour has at least one day.
+ * `self-start` keeps the block hugging its rows inside the flex column. Plain
+ * typography only: no card, border or fill — days separate by spacing.
  */
 export function ItineraryAccordion({ title, days }: ItineraryAccordionProps) {
   if (days.length === 0) return null;
 
   return (
-    <section
-      aria-labelledby="tour-itinerary-heading"
-      className="self-start rounded-xl border bg-card p-5"
-    >
+    <section aria-labelledby="tour-itinerary-heading" className="self-start">
       <h2
         id="tour-itinerary-heading"
         className="text-xs font-semibold uppercase tracking-widest text-link"
@@ -38,7 +36,7 @@ export function ItineraryAccordion({ title, days }: ItineraryAccordionProps) {
         {title}
       </h2>
 
-      <ul className="mt-3 divide-y divide-border/60">
+      <ul className="mt-4 space-y-1">
         {days.map((day, index) => {
           const details = day.details ?? [];
           const hasDetails = details.length > 0;

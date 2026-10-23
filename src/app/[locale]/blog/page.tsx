@@ -31,7 +31,7 @@ export default async function BlogPage({ params }: PageProps) {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mb-10 text-center">
-        <h1 className="mb-3 text-4xl font-bold">{t("title")}</h1>
+        <h1 className="display-title mb-3">{t("title")}</h1>
         <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
       </div>
 

@@ -30,12 +30,12 @@ export default async function PressPage() {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mb-10 text-center">
-        <h1 className="text-4xl font-bold mb-3">{press.title}</h1>
+        <h1 className="display-title mb-3">{press.title}</h1>
         <p className="text-lg text-muted-foreground">{press.subtitle}</p>
       </div>
 
       <div className="max-w-3xl mx-auto space-y-8">
-        <section className="rounded-xl border p-6">
+        <section className="rounded-none border p-6">
           <h2 className="text-xl font-semibold mb-3">{press.boilerplateTitle}</h2>
           <p className="text-muted-foreground leading-relaxed">{press.boilerplateBody}</p>
         </section>
@@ -44,7 +44,7 @@ export default async function PressPage() {
           <h2 className="text-xl font-semibold mb-4">{press.factsTitle}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {press.facts.map((fact) => (
-              <div key={fact.label} className="rounded-xl border p-5 text-center">
+              <div key={fact.label} className="rounded-none border p-5 text-center">
                 <div className="text-2xl font-bold text-link">{fact.value}</div>
                 <div className="mt-1 text-xs text-muted-foreground">{fact.label}</div>
               </div>
@@ -53,7 +53,7 @@ export default async function PressPage() {
           <p className="mt-3 text-xs text-muted-foreground">{press.factsDisclaimer}</p>
         </section>
 
-        <section className="rounded-xl border p-6">
+        <section className="rounded-none border p-6">
           <h2 className="text-xl font-semibold mb-3">{press.mediaContactTitle}</h2>
           <a
             href={`mailto:${press.mediaEmail}`}

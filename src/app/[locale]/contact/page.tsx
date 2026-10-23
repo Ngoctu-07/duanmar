@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 
 /** Phone/Email i18n node keys (fallback labels + tel:/mailto: defaults). */
 const CARD_CLASS =
-  "flex items-center gap-3 rounded-xl border border-border px-5 py-4 text-foreground transition-colors hover:bg-muted";
+  "flex items-center gap-3 rounded-none border border-border px-5 py-4 text-foreground transition-colors hover:bg-muted";
 
 export default async function ContactPage() {
   const t = await getTranslations("contact");
@@ -59,7 +59,7 @@ export default async function ContactPage() {
   return (
     <div className="container mx-auto px-4 py-16">
       <header className="mb-10 text-center">
-        <h1 className="text-4xl font-bold mb-3">{t("title")}</h1>
+        <h1 className="display-title mb-3">{t("title")}</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           {t("subtitle")}
         </p>

@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { PromoModal } from "@/components/layout/promo-modal";
 import { AssistantWidget } from "@/components/assistant/assistant-widget";
+import { AuthProvider } from "@/components/auth/auth-provider";
 import { SITE_CONFIGURATION_QUERY } from "@/sanity/queries/site-configuration";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { pickBilingual } from "@/lib/bilingual-string";
@@ -34,16 +35,18 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <Header />
-      <main className="min-h-screen">{children}</main>
-      <Footer contactSettings={siteConfig?.contactSettings ?? null} slogan={footerSlogan} />
-      <PromoModal
-        imageSrc={popupSrc}
-        width={popupWidth}
-        height={popupHeight}
-        enableEntryPopup={siteConfig?.enableEntryPopup}
-      />
-      <AssistantWidget />
+      <AuthProvider>
+        <Header />
+        <main className="min-h-screen">{children}</main>
+        <Footer contactSettings={siteConfig?.contactSettings ?? null} slogan={footerSlogan} />
+        <PromoModal
+          imageSrc={popupSrc}
+          width={popupWidth}
+          height={popupHeight}
+          enableEntryPopup={siteConfig?.enableEntryPopup}
+        />
+        <AssistantWidget />
+      </AuthProvider>
     </NextIntlClientProvider>
   );
 }

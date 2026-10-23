@@ -49,13 +49,13 @@ export default async function CategoryPage({ params }: PageProps) {
       </Link>
 
       <div className="mt-6 max-w-3xl">
-        <h1 className="text-4xl font-bold mb-3">{data.title}</h1>
+        <h1 className="display-title mb-3">{data.title}</h1>
         <p className="text-lg text-muted-foreground mb-10">{data.summary}</p>
 
         <ul className="space-y-4">
           {data.activities.map((activity) => (
-            <li key={activity} className="flex items-start gap-3 rounded-lg border p-4">
-              <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+            <li key={activity} className="flex items-start gap-3 rounded-none border p-4">
+              <span className="mt-1 h-2 w-2 shrink-0 rounded-none bg-primary" />
               <span className="text-muted-foreground">{activity}</span>
             </li>
           ))}

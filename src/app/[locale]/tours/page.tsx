@@ -22,7 +22,7 @@ export default async function ToursPage({
   return (
     <>
       <div className="mb-10 text-center">
-        <h1 className="mb-3 text-4xl font-bold">
+        <h1 className="display-title mb-3">
           {query ? t("search.title") : t("all.title")}
         </h1>
         <p className="text-lg text-muted-foreground">

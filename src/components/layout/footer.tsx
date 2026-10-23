@@ -43,7 +43,7 @@ type ContactNode = { label?: string; value?: string; href?: string };
 /** Behance-style column label: tiny, uppercase, wide-tracked, white on the red canvas. */
 function ColumnHeading({ children }: { children: ReactNode }) {
   return (
-    <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-white">
+    <h3 className="mb-4 text-xs font-sans font-semibold uppercase tracking-wider text-white">
       {children}
     </h3>
   );

@@ -99,7 +99,7 @@ export function WriteReviewForm({
     <div
       data-testid="write-review-form"
       aria-disabled={!formEnabled}
-      className={`mb-6 rounded-xl border bg-card p-4 sm:p-5 ${
+      className={`mb-6 rounded-none border bg-card p-4 sm:p-5 ${
         !formEnabled ? "pointer-events-none opacity-60 grayscale" : ""
       }`}
     >
@@ -137,7 +137,7 @@ export function WriteReviewForm({
               setSaved(false);
               setError(null);
             }}
-            className="rounded p-1 transition-colors hover:text-link"
+            className="rounded-none p-1 transition-colors hover:text-link"
           >
             <Star
               className={`h-6 w-6 ${

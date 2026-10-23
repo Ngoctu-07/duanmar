@@ -5,6 +5,10 @@ import { PT_COMPONENTS, pickLocaleBlocks } from "@/components/sanity/portable-te
  * CMS-bound About Us narrative (Portable Text, plan 260929-2114).
  * Locale block → other-locale fallback → render nothing: the hardcoded
  * placeholder copy was removed, so an empty field shows no paragraph at all.
+ *
+ * Type size is pinned to the pre-scale 16px (`1rem`) on purpose: the brief
+ * keeps the About Us paragraph at its original size while the rest of the body
+ * scale grows one notch.
  */
 export function AboutNarrative({
   storyEn,
@@ -21,7 +25,7 @@ export function AboutNarrative({
   return (
     <div
       data-testid="about-narrative"
-      className="mt-4 space-y-4 text-muted-foreground"
+      className="mt-4 space-y-4 text-body text-[1rem]"
     >
       <PortableText value={blocks} components={PT_COMPONENTS} />
     </div>

@@ -90,6 +90,14 @@ check("legacy heroSubtitle field kept for back-compat", () => {
   if (!homepageSchema.includes('name: "heroSubtitle"')) throw new Error("heroSubtitle field missing");
 });
 
+check("homepage defines heroBackgroundMedia + heroPromoVideo file fields", () => {
+  const bg = homepageSchema.slice(homepageSchema.indexOf('name: "heroBackgroundMedia"'));
+  if (!/type: "file"/.test(bg.slice(0, 400))) throw new Error("heroBackgroundMedia must be a file asset");
+  if (!bg.slice(0, 400).includes("image/gif")) throw new Error("heroBackgroundMedia must accept GIFs");
+  const promo = homepageSchema.slice(homepageSchema.indexOf('name: "heroPromoVideo"'));
+  if (!/type: "file"/.test(promo.slice(0, 400))) throw new Error("heroPromoVideo must be a file asset");
+});
+
 /* --- query contracts --- */
 
 check("HOMEPAGE_QUERY selects heroSlogan {vi, en}", () => {
@@ -99,6 +107,13 @@ check("HOMEPAGE_QUERY selects heroSlogan {vi, en}", () => {
 
 check("SITE_CONFIGURATION_QUERY selects footerSlogan {vi, en}", () => {
   if (!SITE_CONFIGURATION_QUERY.includes("footerSlogan{ vi, en }")) throw new Error(SITE_CONFIGURATION_QUERY);
+});
+
+check("HOMEPAGE_QUERY selects hero background + centered promo assets", () => {
+  if (!HOMEPAGE_QUERY.includes("heroBackgroundMedia { asset->{url, mimeType} }"))
+    throw new Error("heroBackgroundMedia not selected");
+  if (!HOMEPAGE_QUERY.includes("heroPromoVideo { asset->{url, mimeType} }"))
+    throw new Error("heroPromoVideo not selected");
 });
 
 /* --- frontend binding (no hardcoded slogan strings) --- */
@@ -120,19 +135,29 @@ check("footer renders the slogan prop with i18n fallback + testid", () => {
   if (footerSource.includes("Discover the beauty")) throw new Error("hardcoded EN slogan still in footer");
 });
 
-check("hero renders the giant display wordmark and no subtitle slogan", () => {
+check("hero paints no static display wordmark and binds CMS media", () => {
+  if (heroSource.includes('data-testid="hero-display"')) throw new Error("static display wordmark still present");
   if (heroSource.includes('data-testid="hero-slogan"')) throw new Error("hero subtitle element still present");
-  if (!heroSource.includes('data-testid="hero-display"')) throw new Error("hero-display testid missing");
-  if (!heroSource.includes('t("heroDisplay")')) throw new Error("heroDisplay copy not wired");
-  if (heroSource.includes("Trải nghiệm vẻ đẹp")) throw new Error("hardcoded VI slogan still in hero");
-  if (heroSource.includes("Experience the beauty")) throw new Error("hardcoded EN slogan still in hero");
+  if (heroSource.includes("DECODE TRAVEL")) throw new Error("hardcoded wordmark copy still in hero");
+  if (!heroSource.includes("backgroundMedia")) throw new Error("hero background media prop missing");
+  if (!heroSource.includes("hero-video")) throw new Error("centered promo video missing");
+  if (!heroSource.includes("autoPlay") || !heroSource.includes("playsInline"))
+    throw new Error("hero media autoplay/playsInline attributes missing");
 });
 
-check("i18n display + fallback strings present in both locales", () => {
+check("homepage maps heroBackgroundMedia + heroPromoVideo from the CMS", () => {
+  if (!homePageSource.includes("heroBackgroundMedia")) throw new Error("heroBackgroundMedia not mapped");
+  if (!homePageSource.includes("heroPromoVideo")) throw new Error("heroPromoVideo not mapped");
+  if (!/backgroundMedia=\{heroBackgroundMedia\}/.test(homePageSource))
+    throw new Error("background media not passed to HeroSection");
+});
+
+check("i18n hero + fallback strings present in both locales", () => {
   if (!messagesVi.footer.tagline || !messagesEn.footer.tagline) throw new Error("footer.tagline missing");
   if (!messagesVi.home.heroSubtitle || !messagesEn.home.heroSubtitle) throw new Error("home.heroSubtitle missing");
-  if (messagesVi.home.heroDisplay !== "DECODE TRAVEL" || messagesEn.home.heroDisplay !== "DECODE TRAVEL")
-    throw new Error("home.heroDisplay missing/mismatched");
+  if (!messagesVi.home.heroTitle || !messagesEn.home.heroTitle) throw new Error("home.heroTitle missing");
+  if (messagesVi.home.heroDisplay || messagesEn.home.heroDisplay)
+    throw new Error("home.heroDisplay must be removed with the static wordmark");
 });
 
 console.log(`${passed}/${passed + failed} assertions passed`);

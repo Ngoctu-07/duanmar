@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ghost outline">
+  <!-- Line-art twin of ghost-icon.svg for the footer-inversion layer (white
+       stroke, no fill). Identical path data and facial coordinates, so the
+       solid and outline layers share one geometry and the clip seam can
+       never shift. -->
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <path
+      stroke-width="1.8"
+      d="M14 49C13.4 41 13.8 32.8 15.6 25.4C17.8 15.2 23.6 9 32 9C40.4 9 46.2 15.2 48.4 25.4C50.2 32.8 50.6 41 50 49C50 52.5 47.6 55.5 44 55.5C40.4 55.5 38 52.5 38 49C38 52.5 35.6 55.5 32 55.5C28.4 55.5 26 52.5 26 49C26 52.5 23.6 55.5 20 55.5C16.4 55.5 14 52.5 14 49Z"
+    />
+    <ellipse stroke-width="1.2" cx="26" cy="26.5" rx="2.4" ry="2.9" />
+    <ellipse stroke-width="1.2" cx="38" cy="26.5" rx="2.4" ry="2.9" />
+    <ellipse stroke-width="1.2" cx="32" cy="37" rx="3.1" ry="3.6" />
+  </g>
+</svg>

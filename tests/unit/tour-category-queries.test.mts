@@ -62,9 +62,9 @@ check("DESTINATIONS_QUERY projection gained isSpecialTour", () => {
   assert.ok(DESTINATIONS_QUERY.includes("isSpecialTour"));
 });
 
-check("DESTINATIONS_QUERY call-site safety: $region kept, $category absent", () => {
-  assert.ok(DESTINATIONS_QUERY.includes("$region"));
-  assert.ok(!DESTINATIONS_QUERY.includes("$category"));
+check("DESTINATIONS_QUERY call-site safety: no region/category filters", () => {
+  assert.ok(!DESTINATIONS_QUERY.includes("$region"), "regional filter must be gone");
+  assert.ok(!DESTINATIONS_QUERY.includes("$category"), "category stays a separate query");
 });
 
 check("DESTINATION_BY_SLUG_QUERY: no difficultyLevel, isSpecialTour + $slug, no $category", () => {
@@ -85,15 +85,15 @@ check("FEATURED_DESTINATIONS_QUERY: strict isFeatured == true, no old field, no 
   assert.ok(!FEATURED_DESTINATIONS_QUERY.includes("$"));
 });
 
-check("projection queries keep image fragment + core fields, never difficultyLevel", () => {
+check("projection queries keep the poster fragment + core fields, never difficultyLevel", () => {
   for (const q of [
     DESTINATIONS_QUERY,
     DESTINATION_BY_SLUG_QUERY,
     DESTINATIONS_BY_CATEGORY_QUERY,
     FEATURED_DESTINATIONS_QUERY,
   ]) {
-    assert.ok(q.includes("image {"), "image fragment missing");
-    assert.ok(q.includes("galleryImages[] {"), "galleryImages[] projection missing");
+    assert.ok(q.includes('"posterImage":'), "posterImage fragment missing");
+    assert.ok(!q.includes("galleryImages[]"), "gallery list must be gone");
     assert.ok(!q.includes("difficultyLevel"), "difficultyLevel removed from schema");
     for (const field of ["_id", "name", "slug", "region"]) {
       assert.ok(q.includes(field), `${field} missing`);

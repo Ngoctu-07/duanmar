@@ -107,7 +107,7 @@ export function TourRatingBadge({ slug, initialAggregate }: TourRatingBadgeProps
     <span
       data-testid="tour-rating-badge"
       aria-label={t("ratingAria", { avg: formatRating(view.avg), count: view.count })}
-      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-link tabular-nums"
+      className="inline-flex shrink-0 items-center gap-1 rounded-none bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-link tabular-nums"
     >
       {formatRating(view.avg)}
       <Star className="h-3 w-3 fill-current" aria-hidden />

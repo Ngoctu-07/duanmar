@@ -6,16 +6,14 @@ import { Link } from "@/i18n/navigation";
 import { BookTicketButton } from "@/components/booking/book-ticket-button";
 import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
 import { TourAttributeBadges } from "@/components/explore/tour-attribute-badges";
-import { DestinationHeroCarousel } from "@/components/explore/destination-hero-carousel";
+import { TourDetailExtras } from "@/components/explore/tour-detail-extras";
+import { TourPoster } from "@/components/explore/tour-poster";
 import { CustomerReviews } from "@/components/reviews/customer-reviews";
 import { PriceBlock } from "@/components/pricing/price-block";
-import {
-  ItineraryAccordion,
-  type ItineraryDay,
-} from "@/components/explore/itinerary-accordion";
+import { ItineraryAccordion, type ItineraryDay } from "@/components/explore/itinerary-accordion";
 import { cn } from "@/lib/utils";
 import { mapPricingTiers } from "@/lib/pricing";
-import { pickGalleryImages } from "@/lib/destination-gallery";
+import { pickPosterImage } from "@/lib/destination-poster";
 import {
   resolveLocaleBlocks,
   resolveLocaleList,
@@ -115,16 +113,15 @@ export default async function DestinationDetailPage({ params }: PageProps) {
   const highlights = resolveLocaleList(destination.highlights, locale);
   const included = resolveLocaleList(destination.inclusions, locale);
   const excluded = resolveLocaleList(destination.exclusions, locale);
-  const heroSlides = pickGalleryImages(destination)
-    .map((image) =>
-      image.asset?.url
-        ? { src: image.asset.url, alt: image.alt || tourName }
-        : null
-    )
-    .filter((slide): slide is { src: string; alt: string } => slide !== null);
+  // Single Studio poster asset — no gallery array, no slider. Tours without one
+  // keep the single-column reading measure.
+  const poster = pickPosterImage(destination);
+  const posterImage = poster?.asset?.url
+    ? { src: poster.asset.url, alt: poster.alt || tourName }
+    : null;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8">
       <Link
         href="/explore/destinations"
         className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -132,100 +129,73 @@ export default async function DestinationDetailPage({ params }: PageProps) {
         ← {t("backToList")}
       </Link>
 
-      {heroSlides.length > 0 && <DestinationHeroCarousel slides={heroSlides} />}
+      {/* Header row: title + tags. Outside the grid so the poster can start on
+          the description baseline. Wide horizontal gap keeps the display title
+          visually separated from the taxonomy chips; it collapses to the row
+          gap when the header wraps. */}
+      <header className="mt-8 flex flex-wrap items-center gap-x-10 gap-y-5">
+        <h1 className="display-title min-w-0">{tourName}</h1>
+        <TourRatingBadge slug={slug} initialAggregate={initialAggregate} />
+        <div
+          data-testid="tour-meta-tags"
+          className="flex flex-wrap items-center gap-5"
+        >
+          <span
+            data-testid="tour-country-chip"
+            className="rounded-none border px-3 py-1 text-sm font-medium capitalize"
+          >
+            {destination.country?.[locale as "vi" | "en"] ??
+              (destination.category === "domestic"
+                ? t("vietnam")
+                : t(destination.region as "north" | "central" | "south"))}
+          </span>
+          <TourAttributeBadges isSpecialTour={destination.isSpecialTour} />
+          <BookTicketButton slug={destination.slug.current} />
+        </div>
+      </header>
 
+      {/* Two-column body: description → itinerary → price left, static poster
+          right; items-start keeps both tops equal. */}
       <div
         className={cn(
           "mt-8 grid grid-cols-1 items-start gap-8",
-          hasItinerary ? "lg:grid-cols-2 lg:gap-10" : "max-w-3xl"
+          posterImage ? "lg:grid-cols-2 lg:gap-8" : "max-w-3xl"
         )}
       >
-        {/* Left column: overview + price + reviews in one wrapper so right-
-            column accordion expansion never stretches or pushes this column. */}
-        <div className="flex min-w-0 flex-col gap-6">
-          <div>
-            <div className="mb-3 flex items-center gap-3">
-              <span className="rounded-full border px-3 py-1 text-xs font-medium capitalize">
-                {destination.country?.[locale as "vi" | "en"] ??
-                  (destination.category === "domestic"
-                    ? t("vietnam")
-                    : t(destination.region as "north" | "central" | "south"))}
-              </span>
-              <TourAttributeBadges isSpecialTour={destination.isSpecialTour} />
-              <BookTicketButton slug={destination.slug.current} />
-            </div>
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <h1 className="min-w-0 text-4xl font-bold">{tourName}</h1>
-              <TourRatingBadge slug={slug} initialAggregate={initialAggregate} />
-            </div>
-            {tourDescription && (
-              <p className="text-lg text-muted-foreground whitespace-pre-line">
-                {tourDescription}
-              </p>
-            )}
-            {highlights.length > 0 && (
-              <section aria-label={t("highlights")} className="mt-6">
-                <h2 className="text-xs font-semibold uppercase tracking-widest text-link">
-                  {t("highlights")}
-                </h2>
-                <ul className="mt-3 space-y-2">
-                  {highlights.map((item, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm">
-                      <span aria-hidden className="mt-0.5 text-link">✓</span>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+        <article className="flex min-w-0 flex-col gap-6">
+          {tourDescription && (
+            <p
+              data-testid="tour-description"
+              className="text-lg text-muted-foreground whitespace-pre-line text-justify"
+            >
+              {tourDescription}
+            </p>
+          )}
 
-            <PriceBlock tiers={tiers} locale={locale} />
-
-            {(included.length > 0 || excluded.length > 0) && (
-              <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {included.length > 0 && (
-                  <div className="rounded-xl border bg-card p-5">
-                    <h2 className="text-xs font-semibold uppercase tracking-widest text-link">
-                      {t("included")}
-                    </h2>
-                    <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm">
-                      {included.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {excluded.length > 0 && (
-                  <div className="rounded-xl border bg-card p-5">
-                    <h2 className="text-xs font-semibold uppercase tracking-widest text-link">
-                      {t("excluded")}
-                    </h2>
-                    <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm">
-                      {excluded.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </section>
-            )}
-          </div>
-          {/* key=slug: soft-nav to another tour remounts the section instead of
-              briefly showing the previous tour's list while the refetch runs. */}
-          <CustomerReviews
-            key={slug}
-            tourSlug={slug}
-            locale={locale}
-            initialReviews={initialReviews}
-          />
-        </div>
-
-        {/* Right column: day-by-day itinerary (hidden until CMS days exist). */}
-        {hasItinerary && (
-          <div className="flex min-w-0 flex-col gap-6">
+          {hasItinerary && (
             <ItineraryAccordion title={t("itinerary.title")} days={itineraryDays} />
-          </div>
-        )}
+          )}
+
+          <PriceBlock tiers={tiers} locale={locale} />
+        </article>
+
+        {posterImage && <TourPoster image={posterImage} />}
+      </div>
+
+      <TourDetailExtras
+        highlights={highlights}
+        included={included}
+        excluded={excluded}
+      />
+
+      {/* key=slug remounts on soft-nav instead of showing the previous list. */}
+      <div className="mt-14">
+        <CustomerReviews
+          key={slug}
+          tourSlug={slug}
+          locale={locale}
+          initialReviews={initialReviews}
+        />
       </div>
     </div>
   );

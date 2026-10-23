@@ -25,7 +25,7 @@ export function BrandLogo({
       width={size}
       height={size}
       priority={priority}
-      className={cn("shrink-0 rounded-full", className)}
+      className={cn("shrink-0 rounded-none", className)}
     />
   );
 }

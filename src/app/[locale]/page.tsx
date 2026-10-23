@@ -10,6 +10,11 @@ import { ALL_TOUR_PRICING_QUERY } from "@/sanity/queries/tour-pricing";
 import { getLocale, getTranslations } from "next-intl/server";
 import { buildPriceRangeLabels } from "@/lib/pricing";
 
+// Optional looping ambience for the hero background (mp4/webm URL). Unset →
+// the CSS fog/grain backdrop is used. NEXT_PUBLIC_* is inlined at build time.
+const HERO_AMBIENT_SRC =
+  process.env.NEXT_PUBLIC_HERO_AMBIENT_VIDEO?.trim() || null;
+
 export default async function HomePage() {
   const [locale, priceT, homepageData, destinationsData, pricingDocs] =
     await Promise.all([
@@ -22,12 +27,21 @@ export default async function HomePage() {
       fetchPublished(ALL_TOUR_PRICING_QUERY, {}, { tags: ["sanity:pricing:all"] }),
     ]);
   const priceRanges = buildPriceRangeLabels(pricingDocs, locale, priceT("label"));
-  // Hero media: uploaded promo file wins over the external stream URL; the
-  // poster (else the hero image) frames the video before playback.
+  // Hero media: the new centered promo field wins over the legacy uploaded
+  // file / external URL; the poster (else the hero image) frames the clip.
   const heroVideoSrc =
+    homepageData?.heroPromoVideo?.asset?.url ??
     homepageData?.promoVideo?.asset?.url ??
     homepageData?.promoVideoUrl ??
     null;
+  // Full-bleed background media (video or GIF). Empty → hero image / CSS fog.
+  const heroBackgroundAsset = homepageData?.heroBackgroundMedia?.asset;
+  const heroBackgroundMedia = heroBackgroundAsset?.url
+    ? {
+        url: heroBackgroundAsset.url,
+        mimeType: heroBackgroundAsset.mimeType ?? null,
+      }
+    : null;
   const heroPosterSrc = homepageData?.promoVideoPoster?.asset?.url ?? null;
   // About Us media: uploaded file wins over the external stream URL (plan 260929-1500).
   const aboutVideoSrc =
@@ -37,13 +51,15 @@ export default async function HomePage() {
   const aboutPosterSrc = homepageData?.aboutUsVideoPoster?.asset?.url ?? null;
 
   return (
-    <>
+    <div className="horror-canvas" lang={locale}>
       <HeroSection
         hero={homepageData}
         videoSrc={heroVideoSrc}
         posterSrc={heroPosterSrc}
+        backgroundMedia={heroBackgroundMedia}
+        ambientSrc={HERO_AMBIENT_SRC}
       />
-      <HomeSearch />
+      <HomeSearch breakoutVideo={Boolean(heroVideoSrc)} />
       <FeaturedDestinations destinations={destinationsData || []} priceRanges={priceRanges} />
       <EditorialAnnouncementSection
         data={homepageData?.editorialAnnouncement ?? null}
@@ -55,6 +71,6 @@ export default async function HomePage() {
         storyVi={homepageData?.narrativeStory_vi ?? null}
       />
       <StoriesSection />
-    </>
+    </div>
   );
 }

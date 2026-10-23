@@ -20,19 +20,19 @@ export default async function CulturePage() {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mb-10 text-center">
-        <h1 className="text-4xl font-bold mb-3">{t("title")}</h1>
+        <h1 className="display-title mb-3">{t("title")}</h1>
         <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       <div className="max-w-3xl mx-auto space-y-8">
         {Object.entries(sections).map(([key, section]) => (
-          <section key={key} className="rounded-xl border p-6">
+          <section key={key} className="rounded-none border p-6">
             <h2 className="text-xl font-semibold mb-3">{section.heading}</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">{section.body}</p>
             <ul className="space-y-2">
               {section.points.map((point) => (
                 <li key={point} className="flex items-start gap-3 text-sm text-muted-foreground">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-none bg-primary" />
                   {point}
                 </li>
               ))}

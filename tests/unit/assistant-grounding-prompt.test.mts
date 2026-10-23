@@ -16,7 +16,8 @@ checks.push(["G1 three query sources, all groq-js parseable, no syntax drift", (
     assert.ok(query.includes("_type"), "query selects _type docs");
     parse(query);
   }
-  assert.ok(grounding.GROUNDING_QUERY_SOURCES[0].includes("$region"), "destinations keep $region param");
+  assert.ok(grounding.GROUNDING_QUERY_SOURCES[0].includes("region"), "destinations keep the region projection");
+  assert.ok(!grounding.GROUNDING_QUERY_SOURCES[0].includes("$region"), "destinations drop the regional filter");
 }]);
 
 checks.push(["G2 truncate caps length, collapses whitespace, handles null", () => {

@@ -36,7 +36,7 @@ export function ReviewCard({ review, locale, owned }: ReviewCardProps) {
     <>
       <article
         data-testid="review-card"
-        className="rounded-xl border bg-card p-4 sm:p-5"
+        className="rounded-none border bg-card p-4 sm:p-5"
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 items-center gap-3">
@@ -88,7 +88,7 @@ export function ReviewCard({ review, locale, owned }: ReviewCardProps) {
                   author: review.authorName,
                 })}`}
                 onClick={() => setActiveImage(image)}
-                className="rounded-md focus-visible:outline-2 focus-visible:outline-ring"
+                className="rounded-none focus-visible:outline-2 focus-visible:outline-ring"
               >
                 <Image
                   src={image}
@@ -96,7 +96,7 @@ export function ReviewCard({ review, locale, owned }: ReviewCardProps) {
                   width={112}
                   height={112}
                   loading="lazy"
-                  className="h-24 w-24 rounded-md object-cover sm:h-28 sm:w-28"
+                  className="h-24 w-24 rounded-none object-cover sm:h-28 sm:w-28"
                 />
               </button>
             ))}

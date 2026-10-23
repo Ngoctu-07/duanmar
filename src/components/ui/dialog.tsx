@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "cn"
 
@@ -57,7 +56,7 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-[60] w-[min(92vw,42rem)] max-h-[80vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border bg-card p-3 text-sm text-card-foreground shadow-soft transition duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:scale-95 data-starting-style:scale-95",
+          "fixed top-1/2 left-1/2 z-[60] w-[min(92vw,42rem)] max-h-[80vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-none border bg-card p-3 text-sm text-card-foreground shadow-soft transition duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:scale-95 data-starting-style:scale-95",
           className
         )}
         {...props}

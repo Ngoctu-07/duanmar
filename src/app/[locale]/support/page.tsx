@@ -79,17 +79,17 @@ export default async function SupportPage() {
         }}
       />
       <div className="mb-10 text-center">
-        <h1 className="text-4xl font-bold mb-3">{t("title")}</h1>
+        <h1 className="display-title mb-3">{t("title")}</h1>
         <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       <section
         id="how-to-book"
         data-testid="how-to-book-stepper"
-        className="mx-auto mb-12 max-w-5xl scroll-mt-24 rounded-3xl border border-zinc-200 bg-card p-6 sm:p-10 dark:border-zinc-700/50 dark:bg-neutral-900/90"
+        className="mx-auto mb-12 max-w-5xl scroll-mt-24 rounded-none border border-zinc-200 bg-card p-6 sm:p-10 dark:border-zinc-700/50 dark:bg-neutral-900/90"
       >
         <div className="mb-6 text-center">
-          <h2 className="mb-2 text-2xl font-bold tracking-tight sm:text-3xl">
+          <h2 className="display-title mb-2">
             {tb("title")}
           </h2>
           <p className="mx-auto max-w-2xl text-sm text-muted-foreground sm:text-base">
@@ -101,7 +101,7 @@ export default async function SupportPage() {
             <details
               key={item.q}
               data-testid={`booking-faq-${index + 1}`}
-              className="group rounded-xl border border-zinc-200 bg-muted/40 p-5 dark:border-zinc-700/50 dark:bg-[#1f1f23]"
+              className="group rounded-none border border-zinc-200 bg-muted/40 p-5 dark:border-zinc-700/50 dark:bg-[#1f1f23]"
             >
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium [&::-webkit-details-marker]:hidden">
                 {item.q}
@@ -118,11 +118,11 @@ export default async function SupportPage() {
                         <li
                           key={step.title}
                           data-testid={`booking-step-${stepIndex + 1}`}
-                          className="flex flex-col rounded-2xl border border-zinc-200 bg-background p-5 transition-colors hover:border-zinc-300 dark:border-zinc-700/50 dark:bg-zinc-800 dark:hover:border-zinc-600"
+                          className="flex flex-col rounded-none border border-zinc-200 bg-background p-5 transition-colors hover:border-zinc-300 dark:border-zinc-700/50 dark:bg-zinc-800 dark:hover:border-zinc-600"
                         >
                           <span
                             aria-hidden
-                            className="mb-3 flex size-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground"
+                            className="mb-3 flex size-10 items-center justify-center rounded-none bg-primary text-sm font-bold text-primary-foreground"
                           >
                             {String(stepIndex + 1).padStart(2, "0")}
                           </span>
@@ -151,7 +151,7 @@ export default async function SupportPage() {
                     </p>
                     {index === 4 && (
                       <div className="mt-4 flex flex-wrap gap-3">
-                        <span className="inline-flex items-center gap-2 rounded-full border border-red-900/30 bg-red-500/10 px-4 py-2 text-sm">
+                        <span className="inline-flex items-center gap-2 rounded-none border border-red-900/30 bg-red-500/10 px-4 py-2 text-sm">
                           <span className="text-muted-foreground">
                             {tb("hotlineLabel")}/Zalo:
                           </span>
@@ -160,7 +160,7 @@ export default async function SupportPage() {
                         <a
                           href={supportMailto}
                           data-testid="support-email-link"
-                          className="inline-flex items-center gap-2 rounded-full border border-red-900/30 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-500 hover:underline"
+                          className="inline-flex items-center gap-2 rounded-none border border-red-900/30 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-500 hover:underline"
                         >
                           <Mail className="h-4 w-4 stroke-[2.5]" />
                           {supportEmail}

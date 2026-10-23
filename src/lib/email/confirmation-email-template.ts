@@ -132,7 +132,7 @@ export function renderConfirmationEmail(
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:24px 0;">
     <tr>
       <td align="center">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:0;overflow:hidden;border:1px solid #e5e7eb;">
           <tr>
             <td style="background:#7F1D1D;padding:24px 32px;">
               <div style="font-size:22px;font-weight:bold;color:#ffffff;">DuanMar</div>
@@ -156,7 +156,7 @@ export function renderConfirmationEmail(
               </div>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}
               </table>
-              <div style="margin-top:24px;padding:16px;background:#fefce8;border:1px solid #fde68a;border-radius:8px;">
+              <div style="margin-top:24px;padding:16px;background:#fefce8;border:1px solid #fde68a;border-radius:0;">
                 <div style="font-size:13px;color:#92400e;line-height:1.6;">${escapeHtml(EMAIL_FOOTER_DISCLAIMER_EN)}</div>
                 <div style="font-size:13px;color:#92400e;line-height:1.6;margin-top:8px;">${escapeHtml(EMAIL_FOOTER_DISCLAIMER_VI)}</div>
               </div>

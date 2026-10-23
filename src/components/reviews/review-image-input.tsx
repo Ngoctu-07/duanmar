@@ -54,7 +54,7 @@ export function ReviewImageInput({ value, disabled, onChange }: ReviewImageInput
             void pick(event.target.files);
             event.target.value = "";
           }}
-          className="text-sm file:mr-3 file:rounded-md file:border file:border-input file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-accent"
+          className="text-sm file:mr-3 file:rounded-none file:border file:border-input file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-accent"
         />
         {value.map((image, index) => (
           <span key={index} className="relative inline-block">
@@ -62,14 +62,14 @@ export function ReviewImageInput({ value, disabled, onChange }: ReviewImageInput
             <img
               src={image}
               alt=""
-              className="h-14 w-14 rounded-md border object-cover"
+              className="h-14 w-14 rounded-none border object-cover"
             />
             <button
               type="button"
               disabled={disabled}
               onClick={() => onChange(value.filter((_, i) => i !== index))}
               aria-label={`remove-${index}`}
-              className="absolute -right-1.5 -top-1.5 rounded-full border bg-background p-0.5 text-muted-foreground hover:text-foreground"
+              className="absolute -right-1.5 -top-1.5 rounded-none border bg-background p-0.5 text-muted-foreground hover:text-foreground"
             >
               <X className="h-3 w-3" />
             </button>

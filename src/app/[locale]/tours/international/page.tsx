@@ -13,7 +13,7 @@ export default async function InternationalToursPage() {
   return (
     <>
       <div className="mb-10 text-center">
-        <h1 className="mb-3 text-4xl font-bold">{t("international.title")}</h1>
+        <h1 className="display-title mb-3">{t("international.title")}</h1>
         <p className="text-lg text-muted-foreground">{t("international.subtitle")}</p>
       </div>
       <TourCategorySection category="international" />

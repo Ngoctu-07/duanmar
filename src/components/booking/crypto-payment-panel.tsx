@@ -119,7 +119,7 @@ export function CryptoPaymentPanel({
     return (
       <p
         data-testid="crypto-unavailable"
-        className="mt-4 rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground"
+        className="mt-4 rounded-none bg-muted/40 p-4 text-sm text-muted-foreground"
       >
         {t("cryptoUnavailable")}
       </p>
@@ -135,7 +135,7 @@ export function CryptoPaymentPanel({
 
   const deposit = (
     <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-      <div className="rounded-lg bg-background p-2">
+      <div className="rounded-none bg-background p-2">
         <QRCodeSVG
           data-testid="crypto-qr"
           value={qrValue}
@@ -152,7 +152,7 @@ export function CryptoPaymentPanel({
         <div className="mt-1 flex items-center justify-center gap-2 sm:justify-start">
           <code
             data-testid="crypto-address"
-            className="break-all rounded bg-muted px-2 py-1 text-xs"
+            className="break-all rounded-none bg-muted px-2 py-1 text-xs"
           >
             {config.walletAddress}
           </code>
@@ -171,13 +171,13 @@ export function CryptoPaymentPanel({
         <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
           <span
             data-testid="crypto-network-badge"
-            className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+            className="rounded-none bg-muted px-2 py-0.5 text-xs text-muted-foreground"
           >
             {t("cryptoNetwork")}: {chainName(config.chainId)}
           </span>
           <span
             data-testid="crypto-tokens-badge"
-            className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+            className="rounded-none bg-muted px-2 py-0.5 text-xs text-muted-foreground"
           >
             {t("cryptoTokens")}: USDT / USDC
           </span>
@@ -202,7 +202,7 @@ export function CryptoPaymentPanel({
   );
 
   return (
-    <div data-testid="crypto-payment-panel" className="mt-4 rounded-lg bg-muted/40 p-4">
+    <div data-testid="crypto-payment-panel" className="mt-4 rounded-none bg-muted/40 p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           {t("cryptoIntro", { symbol: config.tokenSymbol, network: chainName(config.chainId) })}
@@ -212,6 +212,7 @@ export function CryptoPaymentPanel({
             <Button
               type="button"
               data-testid="crypto-pay"
+              data-crt-static="300"
               onClick={pay}
               disabled={
                 !quote.ok ||
@@ -241,7 +242,7 @@ export function CryptoPaymentPanel({
       {!provider && (
         <p
           data-testid="crypto-no-wallet"
-          className="mt-3 rounded bg-background/60 p-3 text-xs text-muted-foreground"
+          className="mt-3 rounded-none bg-background/60 p-3 text-xs text-muted-foreground"
         >
           {t("cryptoNoWallet")}
         </p>
@@ -283,7 +284,7 @@ export function CryptoPaymentPanel({
         </p>
       )}
 
-      <div className="mt-4 rounded-lg bg-background/60 p-4">{deposit}</div>
+      <div className="mt-4 rounded-none bg-background/60 p-4">{deposit}</div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent data-slot="crypto-modal" data-testid="crypto-modal">

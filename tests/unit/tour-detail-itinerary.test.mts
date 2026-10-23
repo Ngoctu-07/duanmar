@@ -150,19 +150,174 @@ check("query: by-slug projection fetches itinerary day fields", () => {
 
 // --- Page layout ----------------------------------------------------------------
 
-check("page: 2-column grid at lg with single-column fallback", () => {
-  assert.ok(page.includes('"mt-8 grid grid-cols-1 items-start gap-8"'), "base grid classes missing");
-  assert.ok(page.includes('"lg:grid-cols-2 lg:gap-10"'), "lg two-column classes missing");
+check("page: strict 2-column grid at lg with single-column fallback", () => {
+  assert.ok(
+    page.includes('"mt-8 grid grid-cols-1 items-start gap-8"'),
+    "base grid classes missing"
+  );
+  assert.ok(page.includes('"lg:grid-cols-2 lg:gap-8"'), "lg two-column classes missing");
   assert.ok(page.includes('"max-w-3xl"'), "single-column fallback missing");
-  assert.ok(page.includes("hasItinerary ?"), "grid must branch on itinerary data");
+  assert.ok(page.includes("posterImage ?"), "grid must branch on the featured image");
 });
 
-check("page: overview column keeps price + reviews, itinerary mounts beside it", () => {
-  assert.ok(page.includes("<PriceBlock"), "overview must keep PriceBlock");
-  assert.ok(page.includes("<CustomerReviews"), "overview must keep CustomerReviews");
-  assert.ok(page.includes("<TourRatingBadge"), "overview must keep rating");
+check("page: centered container with equal outer margins", () => {
+  assert.ok(
+    page.includes("mx-auto w-full max-w-6xl px-4 py-8"),
+    "page must wrap content in a centered max-w-6xl container"
+  );
+  assert.ok(!page.includes("container mx-auto px-4 py-8"), "full-bleed container must be gone");
+});
+
+check("page order: title header → description → itinerary → price", () => {
+  const title = page.indexOf("<h1");
+  const description = page.indexOf("tourDescription &&");
+  const itinerary = page.indexOf("<ItineraryAccordion");
+  const price = page.indexOf("<PriceBlock");
+  assert.ok(title > -1 && description > title, `title=${title} description=${description}`);
+  assert.ok(itinerary > description, `description=${description} itinerary=${itinerary}`);
+  assert.ok(price > itinerary, `itinerary=${itinerary} price=${price}`);
+});
+
+check("page: title + tags share one header row above the poster grid", () => {
+  const header = page.indexOf("<header");
+  const h1 = page.indexOf("<h1");
+  const tags = page.indexOf('data-testid="tour-meta-tags"');
+  const grid = page.indexOf("className={cn(");
+  const article = page.indexOf("<article");
+  assert.ok(header > -1 && h1 > header, "h1 must live inside the page header");
+  assert.ok(tags > h1, "metadata tags must follow the title in the same row");
+  assert.ok(grid > tags, "poster grid must start below the header row");
+  assert.ok(article > grid, "description column must start inside the grid");
+  assert.ok(
+    page.includes('<header className="mt-8 flex flex-wrap items-center gap-x-10 gap-y-5">'),
+    "header must be a flex row that keeps tags beside the title"
+  );
+  assert.ok(
+    page.includes('className="flex flex-wrap items-center gap-5"'),
+    "meta tag row must keep a roomy internal gap between chips"
+  );
+});
+
+check("page: tour title uses the shared display-title scale", () => {
+  assert.ok(
+    page.includes('<h1 className="display-title min-w-0">'),
+    "tour title must opt into .display-title like every other page header"
+  );
+  assert.ok(!page.includes("text-5xl"), "old mobile title size must be gone");
+  assert.ok(!page.includes("md:text-7xl"), "title size must come from --display-title-size");
+});
+
+check("page: description owns the column top so the poster aligns to it", () => {
+  assert.ok(
+    page.includes('data-testid="tour-description"'),
+    "description needs a stable hook for baseline alignment"
+  );
+  const article = page.indexOf("<article");
+  const description = page.indexOf('data-testid="tour-description"');
+  assert.ok(description > article, "description must be the first block in the text column");
+  assert.ok(
+    page.indexOf("<ItineraryAccordion") > description,
+    "itinerary must follow the description"
+  );
+});
+
+check("page: single poster from the CMS, no gallery/carousel code", () => {
+  assert.ok(page.includes("pickPosterImage"), "page must read the single poster helper");
+  assert.ok(!page.includes("galleryImages"), "gallery references must be gone");
+  assert.ok(!page.includes("pickGalleryImages"), "gallery helper must be gone");
+  assert.ok(!page.includes("carousel"), "carousel references must be gone");
+});
+
+check("cta: book ticket is a red tag with the same type size as the chips", () => {
+  const cta = read("src/components/booking/book-ticket-button.tsx");
+  assert.ok(cta.includes("bg-primary"), "CTA must use the solid brand red fill");
+  assert.ok(cta.includes("text-primary-foreground"), "CTA text must be white");
+  assert.ok(cta.includes("text-sm"), "CTA type size must match the outlined chips");
+  assert.ok(cta.includes("rounded-none"), "CTA must stay strictly sharp like the chips");
+  assert.ok(!cta.includes("<Button"), "CTA must not render the shadcn button box");
+  assert.ok(!cta.includes("<Ticket"), "CTA must stay icon-free for the minimalist tag");
+  assert.ok(!cta.includes("lucide-react"), "CTA must not pull an icon dependency");
+});
+
+check("page: itinerary + price live in the text column, poster owns the right column", () => {
+  assert.ok(page.includes("<PriceBlock"), "text column must keep PriceBlock");
   assert.ok(page.includes("<ItineraryAccordion"), "itinerary module not mounted");
   assert.ok(page.includes('t("itinerary.title")'), "itinerary heading not translated");
+  assert.ok(page.includes("<TourPoster"), "poster column not mounted");
+  assert.ok(page.includes("<TourRatingBadge"), "title row must keep rating");
+  // The poster is the only thing rendered after the text column closes.
+  const poster = page.indexOf("<TourPoster");
+  assert.ok(poster > page.indexOf("</article>"), "poster must sit outside the text column");
+  assert.ok(
+    page.indexOf("<ItineraryAccordion") < page.indexOf("</article>"),
+    "itinerary must not stay in the right column"
+  );
+});
+
+check("layout: poster is a 3:4 portrait, cover-cropped, capped and sticky", () => {
+  const poster = read("src/components/explore/tour-poster.tsx");
+  assert.ok(poster.includes("aspect-[3/4]"), "poster must keep the 3:4 portrait frame");
+  assert.ok(poster.includes("object-cover"), "poster image must crop to fill");
+  assert.ok(poster.includes("w-full"), "poster must fill its column width");
+  assert.ok(poster.includes("max-w-md"), "poster must be capped at max-w-md");
+  assert.ok(poster.includes("mx-auto"), "poster must be centered in its column");
+  assert.ok(poster.includes("rounded-none"), "poster must keep sharp 90° corners");
+  assert.ok(!poster.includes("rounded-xl"), "poster must not round its corners");
+  assert.ok(poster.includes("lg:sticky"), "poster must stick while the text column scrolls");
+  assert.ok(poster.includes("order-first"), "poster must lead on mobile");
+});
+
+check("typography: Barlow Semi Condensed is the global body face, Gypsy stays display", () => {
+  const layout = read("src/app/layout.tsx");
+  const globals = read("src/app/globals.css");
+  assert.ok(layout.includes("Barlow_Semi_Condensed"), "Barlow Semi Condensed loader missing");
+  assert.ok(layout.includes('variable: "--font-sans"'), "Barlow must drive --font-sans");
+  assert.ok(layout.includes('"vietnamese"'), "Barlow must ship the Vietnamese subset");
+  assert.ok(
+    globals.includes("--font-heading: var(--font-sans)"),
+    "UI headings must follow the body face"
+  );
+  assert.ok(
+    globals.includes("--font-display: var(--font-gypsy)"),
+    "Gypsy Curse must stay the display face"
+  );
+});
+
+check("typography: base scale is one notch up, About Us + tour description are pinned", () => {
+  const globals = read("src/app/globals.css");
+  assert.ok(globals.includes("--text-sm: 0.9375rem"), "text-sm must be 15px");
+  assert.ok(globals.includes("--text-base: 1.0625rem"), "text-base must be 17px");
+  assert.ok(
+    globals.includes("text-body text-base"),
+    "body must inherit the scaled base size"
+  );
+  const about = read("src/components/homepage/about-narrative.tsx");
+  assert.ok(about.includes("text-[1rem]"), "About Us paragraph must stay at 16px");
+  assert.ok(page.includes("text-lg"), "tour description must keep its own size");
+  assert.ok(!page.includes("text-base"), "tour description must not inherit the base bump");
+});
+
+check("polish: justified description + de-boxed itinerary/price", () => {
+  assert.ok(page.includes("text-justify"), "description must be fully justified");
+  const classNamesOf = (source: string) =>
+    [...source.matchAll(/className="([^"]*)"/g)].map((match) => match[1]).join(" ");
+  const boxed = /rounded-(?!none)\w|bg-card|(^|\s)border(\s|$)/;
+  const accordion = classNamesOf(read("src/components/explore/itinerary-accordion.tsx"));
+  assert.ok(!boxed.test(accordion), `itinerary must not keep card borders/fills: ${accordion}`);
+  const price = classNamesOf(read("src/components/pricing/price-block.tsx"));
+  assert.ok(!boxed.test(price), `price block must not keep card borders/fills: ${price}`);
+  const row = read("src/components/explore/itinerary-day-row.tsx");
+  assert.ok(!row.includes("border-t"), "day rows must not draw separators");
+  assert.ok(!row.includes("hover:bg-muted"), "day rows must not paint hover boxes");
+});
+
+check("page: reviews + extra facts move below the poster grid", () => {
+  assert.ok(page.includes("<CustomerReviews"), "page must keep CustomerReviews");
+  assert.ok(
+    page.indexOf("<CustomerReviews") > page.indexOf("</article>"),
+    "reviews must not interrupt the strict column order"
+  );
+  assert.ok(page.includes("<TourDetailExtras"), "highlights/inclusions module not mounted");
 });
 
 // --- Components -----------------------------------------------------------------

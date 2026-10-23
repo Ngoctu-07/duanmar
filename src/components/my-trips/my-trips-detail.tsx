@@ -11,13 +11,19 @@ import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
 interface MyTripsDetailProps {
   reference: string;
   locale: string;
+  /** Account-backed row (survives new devices/sessions); local cache fallback. */
+  serverBooking?: TripBooking | null;
 }
 
 /**
  * Detail view: renders the exact ticket rows the checkout summary shows,
  * rebuilt from the stored booking record.
  */
-export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
+export function MyTripsDetail({
+  reference,
+  locale,
+  serverBooking = null,
+}: MyTripsDetailProps) {
   const t = useTranslations("myTrips");
   const bookingT = useTranslations("booking");
   const [booking, setBooking] = useState<TripBooking | null>(null);
@@ -25,18 +31,18 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe localStorage read must run after mount
-    setBooking(getBooking(reference));
+    setBooking(serverBooking ?? getBooking(reference));
     setLoaded(true);
-  }, [reference]);
+  }, [reference, serverBooking]);
 
   if (!loaded) return null;
 
   if (!booking) {
     return (
-      <div className="rounded-xl border bg-card p-8 text-center">
+      <div className="rounded-none border bg-card p-8 text-center">
         <p className="text-muted-foreground">{t("notFound")}</p>
         <Link
-          href="/my-trips"
+          href="/account"
           className="mt-3 inline-block text-sm font-medium text-link hover:underline"
         >
           {t("back")}
@@ -61,6 +67,9 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
     tourName: booking.tourName,
     values,
     guestCount: booking.guests,
+    subtotal: booking.subtotal ?? null,
+    discount: booking.discount ?? null,
+    voucherCode: booking.voucherCode ?? null,
     total: booking.total,
     locale,
     currency: booking.currency,
@@ -69,7 +78,7 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
   return (
     <section
       aria-labelledby="trip-detail-heading"
-      className="rounded-xl border bg-card p-5"
+      className="rounded-none border bg-card p-5"
     >
       <div className="flex flex-wrap items-center gap-2">
         <h2
@@ -78,7 +87,7 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
         >
           {t("detailTitle")}
         </h2>
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-link">
+        <span className="rounded-none bg-primary/10 px-2 py-0.5 text-xs font-medium text-link">
           {t("paidBadge")}
         </span>
       </div>
@@ -111,7 +120,7 @@ export function MyTripsDetail({ reference, locale }: MyTripsDetailProps) {
       </dl>
 
       <Link
-        href="/my-trips"
+        href="/account"
         className="mt-4 inline-block text-sm text-link hover:underline"
       >
         {t("back")}

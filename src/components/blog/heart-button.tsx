@@ -59,7 +59,7 @@ export function HeartButton({
       aria-pressed={liked}
       aria-label={t(liked ? "liked" : "like")}
       data-testid="like-button"
-      className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-link hover:text-link disabled:cursor-wait"
+      className="inline-flex items-center gap-2 rounded-none border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-link hover:text-link disabled:cursor-wait"
     >
       <Heart
         aria-hidden="true"

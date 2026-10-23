@@ -37,6 +37,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
   if (!data) notFound();
 
   const t = await getTranslations("news");
+  const blogT = await getTranslations("blog");
   const visitor = readVisitor(await cookies());
   const likeCounts = getArticleLikeCounts([slug]);
   const likedSlugs = getVisitorLikedSlugs([slug], visitor);
@@ -54,6 +55,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
         <FeedArticleBlock
           item={data}
           single
+          moreArticlesLabel={blogT("exploreMore")}
           initialLikeCount={likeCounts.get(slug) ?? 0}
           initialLiked={likedSlugs.get(slug) ?? false}
         />

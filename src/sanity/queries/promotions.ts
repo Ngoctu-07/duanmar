@@ -12,8 +12,10 @@ const PROMOTION_FIELDS = `
     discountedPrice,
     originalPrice,
     currency,
+    promoCode,
     validUntil,
     bannerImage { ${imageFragment} },
+    coverImage { ${imageFragment} },
     targetTour->{ _id, "slug": slug.current }
 `;
 
@@ -24,4 +26,13 @@ const PROMOTION_FIELDS = `
  */
 export const PROMOTIONS_QUERY = defineQuery(`
   *[_type == "promotion" && isActive == true] | order(validUntil asc){${PROMOTION_FIELDS}}
+`);
+
+/**
+ * Wallet lookup: claimed vouchers keep a snapshot, but the card text must
+ * follow the active UI locale. Fetch the referenced promotions regardless of
+ * `isActive`/expiry so an old claim still gets its localized copy.
+ */
+export const PROMOTIONS_BY_IDS_QUERY = defineQuery(`
+  *[_type == "promotion" && _id in $ids]{${PROMOTION_FIELDS}}
 `);

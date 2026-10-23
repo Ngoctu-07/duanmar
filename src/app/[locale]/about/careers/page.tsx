@@ -30,7 +30,7 @@ export default async function CareersPage() {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mb-10 text-center">
-        <h1 className="text-4xl font-bold mb-3">{careers.title}</h1>
+        <h1 className="display-title mb-3">{careers.title}</h1>
         <p className="text-lg text-muted-foreground">{careers.subtitle}</p>
       </div>
 
@@ -41,10 +41,10 @@ export default async function CareersPage() {
           <h2 className="text-xl font-semibold mb-4">{careers.openingsTitle}</h2>
           <div className="space-y-4">
             {careers.positions.map((position) => (
-              <div key={position.title} className="rounded-xl border p-5">
+              <div key={position.title} className="rounded-none border p-5">
                 <div className="flex flex-wrap items-center gap-3 mb-2">
                   <h3 className="font-semibold">{position.title}</h3>
-                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-link">
+                  <span className="rounded-none bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-link">
                     {position.type}
                   </span>
                   <span className="text-xs text-muted-foreground">{position.location}</span>
@@ -55,7 +55,7 @@ export default async function CareersPage() {
           </div>
         </section>
 
-        <section className="rounded-xl border p-6">
+        <section className="rounded-none border p-6">
           <a
             href={`mailto:${careers.applyEmail}`}
             className="inline-flex items-center gap-2 font-medium text-link hover:underline"

@@ -35,15 +35,17 @@ const readSlogans = (page) =>
     const footerEl = document.querySelector('[data-testid="footer-slogan"]');
     const heroSloganEl = document.querySelector('[data-testid="hero-slogan"]');
     const heroDisplayEl = document.querySelector('[data-testid="hero-display"]');
+    const heroEl = document.getElementById("home-hero");
     const brand = document.querySelector("footer .grid > div:first-child");
     const h1 = document.querySelector("main h1");
     return {
       footer: footerEl?.textContent?.trim() ?? null,
-      // the subtitle slogan element was removed in favour of the giant wordmark
+      // the subtitle slogan element was removed in favour of the hero media
       heroSloganPresent: Boolean(heroSloganEl),
-      heroDisplay: heroDisplayEl?.textContent?.trim() ?? null,
-      // the giant display wordmark IS the page H1, centred in the hero overlay
-      heroDisplayIsH1: Boolean(heroDisplayEl && h1 && heroDisplayEl === h1),
+      // the hardcoded display wordmark was removed; only an sr-only H1 remains
+      heroWordmarkPresent: Boolean(heroDisplayEl),
+      heroTextHasWordmark: (heroEl?.textContent ?? "").includes("DECODE TRAVEL"),
+      heroHasH1: Boolean(h1),
       footerInBrand: Boolean(footerEl && brand && brand.contains(footerEl)),
       probe: window.__sloganProbe ?? null,
       active:
@@ -72,7 +74,7 @@ try {
   const vi = await readSlogans(page);
   check("S1 VI footer slogan rendered + non-empty", Boolean(vi.footer), JSON.stringify(vi.footer));
   check("S1b VI hero subtitle slogan removed", vi.heroSloganPresent === false, String(vi.heroSloganPresent));
-  check("S1c VI hero giant wordmark = home.heroDisplay (is the H1)", vi.heroDisplay === msg.vi.home.heroDisplay && vi.heroDisplayIsH1, JSON.stringify({ text: vi.heroDisplay, isH1: vi.heroDisplayIsH1 }));
+  check("S1c VI hero paints no static wordmark (only the sr-only H1)", vi.heroWordmarkPresent === false && vi.heroTextHasWordmark === false && vi.heroHasH1, JSON.stringify({ display: vi.heroWordmarkPresent, text: vi.heroTextHasWordmark, h1: vi.heroHasH1 }));
   check("S1d active locale is vi", vi.active === "vi", String(vi.active));
   // CMS fields start empty → i18n fallback; an editor filling Studio flips the
   // expectation below to CMS text without breaking the run.
@@ -107,7 +109,7 @@ try {
   check("S3 URL switched to /en", page.url().includes("/en"), page.url());
   check("S4 no hard refresh (window marker survived)", en.probe !== null && en.probe === probeBefore, `${probeBefore} → ${en.probe}`);
   check("S5 footer slogan re-rendered in EN", Boolean(en.footer) && en.footer !== vi.footer, JSON.stringify({ vi: vi.footer, en: en.footer }));
-  check("S5b EN hero giant wordmark present + still the H1", en.heroDisplay === msg.en.home.heroDisplay && en.heroDisplayIsH1, JSON.stringify(en.heroDisplay));
+  check("S5b EN hero still paints no static wordmark", en.heroWordmarkPresent === false && en.heroTextHasWordmark === false && en.heroHasH1, JSON.stringify({ display: en.heroWordmarkPresent, text: en.heroTextHasWordmark }));
   check("S5c hero subtitle slogan still absent in EN", en.heroSloganPresent === false);
   check(
     "S6 EN footer text = i18n EN fallback when CMS is empty",
@@ -128,7 +130,7 @@ try {
   await dismissPromo(page);
   const back = await readSlogans(page);
   check("S8 back to VI restores the original footer slogan", back.footer === vi.footer, JSON.stringify(back.footer));
-  check("S8b back to VI restores the giant wordmark", back.heroDisplay === vi.heroDisplay && back.heroDisplayIsH1, JSON.stringify(back.heroDisplay));
+  check("S8b back to VI still paints no static wordmark", back.heroWordmarkPresent === false && back.heroTextHasWordmark === false, JSON.stringify({ display: back.heroWordmarkPresent, text: back.heroTextHasWordmark }));
   check("S8c window marker still alive after both toggles", back.probe === probeBefore, String(back.probe));
 
   check("S9 zero pageerrors", pageErrors.length === 0, pageErrors.join("; "));

@@ -6,7 +6,7 @@ export default function ToursLoading() {
       className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
     >
       {[0, 1, 2].map((i) => (
-        <div key={i} className="aspect-video animate-pulse rounded-md bg-muted" />
+        <div key={i} className="aspect-video animate-pulse rounded-none bg-muted" />
       ))}
     </div>
   );

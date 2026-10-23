@@ -45,7 +45,7 @@ try {
 
     const icons = await page.evaluate(() => {
       const search = document.querySelector('header a[href$="/search"], header a[href*="/search"]');
-      const trips = document.querySelector('header a[href$="/my-trips"], header a[href*="/my-trips"]');
+      const account = document.querySelector('header a[href$="/account"], header a[href*="/account"]');
       const tipOf = (el) => {
         const wrap = el?.closest(".group");
         const tip = wrap ? [...wrap.querySelectorAll("span")].find((s) => s.getAttribute("aria-hidden") !== null && s.textContent && !s.querySelector("svg, a, button")) : null;
@@ -55,23 +55,23 @@ try {
       };
       return {
         searchAria: search?.getAttribute("aria-label") ?? null,
-        tripsAria: trips?.getAttribute("aria-label") ?? null,
+        accountAria: account?.getAttribute("aria-label") ?? null,
         searchTip: tipOf(search),
-        tripsTip: tipOf(trips),
+        accountTip: tipOf(account),
       };
     });
 
     check(`A1 /${locale} search icon aria-label`, icons.searchAria === m.common.search, JSON.stringify(icons.searchAria));
-    check(`A2 /${locale} my-trips icon aria-label`, icons.tripsAria === m.myTrips.navLabel, JSON.stringify(icons.tripsAria));
+    check(`A2 /${locale} account icon aria-label`, icons.accountAria === m.account.navLabel, JSON.stringify(icons.accountAria));
     check(`A3 /${locale} search tooltip label = ${m.common.search}`,
       icons.searchTip?.text === m.common.search && icons.searchTip.hidden === "true",
       JSON.stringify(icons.searchTip));
-    check(`A4 /${locale} suitcase tooltip label = ${m.myTrips.navLabel}`,
-      icons.tripsTip?.text === m.myTrips.navLabel && icons.tripsTip.hidden === "true",
-      JSON.stringify(icons.tripsTip));
+    check(`A4 /${locale} account tooltip label = ${m.account.navLabel}`,
+      icons.accountTip?.text === m.account.navLabel && icons.accountTip.hidden === "true",
+      JSON.stringify(icons.accountTip));
     check(`A5 /${locale} tooltips start hidden (opacity 0)`,
-      icons.searchTip?.opacity === "0" && icons.tripsTip?.opacity === "0",
-      `${icons.searchTip?.opacity}/${icons.tripsTip?.opacity}`);
+      icons.searchTip?.opacity === "0" && icons.accountTip?.opacity === "0",
+      `${icons.searchTip?.opacity}/${icons.accountTip?.opacity}`);
 
     // hover reveals
     const searchLink = await page.$('header a[href*="/search"]');
@@ -99,7 +99,7 @@ try {
       const anchors = [...c.querySelectorAll('a[href*="/explore/destinations/"]')];
       const cursor = getComputedStyle(c).cursor;
       const shadow = getComputedStyle(c).boxShadow;
-      const cta = [...c.querySelectorAll("span")].find((s) => s.className.includes("inline-flex") && s.className.includes("rounded-md"));
+      const cta = [...c.querySelectorAll("span")].find((s) => s.className.includes("inline-flex") && s.className.includes("rounded-none"));
       const overlay = anchors.find((a) => a.className.includes("inset-0"));
       return {
         anchorCount: anchors.length,

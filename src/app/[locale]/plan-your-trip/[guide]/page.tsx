@@ -54,7 +54,7 @@ export default async function GuidePage({ params }: PageProps) {
       </Link>
 
       <div className="mt-6 max-w-3xl">
-        <h1 className="text-4xl font-bold mb-3">{data.title}</h1>
+        <h1 className="display-title mb-3">{data.title}</h1>
         <p className="text-lg text-muted-foreground mb-10">{data.summary}</p>
 
         <div className="space-y-8">

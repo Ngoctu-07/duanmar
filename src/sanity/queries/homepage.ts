@@ -8,6 +8,8 @@ export const HOMEPAGE_QUERY = defineQuery(`
     heroSubtitle,
     heroSlogan{ vi, en },
     heroImage { ${imageFragment} },
+    heroBackgroundMedia { asset->{url, mimeType} },
+    heroPromoVideo { asset->{url, mimeType} },
     promoVideo { asset->{url} },
     promoVideoUrl,
     promoVideoPoster { asset->{url, metadata{dimensions{width, height}}} },
@@ -39,7 +41,8 @@ export const FEATURED_DESTINATIONS_QUERY = defineQuery(`
     isSpecialTour,
     description,
     descriptionEn,
-    image { ${imageFragment} },
-    galleryImages[] { ${imageFragment} }
+    // Single poster: the Studio field wins; legacy gallery[0] is only the
+    // pre-backfill bridge (remove after the destination-poster backfill).
+    "posterImage": coalesce(posterImage, galleryImages[0]) { ${imageFragment} }
   }
 `);

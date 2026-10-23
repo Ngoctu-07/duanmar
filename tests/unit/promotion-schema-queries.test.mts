@@ -46,7 +46,8 @@ check("schema declares every required promotion field", () => {
   for (const field of [
     "title_en", "title_vi", "badgeTag_en", "badgeTag_vi",
     "description_en", "description_vi", "discountedPrice", "originalPrice",
-    "currency", "bannerImage", "validUntil", "targetTour", "isActive",
+    "currency", "bannerImage", "coverImage", "validUntil", "targetTour", "isActive",
+    "promoCode",
   ]) {
     assert.ok(schema.includes(`name: "${field}"`), `schema missing ${field}`);
   }
@@ -57,12 +58,16 @@ check("schema uses bilingual en/vi fieldsets (house pattern A)", () => {
   assert.ok(schema.includes('fieldset: "en"') && schema.includes('fieldset: "vi"'));
 });
 
-check("bannerImage has hotspot + required editable alt (first alt precedent)", () => {
-  assert.ok(schema.includes('name: "bannerImage"'));
-  assert.ok(schema.includes("options: { hotspot: true }"));
-  const altBlock = schema.split('name: "alt"')[1]?.slice(0, 300) ?? "";
-  assert.ok(altBlock.includes('type: "string"'), "bannerImage must expose an alt string");
-  assert.ok(altBlock.includes("rule.required()"), "bannerImage alt must be required");
+check("coverImage is appended to the existing schema with hotspot + alt", () => {
+  const block = schema.split('name: "coverImage"')[1]?.slice(0, 400) ?? "";
+  assert.ok(block.includes('type: "image"'), "coverImage must be an image field");
+  assert.ok(block.includes("options: { hotspot: true }"));
+  assert.ok(block.includes('name: "alt"'), "coverImage must expose an alt string");
+  assert.ok(block.includes('type: "string"'));
+  // Legacy banner stays optional so existing docs keep validating.
+  const banner = schema.split('name: "bannerImage"')[1]?.slice(0, 400) ?? "";
+  assert.ok(banner.includes('type: "image"'));
+  assert.ok(!banner.includes("rule.required()"), "bannerImage must no longer be required");
 });
 
 check("currency enum VND/USD, required, initial VND", () => {
@@ -107,7 +112,7 @@ check("query filters isActive, orders by validUntil, projects all fields", () =>
   for (const field of [
     "_id", "title_en", "title_vi", "badgeTag_en", "badgeTag_vi",
     "description_en", "description_vi", "discountedPrice", "originalPrice",
-    "currency", "validUntil", "bannerImage", "targetTour->",
+    "currency", "validUntil", "bannerImage", "coverImage", "targetTour->", "promoCode",
   ]) {
     assert.ok(PROMOTIONS_QUERY.includes(field), `projection missing ${field}`);
   }
@@ -145,7 +150,8 @@ const base = {
   originalPrice: 2_000_000,
   currency: "VND",
   validUntil: "2026-10-05",
-  bannerImage: { asset: { url: "https://cdn.sanity.io/x.jpg" }, alt: "Beach" },
+  bannerImage: { asset: { url: "https://cdn.sanity.io/banner.jpg" }, alt: "Banner beach" },
+  coverImage: { asset: { url: "https://cdn.sanity.io/x.jpg" }, alt: "Beach" },
   targetTour: { _id: "dest-1", slug: "hcm" },
 };
 
@@ -188,75 +194,82 @@ check("toPromotionCard: localized view model with alt fallback + tour slug", () 
   assert.equal(card.price, "1.500.000\u00a0₫");
   assert.equal(card.originalPrice, "2.000.000\u00a0₫");
   assert.equal(card.tourSlug, "hcm");
-  assert.equal(card.bannerUrl, "https://cdn.sanity.io/x.jpg");
-  assert.equal(card.bannerAlt, "Beach");
+  assert.equal(card.coverUrl, "https://cdn.sanity.io/x.jpg");
+  assert.equal(card.coverAlt, "Beach");
   assert.equal(card.daysLeft, daysUntilValid(base.validUntil));
   assert.ok(card.dateLabel.length > 0, "dateLabel must render");
-  assert.equal(toPromotionCard({ ...base, bannerImage: { asset: { url: "u" }, alt: null } }, "en").bannerAlt, "Early Bird: winter departures");
+  // Cover is preferred; legacy banner is the fallback; missing alt → title.
+  const bannerOnly = { ...base, coverImage: null };
+  assert.equal(toPromotionCard(bannerOnly, "en").coverUrl, "https://cdn.sanity.io/banner.jpg");
+  assert.equal(
+    toPromotionCard({ ...base, coverImage: { asset: { url: "u" }, alt: null } }, "en").coverAlt,
+    "Early Bird: winter departures"
+  );
 });
 
-/* --- card render (static markup) --- */
+/* --- card structure (source-level; the browser test renders the live page) --- */
 
-const { createRequire } = await import("node:module");
-const req = createRequire(import.meta.url);
-const React = req("react") as typeof import("react");
-const { renderToStaticMarkup } = req("react-dom/server") as typeof import("react-dom/server");
-const { PromotionCard } = await import("../../src/components/deals/promotion-card.tsx");
-
-const fixtureCard = toPromotionCard(
-  {
-    ...base,
-    bannerImage: { asset: { url: "/images/logo-duanmar-white.png" }, alt: "Beach" },
-    targetTour: null,
-  },
-  "vi"
+const cardSource = readFileSync(
+  new URL("../../src/components/deals/promotion-card.tsx", import.meta.url),
+  "utf8"
 );
+const tourCardSource = readFileSync(
+  new URL("../../src/components/tours/tour-card.tsx", import.meta.url),
+  "utf8"
+);
+const claimButtonSource = readFileSync(
+  new URL("../../src/components/deals/claim-deal-button.tsx", import.meta.url),
+  "utf8"
+);
+const dealsPage = readFileSync(
+  new URL("../../src/app/[locale]/deals/page.tsx", import.meta.url),
+  "utf8"
+);
+const CTA_TYPE = "font-condensed text-sm font-medium uppercase tracking-[0.22em]";
+const has = (source: string, needles: string[]) => {
+  for (const needle of needles) assert.ok(source.includes(needle), `missing: ${needle}`);
+};
 
-check("card renders badge, prices (struck original), countdown and alt text", () => {
-  const html = renderToStaticMarkup(
-    React.createElement(PromotionCard as never, {
-      card: { ...fixtureCard, daysLeft: 3, dateLabel: "5 thg 10, 2026" },
-      countdownLabel: "còn 3 ngày",
-      viewTourLabel: "Xem tour",
-    })
-  );
-  assert.ok(html.includes("Giảm 20%"), "badge missing");
-  assert.ok(html.includes('alt="Beach"'), "banner alt missing");
-  assert.ok(html.includes("1.500.000"), "discounted price missing");
-  assert.ok(html.includes("line-through"), "original price must be struck through");
-  assert.ok(html.includes("còn 3 ngày"), "countdown label missing");
-  assert.ok(html.includes("2026"), "valid-until date missing");
+check("card structure: cover → body (title/description/expiry) → bottom CTA", () => {
+  has(cardSource, [
+    "aspect-[16/10]",
+    "card.coverUrl",
+    "card.coverAlt",
+    "<h2",
+    "line-clamp-3",
+    "card.dateLabel",
+    "mt-auto",
+    "w-full",
+    "bg-primary",
+  ]);
+  assert.ok(cardSource.indexOf("aspect-[16/10]") < cardSource.indexOf("<h2"), "image must precede the body");
+  assert.ok(cardSource.indexOf("<h2") < cardSource.indexOf("mt-auto"), "CTA must follow the body");
+  assert.ok(cardSource.includes("const href = card.tourSlug"), "CTA target logic missing");
+  assert.ok(cardSource.includes("? `/explore/destinations/${card.tourSlug}`"), "tour target missing");
+  assert.ok(cardSource.includes(': "/contact"'), "contact fallback missing");
 });
 
-check("card without a target tour renders no tour link; source keeps the branch", () => {
-  const html = renderToStaticMarkup(
-    React.createElement(PromotionCard as never, {
-      card: fixtureCard,
-      countdownLabel: "Last day today",
-      viewTourLabel: "View tour",
-    })
-  );
-  assert.ok(!html.includes("/explore/destinations/"), "tour link must not render without slug");
-  const source = readFileSync(
-    new URL("../../src/components/deals/promotion-card.tsx", import.meta.url),
-    "utf8"
-  );
-  assert.ok(source.includes("card.tourSlug &&"), "tour link guard missing");
-  assert.ok(
-    source.includes("href={`/explore/destinations/${card.tourSlug}`}"),
-    "tour link must route to the destination detail page"
-  );
+check("card CTA reuses the KHÁM PHÁ NGAY typography exactly", () => {
+  assert.ok(cardSource.includes("<ClaimDealButton"), "deal CTA must stay the guarded claim action");
+  assert.ok(claimButtonSource.includes(CTA_TYPE), "deal CTA typography drifted");
+  assert.ok(tourCardSource.includes(CTA_TYPE), "tour CTA typography changed");
 });
 
-check("card without a banner omits the image block", () => {
-  const html = renderToStaticMarkup(
-    React.createElement(PromotionCard as never, {
-      card: { ...fixtureCard, bannerUrl: null },
-      countdownLabel: "Last day today",
-      viewTourLabel: "View tour",
-    })
-  );
-  assert.ok(!html.includes("<img"), "img must not render without a banner");
+check("deal titles use Barlow Semi Condensed (font-sans), not the display face", () => {
+  const titleClass = cardSource.match(/<h2 className="([^"]+)"/)?.[1] ?? "";
+  assert.ok(titleClass.includes("font-sans"), "deal title must use the body sans face");
+  assert.ok(!titleClass.includes("font-display"), "decorative display face must be removed");
+  assert.ok(/font-(semibold|bold)/.test(titleClass), "deal title needs a solid weight");
+  assert.ok(/text-(lg|xl)/.test(titleClass), "deal title needs a standard size");
+});
+
+check("deals page renders a responsive 3-column card grid", () => {
+  has(dealsPage, [
+    "grid-cols-1",
+    "md:grid-cols-2",
+    "lg:grid-cols-3",
+    'claimNowLabel={t("claimNow")}',
+  ]);
 });
 
 /* --- messages --- */
@@ -268,7 +281,7 @@ check("deals.items removed from BOTH message files (hardcoded cards gone)", () =
 
 check("countdown/empty/CTA keys added to both locales; chrome keys kept", () => {
   for (const dict of [en.deals, vi.deals]) {
-    for (const key of ["endsInDays", "lastDay", "empty", "viewTour", "title", "subtitle", "disclaimer"]) {
+    for (const key of ["endsInDays", "lastDay", "empty", "claimNow", "title", "subtitle", "disclaimer"]) {
       assert.ok(typeof dict[key] === "string" && dict[key].length > 0, `deals.${key} missing`);
     }
   }

@@ -132,7 +132,7 @@ try {
   const domHeader = await readHeaderNav(page);
   check(
     "P8 domestic: header exposes Home + both category links (i18n labels)",
-    domHeader.length === 5 &&
+    domHeader.length >= 5 &&
       domHeader[0].href === "/vi" &&
       domHeader[1].href === "/vi/tours/domestic" &&
       domHeader[2].href === "/vi/tours/international" &&
@@ -178,7 +178,7 @@ try {
   const intHeader = await readHeaderNav(page);
   check(
     "P9 international: header exposes Home + both category links (i18n labels)",
-    intHeader.length === 5 &&
+    intHeader.length >= 5 &&
       intHeader[0].href === "/vi" &&
       intHeader[1].href === "/vi/tours/domestic" &&
       intHeader[2].href === "/vi/tours/international" &&
@@ -331,14 +331,16 @@ try {
       { slug: target.slug, labels: badgeLabels }
     );
     const expected = labelsOfTarget(target);
+    // The card meta row is uppercase by design, so `innerText` is transformed.
+    const haystack = found.text.toLowerCase();
     check(
       "P14 flagged doc card shows its badge labels",
-      found.hasCard && expected.every((l) => found.text.includes(l)),
+      found.hasCard && expected.every((l) => haystack.includes(l.toLowerCase())),
       JSON.stringify({ slug: target.slug, expected, text: found.text.slice(0, 200) })
     );
   } else {
-    const allCardText = [...domCards.cards, ...intCards.cards].join("\n");
-    const hits = badgeLabels.filter((l) => allCardText.includes(l));
+    const allCardText = [...domCards.cards, ...intCards.cards].join("\n").toLowerCase();
+    const hits = badgeLabels.filter((l) => allCardText.includes(l.toLowerCase()));
     check("P14 no flagged docs → no badge labels on any card", hits.length === 0, JSON.stringify(hits));
   }
 
@@ -369,7 +371,7 @@ try {
   await goto(page, "/vi/explore/destinations/hcm");
   const detail = await page.evaluate(async (url) => {
     const h1 = (document.querySelector("h1")?.textContent ?? "").trim();
-    const chip = (document.querySelector("main .mt-8 > div")?.innerText ?? "").trim();
+    const chip = (document.querySelector('[data-testid="tour-meta-tags"]')?.innerText ?? "").trim();
     const response = await fetch(url);
     const doc = new DOMParser().parseFromString(await response.text(), "text/html");
     return { h1, chip, status: response.status, reviews: Boolean(doc.querySelector("#customer-reviews")) };

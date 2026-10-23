@@ -18,7 +18,7 @@ export default async function AccessibilityPage() {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mb-10 text-center">
-        <h1 className="mb-3 text-4xl font-bold">{t("title")}</h1>
+        <h1 className="display-title mb-3">{t("title")}</h1>
         <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
       </div>
 
@@ -43,12 +43,12 @@ export default async function AccessibilityPage() {
           </ul>
         </section>
 
-        <section className="rounded-xl border bg-muted/50 p-6">
+        <section className="rounded-none border bg-muted/50 p-6">
           <h2 className="mb-2 text-xl font-semibold">{t("feedbackTitle")}</h2>
           <p className="mb-4 text-sm text-muted-foreground">{t("feedbackText")}</p>
           <Link
             href="/contact"
-            className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex h-9 items-center rounded-none bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             {ts("contactCta")}
           </Link>

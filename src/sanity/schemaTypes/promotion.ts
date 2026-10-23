@@ -90,21 +90,43 @@ export default defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: "promoCode",
+      title: "Promo code",
+      type: "string",
+      description:
+        "Code shown in the customer's voucher wallet after claiming. Leave empty to auto-generate one.",
+      validation: (rule) => rule.max(32),
+    }),
+    defineField({
+      name: "coverImage",
+      title: "Cover image",
+      type: "image",
+      options: { hotspot: true },
+      description:
+        "Deal-card thumbnail shown above the title. Falls back to the banner image when empty.",
+      fields: [
+        defineField({
+          name: "alt",
+          title: "Alt text",
+          type: "string",
+          description: "Describe the image for screen readers. Falls back to the deal title.",
+        }),
+      ],
+    }),
+    defineField({
       name: "bannerImage",
       title: "Banner image",
       type: "image",
       options: { hotspot: true },
-      description: "Card banner. Alt text is required for accessibility.",
+      description: "Legacy wide banner. Used as the cover fallback when no cover image is set.",
       fields: [
         defineField({
           name: "alt",
           title: "Alt text",
           type: "string",
           description: "Describe the image for screen readers.",
-          validation: (rule) => rule.required(),
         }),
       ],
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "validUntil",
@@ -133,6 +155,11 @@ export default defineType({
     }),
   ],
   preview: {
-    select: { title: "title_en", subtitle: "validUntil", media: "bannerImage" },
+    select: { title: "title_en", subtitle: "validUntil", cover: "coverImage", banner: "bannerImage" },
+    prepare: ({ title, subtitle, cover, banner }) => ({
+      title,
+      subtitle,
+      media: cover ?? banner,
+    }),
   },
 });

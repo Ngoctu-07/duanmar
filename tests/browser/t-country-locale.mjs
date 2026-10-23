@@ -78,7 +78,7 @@ try {
       [...document.querySelectorAll('[data-slot="card"]')].map((card) => {
         const link = card.querySelector('a[href*="/explore/destinations/"]')?.getAttribute("href") ?? "";
         const slug = link.split("/").pop() ?? "";
-        const span = card.querySelector("div.flex.items-center.space-x-2 > svg + span");
+        const span = card.querySelector('[data-testid="tour-card-country"]');
         return { slug, label: (span?.textContent ?? "").trim() };
       })
     );
@@ -109,8 +109,8 @@ try {
       const dst = await goto(`/${locale}/explore/destinations/${doc.slug}`);
       check(`T2 /${locale}/dest/${doc.slug} → 200`, dst === 200, `status=${dst}`);
       const chip = await page.evaluate(() => {
-        const row = [...document.querySelectorAll("div.mt-8 div.mb-3")][0];
-        return (row?.querySelector("span")?.textContent ?? "").trim();
+        const chipNode = document.querySelector('[data-testid="tour-country-chip"]');
+        return (chipNode?.textContent ?? "").trim();
       });
       const want = expectedLabel(doc, locale, "chip");
       chips[locale][doc.slug] = norm(chip);

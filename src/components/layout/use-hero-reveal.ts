@@ -3,17 +3,18 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "@/i18n/navigation";
 
-/** Element id of the full-viewport homepage promo hero ("DECODE TRAVEL"). */
+/** Element id of the full-viewport homepage promo hero. */
 export const HERO_ID = "home-hero";
 
 /** Fraction of the hero height the visitor must scroll before chrome reveals. */
 const REVEAL_RATIO = 0.5;
 
 /**
- * Shared homepage reveal gate for the transparent header and the floating
- * assistant widget (ghost FAB). Over the full-viewport video hero both stay
- * hidden; once the visitor scrolls past 50% of the hero height they reveal
- * together. Off the homepage the gate is always open.
+ * Shared homepage reveal gate. Above 50% of the hero the header renders as a
+ * frameless transparent overlay with centered links only, and the floating
+ * assistant widget stays hidden; past the threshold the solid sticky navbar
+ * slides down and the widget reveals. Off the homepage the gate is always
+ * open.
  *
  * Scroll/resize work is coalesced into a single rAF per frame and reads layout
  * only when the events fire (SSR-safe: first paint happens after mount). Both

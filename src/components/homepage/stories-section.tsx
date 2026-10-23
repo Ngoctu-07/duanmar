@@ -13,10 +13,15 @@ export async function StoriesSection() {
   if (stories.length === 0) return null;
 
   return (
-    <section className="container mx-auto px-4 py-16">
+    <section
+      data-testid="stories-section"
+      className="container mx-auto px-4 py-16"
+    >
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold">{t("title")}</h2>
+          <h2 className="display-title text-balance">
+            {t("title")}
+          </h2>
           <p className="mt-2 text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Link

@@ -87,7 +87,7 @@ try {
   check("K3 bottom utility divider = white/15 over red", near(p.bottomBorderRgb, WHITE_15), `composite=${p.bottomBorderRgb} color=${p.bottomBorder}`);
   check("K4 column labels: 12px / 600 / uppercase", p.headingSize === 12 && p.headingWeight === 600 && p.headingXform === "uppercase", `${p.headingSize}px/${p.headingWeight}/${p.headingXform}`);
   check("K5 labels = white, body links = white/80", near(p.headingColor, [255, 255, 255]) && near(p.linkColor, WHITE_80), `heading=${p.headingColor} link=${p.linkColor}`);
-  check("K6 body links = text-sm (14px)", p.linkSize === 14, `${p.linkSize}px`);
+  check("K6 body links = text-sm (15px, scaled base)", p.linkSize === 15, `${p.linkSize}px`);
   check("K7 brand wordmark = white, text-xl (20px)", near(p.wordmarkColor, [255, 255, 255]) && p.wordmarkSize === 20, `rgb=${p.wordmarkColor} size=${p.wordmarkSize}`);
   check("K8 white/80 body text on red >= 4.5:1", contrast(p.linkColor, p.bgRgb) >= 4.5, `${contrast(p.linkColor, p.bgRgb).toFixed(2)}:1`);
 

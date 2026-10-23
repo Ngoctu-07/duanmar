@@ -90,8 +90,6 @@ export function validateBooking(
   return errors;
 }
 
-export const MAX_GUEST_LIMIT = MAX_GUESTS;
-
 /**
  * Recomputes only the travel-date error after the guest count changed. Bumping
  * guests can push the already-picked date past its remaining spots (`dateFull`),

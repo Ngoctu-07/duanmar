@@ -43,11 +43,27 @@ export default defineType({
       options: { hotspot: true },
     }),
     defineField({
-      name: "promoVideo",
-      title: "Hero Promo Video",
+      name: "heroBackgroundMedia",
+      title: "Hero Background Media (video / GIF)",
       type: "file",
       description:
-        "Full-viewport homepage hero background video (autoplay, muted, looping). Upload MP4/WebM — wins over the URL field.",
+        "Full-viewport (100vh) homepage hero background. Upload an MP4/WebM loop or an animated GIF — rendered autoplay, muted, looping. Empty → Hero Image / promo poster.",
+      options: { accept: "video/mp4,video/webm,image/gif" },
+    }),
+    defineField({
+      name: "heroPromoVideo",
+      title: "Hero Promo Video (centered)",
+      type: "file",
+      description:
+        "Smaller promo clip centered over the hero background (never full-bleed). Upload MP4/WebM — rendered autoplay, muted, looping. Falls back to the legacy Hero Promo Video fields below.",
+      options: { accept: "video/mp4,video/webm" },
+    }),
+    defineField({
+      name: "promoVideo",
+      title: "Hero Promo Video (legacy fallback)",
+      type: "file",
+      description:
+        "Legacy hero video. Used only when Hero Promo Video (centered) is empty. Upload MP4/WebM — wins over the URL field.",
       options: { accept: "video/mp4,video/webm" },
     }),
     defineField({

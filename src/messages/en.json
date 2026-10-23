@@ -82,7 +82,27 @@
       "guestsRequired": "Please enter the number of guests",
       "guestsInvalid": "Number of guests must be between 1 and 99",
       "difficultyRequired": "Please select a difficulty level"
-    }
+    },
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "discountWithCode": "Discount ({code})",
+    "totalPayable": "Total payable",
+    "voucherTitle": "5. Apply offer / Choose voucher",
+    "voucherSubtitle": "Pick one voucher from your wallet — only one can be applied per booking.",
+    "voucherEmpty": "You have no available vouchers",
+    "voucherEmptyCta": "Browse offers",
+    "voucherSignIn": "Sign in to apply vouchers from your wallet.",
+    "voucherSignInCta": "Sign in",
+    "voucherExpired": "Expired",
+    "voucherOtherTour": "Valid for another tour only",
+    "voucherPercent": "{percent}% off",
+    "voucherApply": "Apply voucher",
+    "voucherRemove": "Remove voucher",
+    "voucherAppliedBadge": "Applied",
+    "voucherExpand": "Show voucher details",
+    "voucherCollapse": "Hide voucher details",
+    "voucherApplied": "Voucher {code} applied to this order",
+    "voucherValidUntil": "Valid until {date}"
   },
   "priceRange": {
     "label": "Reference price"
@@ -119,11 +139,12 @@
   "home": {
     "heroTitle": "Discover Vietnam",
     "heroSubtitle": "Experience the beauty, culture, and warmth of Vietnam",
-    "heroDisplay": "DECODE TRAVEL",
     "searchPlaceholder": "Where do you want to go?",
+    "searchEyebrow": "Your next chapter",
     "scrollDown": "Scroll down to explore",
     "heroVideoAria": "Travel promo video",
     "featuredDestinations": "Featured Destinations",
+    "featuredEyebrow": "Choose your next mystery",
     "exploreNow": "Explore Now",
     "aboutSection": {
       "title": "About Us",
@@ -401,11 +422,31 @@
     "subtitle": "Questions about a trip, a booking or a partnership? Reach us however you prefer — we reply within one business day.",
     "formHeading": "Contact Form",
     "nodes": {
-      "phone": { "label": "Phone", "value": "+84 28 3822 0000", "href": "tel:+842838220000" },
-      "email": { "label": "Email", "value": "info@vietnam-tourism.com", "href": "mailto:info@vietnam-tourism.com" },
-      "facebook": { "label": "Facebook", "value": "facebook.com/vietnamtourism", "href": "https://www.facebook.com/vietnamtourism" },
-      "instagram": { "label": "Instagram", "value": "instagram.com/vietnamtourism", "href": "https://www.instagram.com/vietnamtourism" },
-      "tiktok": { "label": "TikTok", "value": "tiktok.com/@vietnamtourism", "href": "https://www.tiktok.com/@vietnamtourism" }
+      "phone": {
+        "label": "Phone",
+        "value": "+84 28 3822 0000",
+        "href": "tel:+842838220000"
+      },
+      "email": {
+        "label": "Email",
+        "value": "info@vietnam-tourism.com",
+        "href": "mailto:info@vietnam-tourism.com"
+      },
+      "facebook": {
+        "label": "Facebook",
+        "value": "facebook.com/vietnamtourism",
+        "href": "https://www.facebook.com/vietnamtourism"
+      },
+      "instagram": {
+        "label": "Instagram",
+        "value": "instagram.com/vietnamtourism",
+        "href": "https://www.instagram.com/vietnamtourism"
+      },
+      "tiktok": {
+        "label": "TikTok",
+        "value": "tiktok.com/@vietnamtourism",
+        "href": "https://www.tiktok.com/@vietnamtourism"
+      }
     },
     "form": {
       "nameLabel": "Full Name",
@@ -930,13 +971,115 @@
     "endsInDays": "{count, plural, one {# day left} other {# days left}}",
     "lastDay": "Last day today",
     "empty": "No active promotions right now — please check back soon.",
-    "viewTour": "View tour"
+    "viewTour": "View tour",
+    "claimNow": "Claim now",
+    "claimed": "Claimed",
+    "claimError": "Could not save this voucher. Please try again."
+  },
+  "auth": {
+    "gateTitle": "Sign in to continue",
+    "gateBody": "Book tickets and claim deals with your DuanMar account.",
+    "signInTab": "Sign in",
+    "registerTab": "Create account",
+    "name": "Full name",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "register": "Create account",
+    "working": "Please wait…",
+    "switchToRegister": "New here? Create an account",
+    "switchToSignIn": "Already have an account? Sign in",
+    "invalidCredentials": "Email or password is incorrect.",
+    "emailTaken": "That email is already registered.",
+    "invalidEmail": "Enter a valid email address.",
+    "invalidPassword": "Password must be at least 8 characters.",
+    "invalidName": "Enter your full name.",
+    "genericError": "Something went wrong. Please try again.",
+    "forgotPassword": "Forgot password?",
+    "passwordRequired": "Enter your password.",
+    "recoveryTitle": "Reset your password",
+    "recoveryBody": "Enter your account email and we will send a 6-digit code. It expires in 60 seconds.",
+    "recoverySend": "Send OTP",
+    "recoverySending": "Sending…",
+    "otpTitle": "Enter the 6-digit code",
+    "otpBody": "Sent to {email}. The code expires 60 seconds after it is issued.",
+    "otpLabel": "OTP code",
+    "otpExpiresIn": "Expires in {time}",
+    "otpExpired": "OTP expired. Please request a new code.",
+    "otpVerify": "Verify code",
+    "otpResend": "Send a new code",
+    "otpInvalid": "Invalid OTP code. Please try again.",
+    "otpTooMany": "Too many attempts. Please request a new code.",
+    "resetTitle": "Set a new password",
+    "resetBody": "Choose a password of at least 8 characters. You will be signed in automatically.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "passwordMismatch": "Passwords do not match.",
+    "resetSave": "Save & sign in",
+    "resetSaving": "Saving…",
+    "backToSignIn": "Back to sign in",
+    "rateLimited": "Wait {seconds}s before requesting another code.",
+    "rateLimitedShort": "Please wait before requesting another code.",
+    "resetExpired": "Your reset window expired. Please start again.",
+    "emailNotConfigured": "Email delivery is not configured. Please contact support.",
+    "emailSenderUnverified": "The email sender domain is not verified. Please contact support.",
+    "emailAuthFailed": "The email service rejected our credentials. Please contact support.",
+    "emailSenderInvalid": "The configured sender address is invalid. Please contact support.",
+    "emailRecipientNotAllowed": "The email service only allows test recipients for this sender. Please contact support.",
+    "emailRateLimited": "The email service is busy. Please try again shortly.",
+    "emailNetworkError": "Could not reach the email service. Please try again."
+  },
+  "account": {
+    "title": "My account",
+    "navLabel": "Account",
+    "subtitle": "Your profile and voucher wallet at DuanMar.",
+    "changeAvatar": "Change avatar",
+    "avatarAlt": "Account avatar",
+    "avatarTitle": "Choose your avatar",
+    "avatarHint": "Pick one of the preset portraits. Custom uploads are not available.",
+    "avatarEmpty": "No avatar presets are available yet.",
+    "avatarSaving": "Saving…",
+    "avatarError": "Could not save that avatar. Please try again.",
+    "profileTab": "Profile",
+    "walletTab": "Voucher wallet",
+    "email": "Email",
+    "name": "Full name",
+    "signOut": "Sign out",
+    "signedOutTitle": "Sign in to view your account",
+    "signedOutBody": "Your voucher wallet and profile are protected by your DuanMar account.",
+    "signedOutCta": "Sign in / Register",
+    "walletTitle": "Claimed vouchers",
+    "walletEmpty": "No vouchers yet — claim offers on the Deals page.",
+    "walletCta": "Explore deals",
+    "activeTitle": "Active missions",
+    "activeSubtitle": "In-flight and upcoming operations",
+    "activeEmpty": "No active missions — book a tour to open one.",
+    "activeCta": "Explore tours",
+    "archiveTitle": "Mission archive",
+    "archiveSubtitle": "Case files unlock one day after the tour ends.",
+    "archiveEmpty": "No archived missions yet.",
+    "loading": "Decrypting mission files…",
+    "viewTicket": "View ticket",
+    "guests": "{count} guests",
+    "clearTime": "Clear time",
+    "clues": "Clues used",
+    "missionAccomplished": "Mission accomplished",
+    "missionFailed": "M.I.A / Failed",
+    "archiveNote": "Telemetry logged by the field team",
+    "deleteAll": "Delete all trips",
+    "deleteAllConfirm": "Delete every trip saved on this device?",
+    "codeLabel": "Promo code",
+    "claimedOn": "Claimed {date}",
+    "validUntil": "Valid until {date}",
+    "expired": "Expired",
+    "useNow": "Use now"
   },
   "bookingSteps": {
     "title": "How to Book",
     "subtitle": "Five simple steps from first hello to wheels-up — with a real human team behind every booking.",
     "hotlineLabel": "Hotline",
-    "steps": [      {
+    "steps": [
+      {
         "title": "Consultation",
         "body": "Explore tour info on the website, use the AI Chatbot, or directly contact the DUANMAR team for consultation."
       },
@@ -985,8 +1128,6 @@
     "subtitle": "Press releases and travel stories from across Vietnam",
     "viewArticle": "Read more",
     "backToList": "Back to news"
-    
-    
   },
   "map": {
     "title": "Interactive Map",
@@ -1143,7 +1284,8 @@
     "viewArticle": "Read story",
     "viewAll": "View all stories",
     "like": "Like this article",
-    "liked": "Liked"
+    "liked": "Liked",
+    "exploreMore": "Explore more articles"
   },
   "events": {
     "title": "Events & Festivals Calendar",

@@ -43,3 +43,7 @@ CLAUDE.md
 
 # Article like-count store (runtime data)
 data/
+
+# Dev-only password-reset maildrop (written by the dry-run email adapter when
+# RESEND_API_KEY is absent; the OTP is a secret and must never be committed)
+data/dev-mail/

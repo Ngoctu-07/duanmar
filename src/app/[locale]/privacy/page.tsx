@@ -52,7 +52,7 @@ export default async function PrivacyPage() {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mb-10 text-center">
-        <h1 className="mb-3 text-4xl font-bold">{t("title")}</h1>
+        <h1 className="display-title mb-3">{t("title")}</h1>
         <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
         <p className="mt-2 text-sm text-muted-foreground">{t("lastUpdated")}</p>
       </div>
@@ -71,12 +71,12 @@ export default async function PrivacyPage() {
         <SectionList sections={terms} />
       </div>
 
-      <div className="mx-auto mt-12 max-w-3xl rounded-xl border bg-muted/50 p-8 text-center">
+      <div className="mx-auto mt-12 max-w-3xl rounded-none border bg-muted/50 p-8 text-center">
         <h2 className="mb-2 text-xl font-semibold">{ts("contactTitle")}</h2>
         <p className="mb-4 text-sm text-muted-foreground">{ts("contactText")}</p>
         <Link
           href="/contact"
-          className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          className="inline-flex h-9 items-center rounded-none bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           {ts("contactCta")}
         </Link>

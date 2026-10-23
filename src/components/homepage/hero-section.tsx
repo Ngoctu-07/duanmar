@@ -3,36 +3,64 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
-import Image from "next/image";
+import {
+  HeroAmbientBackdrop,
+  type HeroBackgroundMedia,
+} from "@/components/homepage/hero-ambient-backdrop";
 
 interface HeroProps {
   hero?: {
+    title?: string | null;
+    heroTitle?: string | null;
     heroImage?: { asset?: { url: string } };
   };
-  /** Hero promo video (uploaded file > stream URL); null → hero image fallback. */
+  /** Centered promo clip (CMS heroPromoVideo > legacy promo fields). */
   videoSrc?: string | null;
   /** Poster frame shown before playback / on video error. */
   posterSrc?: string | null;
+  /** CMS `heroBackgroundMedia` — full-bleed looping video or animated GIF. */
+  backgroundMedia?: HeroBackgroundMedia | null;
+  /** Optional looping ambience used when no CMS background media is set. */
+  ambientSrc?: string | null;
 }
 
 /**
- * Full-viewport homepage hero. Renders the configured promo video (autoplay,
- * muted, looping, inline) as the background, degrading to the hero image or a
- * gradient when no video is available.
+ * Full-viewport horror hero with a breakout promo film.
  *
- * The overlay is a single giant brand wordmark ("DECODE TRAVEL") that stretches
- * full-width with fluid viewport typography — no subtitle — plus a scroll-down
- * affordance that advances past the fold.
+ * Layers, back to front: CMS background media (video/GIF → hero still → CSS
+ * fog/grain) with a media-only 7% brightness grade (`brightness(0.93)`) plus
+ * sepia/contrast, then a static 10% grain overlay → the promo film capped at
+ * half the viewport width (`w-[50vw] max-w-3xl aspect-video`), anchored to the
+ * hero's bottom edge and translated down by 40% of its own height. The result
+ * is a 60/40 split: 60% of the film overlaps the background, 40% hangs outside
+ * the hero and overlaps the search section below. The promo is a sibling above
+ * the background, so neither the grade nor the grain touches it; it stays
+ * sharp and bright.
+ *
+ * The hero intentionally does not clip its overflow; the ambient backdrop owns
+ * its own clip so the fog/grain never spill. The search section reserves the
+ * overhang and stacks above the film so no control is obscured.
+ *
+ * There is no hardcoded display wordmark anymore: the only heading is a
+ * visually hidden H1 fed by the CMS (`heroTitle`), preserving SEO/landmarks
+ * without painting static text over the media.
  *
  * Note: the header is transparent/hidden over this section (see header.tsx),
  * so `-mt-16` pulls the hero up under the sticky bar to fill the viewport.
  */
-export function HeroSection({ hero, videoSrc, posterSrc }: HeroProps) {
+export function HeroSection({
+  hero,
+  videoSrc,
+  posterSrc,
+  backgroundMedia,
+  ambientSrc,
+}: HeroProps) {
   const t = useTranslations("home");
   const [failed, setFailed] = useState(false);
 
   const imageSrc = hero?.heroImage?.asset?.url ?? null;
   const showVideo = Boolean(videoSrc) && !failed;
+  const heroTitle = t("heroTitle") || hero?.heroTitle?.trim();
 
   const handleScrollDown = () => {
     const heroEl = document.getElementById("home-hero");
@@ -46,59 +74,48 @@ export function HeroSection({ hero, videoSrc, posterSrc }: HeroProps) {
     <section
       id="home-hero"
       data-testid="home-hero"
-      className="relative -mt-16 flex h-screen min-h-[560px] w-full items-center justify-center overflow-hidden bg-black"
+      className="relative -mt-16 flex h-screen min-h-[560px] w-full items-center justify-center bg-[#0a0a0a]"
     >
-      {showVideo ? (
-        <video
-          data-testid="hero-video"
-          src={videoSrc ?? undefined}
-          poster={posterSrc ?? imageSrc ?? undefined}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          onError={() => setFailed(true)}
-          aria-label={t("heroVideoAria")}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      ) : imageSrc ? (
-        <Image
-          src={imageSrc}
-          alt={t("heroDisplay")}
-          fill
-          priority
-          sizes="100vw"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-background to-secondary/40" />
-      )}
-
-      {/* Contiki-style legibility scrim: darker at the top/bottom edges, lighter
-          through the middle, so the full-bleed wordmark and the top scroll chrome
-          stay readable over any video frame while the footage still shows through. */}
-      <div
-        className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/70"
-        aria-hidden
+      <HeroAmbientBackdrop
+        imageSrc={posterSrc ?? imageSrc}
+        media={backgroundMedia}
+        videoSrc={ambientSrc}
       />
 
-      <div className="relative z-10 flex w-full items-center justify-center px-2">
-        <h1
-          data-testid="hero-display"
-          style={{ textShadow: "0 2px 24px rgba(0,0,0,0.65), 0 1px 3px rgba(0,0,0,0.8)" }}
-          className="w-full text-center font-display font-normal uppercase leading-none tracking-[0.12em] whitespace-nowrap text-white text-[clamp(3rem,15vw,20rem)]"
-        >
-          {t("heroDisplay")}
-        </h1>
-      </div>
+      {/* CMS-driven landmark only — no static display wordmark is painted. */}
+      <h1 className="sr-only">{heroTitle}</h1>
+
+      {showVideo ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center px-4">
+          <div
+            data-testid="hero-video-frame"
+            className="w-[50vw] max-w-3xl translate-y-[40%]"
+          >
+            <div className="aspect-video overflow-hidden rounded-none bg-black/40 shadow-[0_30px_120px_-20px_rgba(0,0,0,0.95)]">
+              <video
+                data-testid="hero-video"
+                src={videoSrc ?? undefined}
+                poster={posterSrc ?? imageSrc ?? undefined}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                onError={() => setFailed(true)}
+                aria-label={t("heroVideoAria")}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <button
         type="button"
         onClick={handleScrollDown}
         aria-label={t("scrollDown")}
         data-testid="hero-scroll-down"
-        className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2 animate-bounce rounded-full p-2 text-white/80 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+        className="absolute right-4 bottom-8 z-30 animate-bounce rounded-none p-2 text-white/80 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:right-8"
       >
         <ChevronDown className="h-7 w-7 stroke-[1.5]" />
       </button>

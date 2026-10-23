@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PromotionCard } from "@/components/deals/promotion-card";
+import { currentUser } from "@/lib/auth/session";
+import { listVouchers } from "@/lib/vouchers/voucher-store";
 import { filterLivePromotions, toPromotionCard, type PromotionRecord } from "@/lib/promotions";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { PROMOTIONS_QUERY } from "@/sanity/queries/promotions";
@@ -16,10 +18,18 @@ interface PageProps {
 
 export default async function DealsPage({ params }: PageProps) {
   const { locale } = await params;
-  const [promotions, t] = await Promise.all([
+  const [promotions, t, user] = await Promise.all([
     fetchPublished(PROMOTIONS_QUERY, {}, { tags: ["sanity:promotion:list"] }),
     getTranslations("deals"),
+    currentUser(),
   ]);
+
+  // Signed-in visitors see "ĐÃ NHẬN" on deals already saved to their wallet.
+  // Reading the session makes this page dynamic, which is what keeps the state
+  // fresh after a claim (the button also calls `router.refresh()`).
+  const claimedIds = new Set(
+    user ? listVouchers(user.id).map((voucher) => voucher.promotionId) : []
+  );
 
   const cards = filterLivePromotions((promotions ?? []) as PromotionRecord[]).map((promo) =>
     toPromotionCard(promo, locale)
@@ -28,16 +38,16 @@ export default async function DealsPage({ params }: PageProps) {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mb-10 text-center">
-        <h1 className="text-4xl font-bold mb-3">{t("title")}</h1>
+        <h1 className="display-title mb-3">{t("title")}</h1>
         <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       {cards.length === 0 ? (
-        <p className="mx-auto max-w-4xl rounded-xl border border-dashed p-10 text-center text-muted-foreground">
+        <p className="mx-auto max-w-4xl rounded-none border border-dashed p-10 text-center text-muted-foreground">
           {t("empty")}
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {cards.map((card) => (
             <PromotionCard
               key={card.id}
@@ -45,7 +55,9 @@ export default async function DealsPage({ params }: PageProps) {
               countdownLabel={
                 card.daysLeft === 0 ? t("lastDay") : t("endsInDays", { count: card.daysLeft })
               }
-              viewTourLabel={t("viewTour")}
+              claimNowLabel={t("claimNow")}
+              claimedLabel={t("claimed")}
+              claimed={claimedIds.has(card.id)}
             />
           ))}
         </div>

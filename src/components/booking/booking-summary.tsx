@@ -6,6 +6,7 @@ import { saveBooking } from "@/lib/booking-history";
 import type { PaymentMethod } from "@/lib/payment";
 import type { CryptoConfig } from "@/lib/crypto-payment";
 import type { PriceCurrency, PriceTier } from "@/lib/pricing";
+import type { VoucherDiscount } from "@/lib/vouchers/voucher-discount";
 import { BookingPaymentSection } from "./booking-payment-section";
 import { buildTicketRows } from "./ticket-rows";
 import type { BookingValues } from "./booking-validation";
@@ -16,6 +17,12 @@ interface BookingSummaryProps {
   values: BookingValues;
   guestCount: number;
   tier: PriceTier | null;
+  /** Pre-voucher total. */
+  subtotal?: number | null;
+  /** Selected voucher discount (`null` when none). */
+  discount?: VoucherDiscount | null;
+  voucherCode?: string | null;
+  /** Final payable amount (subtotal − discount). */
   total: number | null;
   locale: string;
   currency: PriceCurrency;
@@ -36,6 +43,9 @@ export function BookingSummary({
   values,
   guestCount,
   tier,
+  subtotal = null,
+  discount = null,
+  voucherCode = null,
   total,
   locale,
   currency,
@@ -46,6 +56,7 @@ export function BookingSummary({
   const [reference] = useState(() =>
     `VN-${Date.now().toString(36).toUpperCase()}`
   );
+  const discountAmount = discount && discount.amount > 0 ? discount.amount : null;
 
   const rows = buildTicketRows({
     t,
@@ -53,6 +64,9 @@ export function BookingSummary({
     tourName,
     values,
     guestCount,
+    subtotal,
+    discount: discountAmount,
+    voucherCode: discountAmount !== null ? voucherCode : null,
     total,
     locale,
     currency,
@@ -60,7 +74,7 @@ export function BookingSummary({
 
   const handlePaid = (paymentMethod: PaymentMethod, txHash?: string) => {
     const paidAt = new Date().toISOString();
-    saveBooking({
+    const booking = {
       reference,
       slug,
       tourName,
@@ -74,13 +88,27 @@ export function BookingSummary({
       ...(isSpecialTour === true && { difficulty: values.difficulty }),
       pricePerGuest: tier?.pricePerGuest ?? null,
       total,
+      // Voucher breakdown (absent when no voucher reduced the price).
+      ...(discountAmount !== null && {
+        subtotal,
+        discount: discountAmount,
+        ...(voucherCode && { voucherCode }),
+      }),
       currency,
       locale,
       paidAt,
       paymentMethod,
       // Web3 rail only: on-chain settlement proof for order verification.
       ...(txHash && { txHash }),
-    });
+    };
+    // Local cache keeps the immediate confirmation view working offline…
+    saveBooking(booking);
+    // …while the account row makes the ticket follow the user to any device.
+    void fetch("/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(booking),
+    }).catch(() => undefined);
 
     // Fire-and-forget: the delayed confirmation email is enqueued server-side
     // (2 min). Email failure must never block the payment UX (plan 260929-2229).
@@ -111,7 +139,7 @@ export function BookingSummary({
   return (
     <section
       aria-labelledby="booking-summary-heading"
-      className="rounded-xl border bg-card p-5"
+      className="rounded-none border bg-card p-5"
     >
       <div className="flex items-center gap-2">
         <CheckCircle2 className="h-5 w-5 text-link" aria-hidden="true" />

@@ -31,7 +31,7 @@ export default async function ItinerariesPage() {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mb-10 text-center">
-        <h1 className="text-4xl font-bold mb-3">{t("title")}</h1>
+        <h1 className="display-title mb-3">{t("title")}</h1>
         <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
       </div>
 
@@ -40,9 +40,9 @@ export default async function ItinerariesPage() {
           <Link
             key={slug}
             href={`/explore/itineraries/${slug}`}
-            className="group flex flex-col rounded-xl border p-6 transition-colors hover:bg-muted"
+            className="group flex flex-col rounded-none border p-6 transition-colors hover:bg-muted"
           >
-            <span className="mb-3 w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-link">
+            <span className="mb-3 w-fit rounded-none bg-primary/10 px-3 py-1 text-xs font-medium text-link">
               {itinerary.duration}
             </span>
             <h2 className="text-xl font-semibold mb-2 group-hover:text-link transition-colors">

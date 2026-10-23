@@ -42,7 +42,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mb-8 text-center">
-        <h1 className="mb-3 text-4xl font-bold">{t("title")}</h1>
+        <h1 className="display-title mb-3">{t("title")}</h1>
         <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
           {t("subtitle")}
         </p>
@@ -62,8 +62,8 @@ export default async function EventsPage({ searchParams }: PageProps) {
               aria-current={active ? "true" : undefined}
               className={
                 active
-                  ? "rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
-                  : "rounded-full border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  ? "rounded-none bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
+                  : "rounded-none border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               }
             >
               {name}
@@ -83,7 +83,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
       ) : (
         <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
           {filtered.map((festival) => (
-            <article key={festival.name} className="rounded-xl border p-6">
+            <article key={festival.name} className="rounded-none border p-6">
               <h2 className="mb-3 text-xl font-semibold">{festival.name}</h2>
               <div className="mb-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5">

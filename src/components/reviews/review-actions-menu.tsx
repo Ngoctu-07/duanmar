@@ -72,7 +72,7 @@ export function ReviewActionsMenu({ review }: ReviewActionsMenuProps) {
   };
 
   const itemClass =
-    "flex w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground disabled:opacity-50";
+    "flex w-full rounded-none px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground disabled:opacity-50";
 
   return (
     <div ref={rootRef} className="relative shrink-0">
@@ -83,7 +83,7 @@ export function ReviewActionsMenu({ review }: ReviewActionsMenuProps) {
         aria-expanded={open}
         aria-label={t("reviews.menuLabel")}
         onClick={toggle}
-        className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="rounded-none p-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <EllipsisVertical className="h-4 w-4" aria-hidden />
       </button>
@@ -91,7 +91,7 @@ export function ReviewActionsMenu({ review }: ReviewActionsMenuProps) {
         <div
           role="menu"
           data-testid="review-actions-menu"
-          className="absolute right-0 top-full z-10 mt-1 min-w-32 rounded-lg border bg-popover p-1 text-popover-foreground shadow-md"
+          className="absolute right-0 top-full z-10 mt-1 min-w-32 rounded-none border bg-popover p-1 text-popover-foreground shadow-md"
         >
           <button
             type="button"

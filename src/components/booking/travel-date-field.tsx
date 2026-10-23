@@ -137,7 +137,7 @@ export function TravelDateField({
           role="group"
           aria-label={t("travelDateLabel")}
           aria-describedby={describedBy("booking-travel-date", error)}
-          className="w-full max-w-none rounded-lg border bg-background p-6"
+          className="w-full max-w-none rounded-none border bg-background p-6"
           style={{ ...(capacity ? CAPACITY_CELL : {}), ...RDP_THEME }}
         >
           {ready ? (
@@ -175,9 +175,9 @@ export function TravelDateField({
                 week: "grid w-full grid-cols-7 gap-y-3.5 text-center",
                 day: "flex min-h-[60px] w-full items-center justify-center",
                 day_button:
-                  "flex flex-col items-center justify-center gap-0.5 rounded-full text-sm text-inherit transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-link disabled:cursor-not-allowed",
+                  "flex flex-col items-center justify-center gap-0.5 rounded-none text-sm text-inherit transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-link disabled:cursor-not-allowed",
                 selected:
-                  "rounded-full bg-primary font-semibold text-primary-foreground",
+                  "rounded-none bg-primary font-semibold text-primary-foreground",
                 disabled: "text-muted-foreground",
                 today: "font-medium text-link",
                 outside: "text-muted-foreground",

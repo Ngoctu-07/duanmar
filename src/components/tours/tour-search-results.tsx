@@ -1,8 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import {
-  DestinationCard,
-  type Destination,
-} from "@/components/explore/destination-card";
+import { TourCard, TOUR_CARD_GRID, type Destination } from "@/components/tours/tour-card";
 import { filterDestinations } from "@/lib/tour-search";
 import { buildPriceRangeLabels } from "@/lib/pricing";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
@@ -17,7 +14,7 @@ import { ALL_TOUR_PRICING_QUERY } from "@/sanity/queries/tour-pricing";
 export async function TourSearchResults({ query }: { query: string }) {
   const [rawDestinations, pricingDocs, actionT, toursT, priceT, locale] =
     await Promise.all([
-      fetchPublished(DESTINATIONS_QUERY, { region: "" }, {
+      fetchPublished(DESTINATIONS_QUERY, {}, {
         tags: ["sanity:destination:list"],
       }),
       fetchPublished(ALL_TOUR_PRICING_QUERY, {}, {
@@ -41,9 +38,9 @@ export async function TourSearchResults({ query }: { query: string }) {
   const priceRanges = buildPriceRangeLabels(pricingDocs, locale, priceT("label"));
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className={TOUR_CARD_GRID}>
       {destinations.map((dest: Destination) => (
-        <DestinationCard
+        <TourCard
           key={dest._id}
           destination={dest}
           actionLabel={actionT("viewDetails")}

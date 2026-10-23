@@ -116,7 +116,7 @@ try {
   );
   check("O2b labels = white", d?.heading && near(d.heading.color, WHITE), JSON.stringify(d?.heading?.color));
 
-  check("O3a body links = text-sm (14px)", d?.link && d.link.size === 14, `size=${d?.link?.size}`);
+  check("O3a body links = text-sm (15px, scaled base)", d?.link && d.link.size === 15, `size=${d?.link?.size}`);
   check("O3b body links = white/80", d?.link && near(d.link.color, WHITE_80), JSON.stringify(d?.link?.color));
   check("O3c body links transition on hover", d?.link && d.link.transition !== "0s", String(d?.link?.transition));
 

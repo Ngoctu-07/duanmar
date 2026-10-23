@@ -151,7 +151,7 @@ export default async function SearchPage({
   const [{ q }, { locale }] = await Promise.all([searchParams, params]);
   const [messages, destinations, articles, promotions, t] = await Promise.all([
     getMessages(),
-    fetchPublished(DESTINATIONS_QUERY, { region: "" }, {
+    fetchPublished(DESTINATIONS_QUERY, {}, {
       tags: ["sanity:destination:list"],
     }),
     getNewsList(locale),
@@ -186,7 +186,7 @@ export default async function SearchPage({
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold mb-3">{t("title")}</h1>
+        <h1 className="display-title mb-3">{t("title")}</h1>
       </div>
       <SearchClient entries={entries} labels={labels} initialQuery={q ?? ""} />
     </div>

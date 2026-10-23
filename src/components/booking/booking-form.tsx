@@ -6,11 +6,18 @@ import { Button } from "@/components/ui/button";
 import { listBookings, BOOKINGS_STORAGE_KEY } from "@/lib/booking-history";
 import { mergeDeviceBookings, type TourCapacity } from "@/lib/tour-capacity";
 import { getCurrency, resolveTierForGuests, type PriceTier } from "@/lib/pricing";
+import type { Voucher } from "@/lib/vouchers/voucher-store";
+import {
+  isVoucherApplicable,
+  resolveVoucherDiscount,
+  type VoucherDiscount,
+} from "@/lib/vouchers/voucher-discount";
 import { BookingContactSection } from "./booking-contact-section";
 import { BookingDateSection } from "./booking-date-section";
 import { BookingDifficultySection } from "./booking-difficulty-section";
 import { BookingPricingSection } from "./booking-pricing-section";
 import { BookingSummary } from "./booking-summary";
+import { BookingVoucherSection } from "./booking-voucher-section";
 import type { CryptoConfig } from "@/lib/crypto-payment";
 import {
   isValidGuests,
@@ -42,6 +49,10 @@ interface BookingFormProps {
   capacity?: TourCapacity | null;
   /** Validated Web3 (MetaMask) config — `null` keeps the crypto rail but marks it unconfigured. */
   cryptoConfig?: CryptoConfig | null;
+  /** Signed-in user's claimed vouchers (wallet snapshot). */
+  vouchers?: Voucher[];
+  /** Whether a session exists — drives the voucher empty state. */
+  signedIn?: boolean;
 }
 
 export function BookingForm({
@@ -52,12 +63,16 @@ export function BookingForm({
   isSpecialTour,
   capacity,
   cryptoConfig = null,
+  vouchers = [],
+  signedIn = false,
 }: BookingFormProps) {
   const t = useTranslations("booking");
   const currency = getCurrency(locale);
   const [values, setValues] = useState(EMPTY_VALUES);
   const [errors, setErrors] = useState<BookingErrors>({});
   const [confirmed, setConfirmed] = useState(false);
+  // Exactly one voucher can be applied; picking another replaces this value.
+  const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
   // Starts as the server value so hydration matches, then adds this device's bookings.
   const [activeCapacity, setActiveCapacity] = useState<TourCapacity | null>(
     () => capacity ?? null
@@ -90,6 +105,18 @@ export function BookingForm({
     ? resolveTierForGuests(tiers, guestCount)
     : null;
   const total = tier ? Math.round(guestCount * tier.pricePerGuest * 100) / 100 : null;
+
+  // Voucher math is derived, never stored: changing guests, switching or
+  // clearing the voucher recomputes the payable amount in one render.
+  const applicableVoucher =
+    selectedVoucher && isVoucherApplicable(selectedVoucher, slug)
+      ? selectedVoucher
+      : null;
+  const discount: VoucherDiscount | null =
+    applicableVoucher && total !== null
+      ? resolveVoucherDiscount(applicableVoucher, total)
+      : null;
+  const payable = discount ? discount.total : total;
 
   const change = (field: BookingField, value: string) => {
     // Bumping guests can push the already-picked date past its capacity;
@@ -131,7 +158,10 @@ export function BookingForm({
         values={values}
         guestCount={guestCount}
         tier={tier}
-        total={total}
+        subtotal={total}
+        discount={discount}
+        voucherCode={applicableVoucher?.code ?? null}
+        total={payable}
         locale={locale}
         currency={currency}
         isSpecialTour={isSpecialTour === true}
@@ -141,7 +171,7 @@ export function BookingForm({
   }
 
   return (
-    <form onSubmit={submit} noValidate className="space-y-5">
+    <form onSubmit={submit} noValidate data-crt-static="300" className="space-y-5">
       <BookingContactSection values={values} errors={errors} onChange={change} />
       <BookingDateSection
         values={values}
@@ -157,7 +187,10 @@ export function BookingForm({
         onChange={change}
         guestCount={guestCount}
         tier={tier}
-        total={total}
+        subtotal={total}
+        discount={discount}
+        voucherCode={applicableVoucher?.code ?? null}
+        payable={payable}
         locale={locale}
         currency={currency}
       />
@@ -168,6 +201,17 @@ export function BookingForm({
           onChange={change}
         />
       )}
+
+      <BookingVoucherSection
+        vouchers={vouchers}
+        slug={slug}
+        signedIn={signedIn}
+        selected={applicableVoucher}
+        onSelect={setSelectedVoucher}
+        subtotal={total}
+        locale={locale}
+        currency={currency}
+      />
 
       <Button type="submit" className="h-9 w-full">
         {t("submit")}

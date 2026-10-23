@@ -67,10 +67,10 @@ export default async function ItineraryPage({ params }: PageProps) {
       </Link>
 
       <div className="mt-6 max-w-3xl">
-        <span className="mb-3 block w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-link">
+        <span className="mb-3 block w-fit rounded-none bg-primary/10 px-3 py-1 text-xs font-medium text-link">
           {data.duration}
         </span>
-        <h1 className="text-4xl font-bold mb-3">{data.title}</h1>
+        <h1 className="display-title mb-3">{data.title}</h1>
         <p className="text-muted-foreground mb-2">{data.regions}</p>
         <p className="text-lg text-muted-foreground mb-10">{data.summary}</p>
 
@@ -78,9 +78,9 @@ export default async function ItineraryPage({ params }: PageProps) {
 
         <ol className="space-y-6">
           {data.days.map((day) => (
-            <li key={day.day} className="rounded-xl border p-6">
+            <li key={day.day} className="rounded-none border p-6">
               <div className="mb-2 flex items-center gap-3">
-                <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-semibold text-link">
+                <span className="rounded-none bg-primary/10 px-2 py-1 text-xs font-semibold text-link">
                   {day.day}
                 </span>
                 <h2 className="text-lg font-semibold">{day.title}</h2>

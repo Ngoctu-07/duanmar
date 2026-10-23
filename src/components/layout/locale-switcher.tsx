@@ -34,7 +34,7 @@ export function LocaleSwitcher({
     <div
       role="group"
       aria-label={t("language")}
-      className={`flex items-center overflow-hidden rounded-md border text-xs ${
+      className={`flex items-center overflow-hidden rounded-none border text-xs ${
         inverse ? "border-white/20" : ""
       }`}
     >

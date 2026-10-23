@@ -39,7 +39,71 @@ CREATE TABLE IF NOT EXISTS reviews (
   updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_reviews_tour_created ON reviews(tour_slug, created_at DESC);
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  password_hash TEXT NOT NULL,
+  avatar_preset_id TEXT,
+  avatar_url TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS vouchers (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  promotion_id TEXT NOT NULL,
+  code TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  price TEXT,
+  original_price TEXT,
+  badge TEXT,
+  valid_until TEXT,
+  tour_slug TEXT,
+  claimed_at TEXT NOT NULL,
+  UNIQUE (user_id, promotion_id)
+);
+CREATE INDEX IF NOT EXISTS idx_vouchers_user ON vouchers(user_id, claimed_at DESC);
+CREATE TABLE IF NOT EXISTS bookings (
+  reference TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  payload TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id, created_at DESC);
+CREATE TABLE IF NOT EXISTS password_reset_otps (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  code_hash TEXT NOT NULL,
+  reset_token_hash TEXT,
+  expires_at INTEGER NOT NULL,
+  token_expires_at INTEGER,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  verified_at INTEGER,
+  consumed_at INTEGER,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_password_reset_user ON password_reset_otps(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_password_reset_token ON password_reset_otps(reset_token_hash);
 `;
+
+/** Additive migration: `ALTER TABLE` only when the column is really missing. */
+function ensureColumns(
+  database: DatabaseSync,
+  table: string,
+  columns: Array<[name: string, definition: string]>
+) {
+  const existing = new Set(
+    (
+      database.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>
+    ).map((column) => column.name)
+  );
+  for (const [name, definition] of columns) {
+    if (existing.has(name)) continue;
+    database.exec(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`);
+  }
+}
 
 export function dbPath(): string {
   return (
@@ -62,6 +126,11 @@ export function getDb(): DatabaseSync | null {
     const database = new DatabaseSync(path);
     database.exec("PRAGMA busy_timeout = 5000");
     database.exec(DDL);
+    // Legacy files predate the CMS avatar columns.
+    ensureColumns(database, "users", [
+      ["avatar_preset_id", "TEXT"],
+      ["avatar_url", "TEXT"],
+    ]);
     cached = database;
     cachedPath = path;
     return database;

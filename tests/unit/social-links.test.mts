@@ -257,6 +257,17 @@ check("layout passes contactSettings into the Footer", () => {
   assert.ok(!layoutSource.includes("socialLinks"));
 });
 
+check("contact page uses the shared primary-title scale", () => {
+  assert.ok(
+    contactSource.includes('className="display-title mb-3"'),
+    "contact h1 must opt into .display-title like the tour category pages"
+  );
+  assert.ok(
+    !contactSource.includes("text-4xl font-bold"),
+    "old ad-hoc contact heading size remains"
+  );
+});
+
 check("contact page renders the CMS-backed 7-channel grid via the shared builder", () => {
   assert.ok(contactSource.includes("SITE_CONFIGURATION_QUERY"));
   assert.ok(contactSource.includes('tags: ["sanity:siteconfig"]'));

@@ -1,7 +1,10 @@
 import { formatPrice } from "@/lib/pricing";
 
-/** Currency authored on the promotion document (never flipped by page locale). */
-export type PromotionCurrency = "VND" | "USD";
+/** Sanity image projection shared by the banner (legacy) and cover fields. */
+export interface PromotionImage {
+  asset?: { url?: string; metadata?: { dimensions?: { width?: number; height?: number } } };
+  alt?: string | null;
+}
 
 /** Shape returned by `PROMOTIONS_QUERY` (see `src/sanity/queries/promotions.ts`). */
 export interface PromotionRecord {
@@ -15,11 +18,10 @@ export interface PromotionRecord {
   discountedPrice?: number | null;
   originalPrice?: number | null;
   currency?: string | null;
+  promoCode?: string | null;
   validUntil?: string | null;
-  bannerImage?: {
-    asset?: { url?: string; metadata?: { dimensions?: { width?: number; height?: number } } };
-    alt?: string | null;
-  } | null;
+  bannerImage?: PromotionImage | null;
+  coverImage?: PromotionImage | null;
   targetTour?: { _id: string; slug?: string | null } | null;
 }
 
@@ -31,11 +33,13 @@ export interface PromotionCard {
   description: string | null;
   price: string | null;
   originalPrice: string | null;
+  promoCode: string | null;
+  validUntil: string | null;
   daysLeft: number;
   dateLabel: string;
   tourSlug: string | null;
-  bannerUrl: string | null;
-  bannerAlt: string;
+  coverUrl: string | null;
+  coverAlt: string;
 }
 
 const DAY_MS = 86_400_000;
@@ -118,7 +122,9 @@ export function toPromotionCard(promo: PromotionRecord, locale: string): Promoti
   const text = pickPromotionText(promo, locale);
   const price = formatPromoPrice(promo.discountedPrice, promo.currency, locale);
   const original = formatPromoPrice(promo.originalPrice, promo.currency, locale);
-  const bannerAlt = promo.bannerImage?.alt?.trim() || text.title;
+  // Cover is the new card thumbnail; existing docs keep their banner as fallback.
+  const image = promo.coverImage ?? promo.bannerImage;
+  const coverAlt = image?.alt?.trim() || text.title;
   const numberLocale = locale === "vi" ? "vi-VN" : "en-GB";
   const dateLabel = utcDay(promo.validUntil)
     ? new Intl.DateTimeFormat(numberLocale, {
@@ -136,10 +142,12 @@ export function toPromotionCard(promo: PromotionRecord, locale: string): Promoti
     description: text.description,
     price,
     originalPrice: original,
+    promoCode: isBlank(promo.promoCode) ? null : (promo.promoCode as string).trim(),
+    validUntil: utcDay(promo.validUntil) ? (promo.validUntil as string) : null,
     daysLeft: daysUntilValid(promo.validUntil),
     dateLabel,
     tourSlug: promo.targetTour?.slug ?? null,
-    bannerUrl: promo.bannerImage?.asset?.url ?? null,
-    bannerAlt,
+    coverUrl: image?.asset?.url ?? null,
+    coverAlt,
   };
 }

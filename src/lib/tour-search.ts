@@ -1,4 +1,4 @@
-import type { Destination } from "@/components/explore/destination-card";
+import type { Destination } from "@/components/tours/tour-card";
 import { normalizeSearchText } from "@/lib/search-normalize";
 import { resolveLocaleString, resolveLocalizedField } from "@/lib/bilingual-string";
 

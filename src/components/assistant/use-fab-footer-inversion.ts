@@ -21,8 +21,8 @@ export const FAB_FOOTER_ID = "site-footer";
  */
 export function useFabFooterInversion(
   fabRef: React.RefObject<HTMLElement | null>,
-  solidRef: React.RefObject<SVGSVGElement | null>,
-  outlineRef: React.RefObject<SVGSVGElement | null>,
+  solidRef: React.RefObject<HTMLElement | null>,
+  outlineRef: React.RefObject<HTMLElement | null>,
   footerId: string = FAB_FOOTER_ID
 ): void {
   React.useEffect(() => {

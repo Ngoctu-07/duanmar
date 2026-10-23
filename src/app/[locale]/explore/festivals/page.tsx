@@ -25,7 +25,7 @@ export default async function FestivalsPage() {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mb-10 text-center">
-        <h1 className="text-4xl font-bold mb-3">{t("title")}</h1>
+        <h1 className="display-title mb-3">{t("title")}</h1>
         <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
         <Link
           href="/explore/events"
@@ -37,7 +37,7 @@ export default async function FestivalsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         {items.map((festival) => (
-          <article key={festival.name} className="rounded-xl border p-6">
+          <article key={festival.name} className="rounded-none border p-6">
             <h2 className="text-xl font-semibold mb-3">{festival.name}</h2>
             <div className="mb-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">

@@ -83,7 +83,8 @@ try {
   await page.goto("http://localhost:3000/vi", { waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
   check("L5 search entry kept", Boolean(await page.$('header a[aria-label="Tìm kiếm"]')));
-  check("L5 my-trips entry kept", Boolean(await page.$('header a[aria-label="Chuyến đi của tôi"]')));
+  check("L5 my-trips nav entry removed", !(await page.$('header a[aria-label="Chuyến đi của tôi"]')));
+  check("L5 account entry kept", Boolean(await page.$('header a[aria-label="Tài khoản"]')));
 
   // --- L6 Home self-refresh: hard reload when already on home, plain nav otherwise
   await page.evaluate(() => {

@@ -25,7 +25,7 @@ export function BookingDifficultySection({
   return (
     <section
       aria-labelledby="booking-difficulty-heading"
-      className="rounded-xl border bg-card p-5"
+      className="rounded-none border bg-card p-5"
     >
       <h2
         id="booking-difficulty-heading"

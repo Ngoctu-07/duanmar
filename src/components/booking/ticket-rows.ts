@@ -16,6 +16,13 @@ interface TicketRowsInput {
   tourName: string;
   values: BookingValues;
   guestCount: number;
+  /** Pre-voucher total (`null` when the tour has no authored price). */
+  subtotal?: number | null;
+  /** Voucher amount removed from the subtotal. */
+  discount?: number | null;
+  /** Voucher code applied to the order (label only). */
+  voucherCode?: string | null;
+  /** Final payable amount (subtotal − discount). */
   total: number | null;
   locale: string;
   currency: PriceCurrency;
@@ -31,10 +38,16 @@ export function buildTicketRows({
   tourName,
   values,
   guestCount,
+  subtotal = null,
+  discount = null,
+  voucherCode = null,
   total,
   locale,
   currency,
 }: TicketRowsInput): TicketRow[] {
+  const showBreakdown =
+    subtotal !== null && (discount ?? 0) > 0 && total !== null;
+
   return [
     { label: t("reference"), value: reference },
     { label: t("tour"), value: tourName },
@@ -55,10 +68,27 @@ export function buildTicketRows({
     ...(values.notes.trim()
       ? [{ label: t("notes"), value: values.notes.trim() }]
       : []),
+    // Breakdown only exists when a voucher actually reduced the price, so
+    // legacy/discount-free tickets keep their original two-line footer.
+    ...(showBreakdown
+      ? [
+          {
+            label: t("subtotal"),
+            value: formatPrice(subtotal as number, locale, currency),
+          },
+          {
+            label: voucherCode
+              ? t("discountWithCode", { code: voucherCode })
+              : t("discount"),
+            value: `−${formatPrice(discount as number, locale, currency)}`,
+            strong: true,
+          },
+        ]
+      : []),
     ...(total !== null
       ? [
           {
-            label: t("total"),
+            label: showBreakdown ? t("totalPayable") : t("total"),
             value: formatPrice(total, locale, currency),
             strong: true,
             price: true,

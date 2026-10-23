@@ -82,7 +82,27 @@
       "guestsRequired": "Vui lòng nhập số khách",
       "guestsInvalid": "Số khách phải từ 1 đến 99",
       "difficultyRequired": "Vui lòng chọn độ khó"
-    }
+    },
+    "subtotal": "Tạm tính",
+    "discount": "Giảm giá",
+    "discountWithCode": "Giảm giá ({code})",
+    "totalPayable": "Tổng thanh toán",
+    "voucherTitle": "5. Áp dụng ưu đãi / Chọn voucher",
+    "voucherSubtitle": "Chọn một voucher trong ví — mỗi đơn chỉ áp dụng được một mã.",
+    "voucherEmpty": "Bạn chưa có voucher nào",
+    "voucherEmptyCta": "Xem ưu đãi",
+    "voucherSignIn": "Đăng nhập để dùng voucher trong ví của bạn.",
+    "voucherSignInCta": "Đăng nhập",
+    "voucherExpired": "Đã hết hạn",
+    "voucherOtherTour": "Chỉ dùng cho tour khác",
+    "voucherPercent": "Giảm {percent}%",
+    "voucherApply": "Áp dụng voucher",
+    "voucherRemove": "Bỏ áp dụng",
+    "voucherAppliedBadge": "Đang áp dụng",
+    "voucherExpand": "Xem chi tiết voucher",
+    "voucherCollapse": "Ẩn chi tiết voucher",
+    "voucherApplied": "Đã áp dụng voucher {code} cho đơn này",
+    "voucherValidUntil": "Có hiệu lực đến {date}"
   },
   "priceRange": {
     "label": "Giá tham khảo"
@@ -119,11 +139,12 @@
   "home": {
     "heroTitle": "Khám phá Việt Nam",
     "heroSubtitle": "Trải nghiệm vẻ đẹp, văn hóa và sự thân thiện của Việt Nam",
-    "heroDisplay": "DECODE TRAVEL",
     "searchPlaceholder": "Bạn muốn đi đâu?",
+    "searchEyebrow": "Chương tiếp theo",
     "scrollDown": "Cuộn xuống để khám phá",
     "heroVideoAria": "Video giới thiệu du lịch",
     "featuredDestinations": "Điểm đến nổi bật",
+    "featuredEyebrow": "Chọn bí ẩn tiếp theo",
     "exploreNow": "Khám phá ngay",
     "aboutSection": {
       "title": "Về chúng tôi",
@@ -401,11 +422,31 @@
     "subtitle": "Câu hỏi về tour, đặt chỗ hay hợp tác? Liên hệ theo cách bạn thích — chúng tôi phản hồi trong vòng một ngày làm việc.",
     "formHeading": "Form liên hệ",
     "nodes": {
-      "phone": { "label": "Điện thoại", "value": "+84 28 3822 0000", "href": "tel:+842838220000" },
-      "email": { "label": "Email", "value": "info@vietnam-tourism.com", "href": "mailto:info@vietnam-tourism.com" },
-      "facebook": { "label": "Facebook", "value": "facebook.com/vietnamtourism", "href": "https://www.facebook.com/vietnamtourism" },
-      "instagram": { "label": "Instagram", "value": "instagram.com/vietnamtourism", "href": "https://www.instagram.com/vietnamtourism" },
-      "tiktok": { "label": "TikTok", "value": "tiktok.com/@vietnamtourism", "href": "https://www.tiktok.com/@vietnamtourism" }
+      "phone": {
+        "label": "Điện thoại",
+        "value": "+84 28 3822 0000",
+        "href": "tel:+842838220000"
+      },
+      "email": {
+        "label": "Email",
+        "value": "info@vietnam-tourism.com",
+        "href": "mailto:info@vietnam-tourism.com"
+      },
+      "facebook": {
+        "label": "Facebook",
+        "value": "facebook.com/vietnamtourism",
+        "href": "https://www.facebook.com/vietnamtourism"
+      },
+      "instagram": {
+        "label": "Instagram",
+        "value": "instagram.com/vietnamtourism",
+        "href": "https://www.instagram.com/vietnamtourism"
+      },
+      "tiktok": {
+        "label": "TikTok",
+        "value": "tiktok.com/@vietnamtourism",
+        "href": "https://www.tiktok.com/@vietnamtourism"
+      }
     },
     "form": {
       "nameLabel": "Họ và tên",
@@ -930,7 +971,108 @@
     "endsInDays": "{count, plural, other {còn # ngày}}",
     "lastDay": "Hôm nay là ngày cuối",
     "empty": "Hiện chưa có ưu đãi đang diễn ra — bạn quay lại sau nhé.",
-    "viewTour": "Xem tour"
+    "viewTour": "Xem tour",
+    "claimNow": "Nhận ngay",
+    "claimed": "Đã nhận",
+    "claimError": "Không thể lưu voucher. Vui lòng thử lại."
+  },
+  "auth": {
+    "gateTitle": "Đăng nhập để tiếp tục",
+    "gateBody": "Đặt vé và nhận ưu đãi bằng tài khoản DuanMar của bạn.",
+    "signInTab": "Đăng nhập",
+    "registerTab": "Tạo tài khoản",
+    "name": "Họ và tên",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "signIn": "Đăng nhập",
+    "register": "Tạo tài khoản",
+    "working": "Đang xử lý…",
+    "switchToRegister": "Chưa có tài khoản? Đăng ký",
+    "switchToSignIn": "Đã có tài khoản? Đăng nhập",
+    "invalidCredentials": "Email hoặc mật khẩu không đúng.",
+    "emailTaken": "Email này đã được đăng ký.",
+    "invalidEmail": "Nhập địa chỉ email hợp lệ.",
+    "invalidPassword": "Mật khẩu phải có ít nhất 8 ký tự.",
+    "invalidName": "Nhập họ và tên của bạn.",
+    "genericError": "Có lỗi xảy ra. Vui lòng thử lại.",
+    "forgotPassword": "Quên mật khẩu?",
+    "passwordRequired": "Vui lòng nhập mật khẩu.",
+    "recoveryTitle": "Đặt lại mật khẩu",
+    "recoveryBody": "Nhập email tài khoản, chúng tôi sẽ gửi mã gồm 6 chữ số. Mã hết hạn sau 60 giây.",
+    "recoverySend": "Gửi mã OTP",
+    "recoverySending": "Đang gửi…",
+    "otpTitle": "Nhập mã 6 chữ số",
+    "otpBody": "Đã gửi đến {email}. Mã hết hạn sau 60 giây kể từ khi phát hành.",
+    "otpLabel": "Mã OTP",
+    "otpExpiresIn": "Hết hạn sau {time}",
+    "otpExpired": "Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.",
+    "otpVerify": "Xác nhận mã",
+    "otpResend": "Gửi mã mới",
+    "otpInvalid": "Mã OTP không chính xác. Vui lòng thử lại.",
+    "otpTooMany": "Sai quá nhiều lần. Vui lòng yêu cầu mã mới.",
+    "resetTitle": "Đặt mật khẩu mới",
+    "resetBody": "Chọn mật khẩu tối thiểu 8 ký tự. Bạn sẽ được đăng nhập tự động.",
+    "newPassword": "Mật khẩu mới",
+    "confirmPassword": "Nhập lại mật khẩu",
+    "passwordMismatch": "Mật khẩu không khớp.",
+    "resetSave": "Lưu & đăng nhập",
+    "resetSaving": "Đang lưu…",
+    "backToSignIn": "Quay lại đăng nhập",
+    "rateLimited": "Vui lòng đợi {seconds} giây trước khi yêu cầu mã mới.",
+    "rateLimitedShort": "Vui lòng đợi trước khi yêu cầu mã mới.",
+    "resetExpired": "Phiên đặt lại đã hết hạn. Vui lòng bắt đầu lại.",
+    "emailNotConfigured": "Dịch vụ email chưa được cấu hình. Vui lòng liên hệ hỗ trợ.",
+    "emailSenderUnverified": "Tên miền gửi email chưa được xác minh. Vui lòng liên hệ hỗ trợ.",
+    "emailAuthFailed": "Dịch vụ email từ chối thông tin xác thực. Vui lòng liên hệ hỗ trợ.",
+    "emailSenderInvalid": "Địa chỉ người gửi không hợp lệ. Vui lòng liên hệ hỗ trợ.",
+    "emailRecipientNotAllowed": "Dịch vụ email chỉ cho phép gửi thử đến địa chỉ chủ tài khoản. Vui lòng liên hệ hỗ trợ.",
+    "emailRateLimited": "Dịch vụ email đang bận. Vui lòng thử lại sau.",
+    "emailNetworkError": "Không thể kết nối dịch vụ email. Vui lòng thử lại."
+  },
+  "account": {
+    "title": "Tài khoản của tôi",
+    "navLabel": "Tài khoản",
+    "subtitle": "Hồ sơ và ví voucher của bạn tại DuanMar.",
+    "changeAvatar": "Đổi ảnh đại diện",
+    "avatarAlt": "Ảnh đại diện tài khoản",
+    "avatarTitle": "Chọn ảnh đại diện",
+    "avatarHint": "Chọn một trong các ảnh có sẵn. Không hỗ trợ tải ảnh cá nhân lên.",
+    "avatarEmpty": "Chưa có ảnh đại diện nào.",
+    "avatarSaving": "Đang lưu…",
+    "avatarError": "Không thể lưu ảnh đại diện. Vui lòng thử lại.",
+    "profileTab": "Hồ sơ",
+    "walletTab": "Ví voucher",
+    "email": "Email",
+    "name": "Họ và tên",
+    "signOut": "Đăng xuất",
+    "signedOutTitle": "Đăng nhập để xem tài khoản",
+    "signedOutBody": "Ví voucher và thông tin cá nhân được bảo vệ bằng tài khoản DuanMar.",
+    "signedOutCta": "Đăng nhập / Đăng ký",
+    "walletTitle": "Voucher đã nhận",
+    "walletEmpty": "Chưa có voucher nào — nhận ưu đãi tại trang Ưu đãi.",
+    "walletCta": "Xem ưu đãi",
+    "activeTitle": "Nhiệm vụ đang mở",
+    "activeSubtitle": "Các chuyến đang diễn ra và sắp khởi hành",
+    "activeEmpty": "Chưa có nhiệm vụ nào — đặt tour để mở nhiệm vụ mới.",
+    "activeCta": "Khám phá tour",
+    "archiveTitle": "Hồ sơ lưu trữ",
+    "archiveSubtitle": "Hồ sơ mở khóa sau 1 ngày kể từ khi tour kết thúc.",
+    "archiveEmpty": "Chưa có hồ sơ lưu trữ nào.",
+    "loading": "Đang giải mã hồ sơ…",
+    "viewTicket": "Xem vé",
+    "guests": "{count} khách",
+    "clearTime": "Thời gian hoàn thành",
+    "clues": "Gợi ý đã dùng",
+    "missionAccomplished": "Hoàn thành nhiệm vụ",
+    "missionFailed": "M.I.A / Thất bại",
+    "archiveNote": "Dữ liệu do đội hiện trường ghi lại",
+    "deleteAll": "Xóa tất cả chuyến đi",
+    "deleteAllConfirm": "Xóa toàn bộ chuyến đi đã lưu trên thiết bị này?",
+    "codeLabel": "Mã ưu đãi",
+    "claimedOn": "Đã nhận {date}",
+    "validUntil": "Có hiệu lực đến {date}",
+    "expired": "Đã hết hạn",
+    "useNow": "Dùng ngay"
   },
   "bookingSteps": {
     "title": "Hướng dẫn đặt tour",
@@ -986,8 +1128,6 @@
     "subtitle": "Thông cáo báo chí và câu chuyện du lịch khắp Việt Nam",
     "viewArticle": "Đọc tiếp",
     "backToList": "Quay lại tin tức"
-    
-    
   },
   "map": {
     "title": "Bản đồ tương tác",
@@ -1144,7 +1284,8 @@
     "viewArticle": "Đọc câu chuyện",
     "viewAll": "Xem tất cả câu chuyện",
     "like": "Thích bài viết",
-    "liked": "Đã thích"
+    "liked": "Đã thích",
+    "exploreMore": "Đọc thêm các bài viết khác"
   },
   "events": {
     "title": "Lịch sự kiện & lễ hội",

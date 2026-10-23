@@ -8,6 +8,7 @@ import {
   BOOKINGS_STORAGE_KEY,
   clearBookings,
   listBookings,
+  mergeBookings,
   type TripBooking,
 } from "@/lib/booking-history";
 import { formatTravelDate } from "@/lib/date-window";
@@ -15,10 +16,12 @@ import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
 
 interface MyTripsClientProps {
   locale: string;
+  /** Account rows (SQLite) merged with the device's legacy local cache. */
+  serverBookings: TripBooking[];
 }
 
 /** Master view: one card per paid booking (tour name + travel date). */
-export function MyTripsClient({ locale }: MyTripsClientProps) {
+export function MyTripsClient({ locale, serverBookings }: MyTripsClientProps) {
   const t = useTranslations("myTrips");
   const [bookings, setBookings] = useState<TripBooking[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -26,32 +29,33 @@ export function MyTripsClient({ locale }: MyTripsClientProps) {
   // Load once on mount (after hydration, to avoid SSR mismatch)
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe localStorage read must run after mount
-    setBookings(listBookings());
+    setBookings(mergeBookings(serverBookings, listBookings()));
     setLoaded(true);
-  }, []);
+  }, [serverBookings]);
 
   // Another tab booked or deleted → refresh in place (storage events only
   // fire cross-tab, so this never loops with our own writes).
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (event.key && event.key !== BOOKINGS_STORAGE_KEY) return;
-      setBookings(listBookings());
+      setBookings(mergeBookings(serverBookings, listBookings()));
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  }, [serverBookings]);
 
   const deleteAll = () => {
     if (!window.confirm(t("deleteAllConfirm"))) return;
     clearBookings();
     setBookings([]);
+    void fetch("/api/bookings", { method: "DELETE" }).catch(() => undefined);
   };
 
   if (!loaded) return null;
 
   if (bookings.length === 0) {
     return (
-      <div className="rounded-xl border bg-card p-8 text-center">
+      <div className="rounded-none border bg-card p-8 text-center">
         <p className="text-muted-foreground">{t("empty")}</p>
         <Link
           href="/explore/destinations"
@@ -75,7 +79,7 @@ export function MyTripsClient({ locale }: MyTripsClientProps) {
           <li key={booking.reference}>
             <Link
               href={`/my-trips/${booking.reference}`}
-              className="flex items-center justify-between gap-4 rounded-xl border bg-card p-5 transition-colors hover:bg-muted/40"
+              className="flex items-center justify-between gap-4 rounded-none border bg-card p-5 transition-colors hover:bg-muted/40"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <div className="min-w-0">

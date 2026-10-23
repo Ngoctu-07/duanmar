@@ -12,6 +12,9 @@ const DEFAULT_POSTER_SRC = "/images/promo-modal.png";
  * autoplays muted/looping/inline; without one, the frame renders a static
  * poster so the 50/50 grid never breaks. A configured video that fails to
  * load degrades to the poster + the localized "coming soon" caption.
+ *
+ * Horror grade: the video is dimmed exactly 7% (`brightness(0.93)`, no other
+ * filters). No noise/CRT/glitch overlay is applied — the footage stays clean.
  */
 export function PromoVideo({
   videoSrc,
@@ -27,7 +30,7 @@ export function PromoVideo({
   return (
     <div
       data-testid="about-promo-video"
-      className="relative aspect-video overflow-hidden rounded-xl border bg-muted"
+      className="relative aspect-video overflow-hidden rounded-none border bg-muted"
     >
       {videoSrc && !failed ? (
         <video
@@ -40,7 +43,7 @@ export function PromoVideo({
           preload="metadata"
           aria-label={t("aboutSection.videoAria")}
           onError={() => setFailed(true)}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover brightness-[0.93]"
         />
       ) : (
         <Image
@@ -52,7 +55,7 @@ export function PromoVideo({
         />
       )}
       {videoSrc && failed && (
-        <span className="absolute inset-x-0 bottom-3 mx-auto w-fit rounded bg-background/80 px-3 py-1 text-sm text-muted-foreground">
+        <span className="absolute inset-x-0 bottom-3 z-10 mx-auto w-fit rounded-none bg-background/80 px-3 py-1 text-sm text-muted-foreground">
           {t("aboutSection.videoFallback")}
         </span>
       )}

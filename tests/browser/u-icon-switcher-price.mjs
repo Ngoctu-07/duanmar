@@ -75,12 +75,12 @@ try {
   await goto(page, "/vi");
   const [u1s, u1t, u1b1, u1b2] = await Promise.all([
     readStyle(page, 'header a[aria-label="Tìm kiếm"] svg', ["strokeWidth"]),
-    readStyle(page, 'header a[aria-label="Chuyến đi của tôi"] svg', ["strokeWidth"]),
+    readStyle(page, 'header a[aria-label="Tài khoản"] svg', ["strokeWidth"]),
     readStyle(page, 'header a[aria-label="Tìm kiếm"]'),
-    readStyle(page, 'header a[aria-label="Chuyến đi của tôi"]'),
+    readStyle(page, 'header a[aria-label="Tài khoản"]'),
   ]);
   check("U1 search icon 24×24 (size-6 beats Button size-4)", u1s && near(u1s.w, 24) && near(u1s.h, 24), JSON.stringify(u1s));
-  check("U1 my-trips icon 24×24", u1t && near(u1t.w, 24) && near(u1t.h, 24), JSON.stringify(u1t));
+  check("U1 account icon 24×24", u1t && near(u1t.w, 24) && near(u1t.h, 24), JSON.stringify(u1t));
   check("U1 icon buttons stay 36×36", [u1b1, u1b2].every((b) => b && near(b.w, 36) && near(b.h, 36)), JSON.stringify([u1b1, u1b2]));
   check(
     "U1 header icon strokes ≤1.5 (S1)",
@@ -100,10 +100,16 @@ try {
   check("U2 hero search adornment 20×20", u2a && near(u2a.w, 20) && near(u2a.h, 20), JSON.stringify(u2a));
   check("U2 hero adornment inside pl-10 content edge", u2a && u2a.left >= 0 && u2a.right <= u2a.inputLeft + 41, `left=${u2a?.left.toFixed(1)} right=${u2a?.right.toFixed(1)} edge=${(u2a.inputLeft + 40).toFixed(1)}`);
   const u2b = await page.$$eval("section.py-8 svg", (els) => els.map((el) => { const r = el.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height), stroke: getComputedStyle(el).strokeWidth }; }));
-  check("U2 quick-access icons ×2 all 24×24", u2b.length === 2 && u2b.every((s) => near(s.w, 24) && near(s.h, 24)), JSON.stringify(u2b));
+  // The legacy quick-access strip (`section.py-8`) was removed from the
+  // homepage; only assert its icon metrics when such a section exists again.
+  if (u2b.length === 0) {
+    skip("U2 quick-access icons ×2 all 24×24", "no section.py-8 quick-access block on the homepage");
+  } else {
+    check("U2 quick-access icons ×2 all 24×24", u2b.length === 2 && u2b.every((s) => near(s.w, 24) && near(s.h, 24)), JSON.stringify(u2b));
+  }
   check(
     "U2 hero + quick-access strokes ≤1.5 (S2, S3)",
-    Boolean(u2a) && fs(u2a.stroke) <= 1.5 && u2b.length === 2 && u2b.every((s) => fs(s.stroke) <= 1.5),
+    Boolean(u2a) && fs(u2a.stroke) <= 1.5 && u2b.every((s) => fs(s.stroke) <= 1.5),
     JSON.stringify({ hero: u2a?.stroke, quick: u2b.map((s) => s.stroke) })
   );
   await goto(page, "/vi/search");
@@ -137,21 +143,157 @@ try {
   check("U4 click en → /en, en active fw 600–700 opacity=1", u4a && u4a.text === "en" && u4a.fw >= 600 && u4a.fw <= 700 && u4a.opacity === 1, JSON.stringify(u4a));
   check("U4 vi demoted (no aria-current, opacity≤0.65)", u4v && !u4v.current && u4v.opacity <= 0.65, JSON.stringify(u4v));
 
-  // --- U5 chatbot trigger (desktop /vi): ghost body + punch-through eye holes
+  // --- U5 chatbot trigger (desktop /vi): brand-red ghost asset, no clipping
   await goto(page, "/vi");
+  await revealHomeHeader(page);
   const u5 = await page.evaluate(() => {
     const b = document.querySelector('[data-testid="assistant-trigger"]');
     if (!b) return null;
     const r = b.getBoundingClientRect();
-    const svg = b.querySelector('[data-testid="ghost-body"]');
-    const path = svg?.querySelector("path");
-    const d = path?.getAttribute("d") ?? "";
-    const scs = svg ? getComputedStyle(svg) : null;
-    return { w: r.width, h: r.height, subpaths: (d.match(/M/g) || []).length, arcs: (d.match(/a1\.2/g) || []).length, circles: svg?.querySelectorAll("circle").length ?? -1, fillRule: scs?.fillRule ?? "", fill: scs?.fill ?? "", visible: Boolean(b.offsetParent), expanded: b.getAttribute("aria-expanded"), label: b.getAttribute("aria-label") };
+    const solid = b.querySelector('[data-testid="ghost-body"]');
+    const outline = b.querySelector('[data-testid="ghost-outline"]');
+    const scs = solid ? getComputedStyle(solid) : null;
+    const ocs = outline ? getComputedStyle(outline) : null;
+    return {
+      w: r.width,
+      h: r.height,
+      right: r.right,
+      bottom: r.bottom,
+      vw: window.innerWidth,
+      vh: window.innerHeight,
+      overflow: getComputedStyle(b).overflow,
+      aspect: getComputedStyle(b).aspectRatio,
+      outlineOverflow: ocs?.overflow ?? null,
+      rootOverflow: (() => {
+        const root = document.querySelector('[data-testid="assistant-widget"]');
+        return root ? getComputedStyle(root).overflow : null;
+      })(),
+      rootRight: (() => {
+        const root = document.querySelector('[data-testid="assistant-widget"]');
+        return root ? getComputedStyle(root).right : null;
+      })(),
+      rootBottom: (() => {
+        const root = document.querySelector('[data-testid="assistant-widget"]');
+        return root ? getComputedStyle(root).bottom : null;
+      })(),
+      solidTag: solid?.tagName ?? null,
+      solidImage: scs?.backgroundImage ?? "",
+      outlineImage: ocs?.backgroundImage ?? "",
+      visible: Boolean(b.offsetParent),
+      expanded: b.getAttribute("aria-expanded"),
+      label: b.getAttribute("aria-label"),
+    };
   });
-  check("U5 trigger box 57–59 (expect 58 = 55 × 1.05)", u5 && u5.w >= 57 && u5.w <= 59 && u5.h >= 57 && u5.h <= 59, `w=${u5?.w} h=${u5?.h}`);
-  check("U5 red body + 2 evenodd eye cutouts (single compound path)", u5 && u5.subpaths === 3 && u5.arcs === 4 && u5.circles === 0 && u5.fillRule === "evenodd", JSON.stringify(u5 && { subpaths: u5.subpaths, arcs: u5.arcs, circles: u5.circles, fillRule: u5.fillRule, fill: u5.fill }));
+  check("U5 trigger box is a full 64px square", u5 && near(u5.w, 64) && near(u5.h, 64) && u5.aspect === "1 / 1", `w=${u5?.w} h=${u5?.h} aspect=${u5?.aspect}`);
+  check(
+    "U5 brand-red ghost artwork paints the solid + outline layers (object-contain letterbox)",
+    u5 &&
+      u5.solidTag === "SPAN" &&
+      u5.solidImage.includes("/images/ghost-icon.svg") &&
+      u5.outlineImage.includes("/images/ghost-icon-outline.svg"),
+    JSON.stringify(u5 && { tag: u5.solidTag, solid: u5.solidImage, outline: u5.outlineImage })
+  );
+  const u5svg = await page.evaluate(async () => {
+    const response = await fetch("/images/ghost-icon.svg");
+    return response.ok ? await response.text() : "";
+  });
+  check(
+    "U5 ghost SVG is the arcade silhouette in brand red #8B0000 with 2 eyes + open mouth",
+    u5svg.includes('fill="#8B0000"') &&
+            u5svg.includes('d="M14 49C13.4 41 13.8 32.8 15.6 25.4') &&
+      (u5svg.match(/<ellipse/g) ?? []).length === 3,
+    JSON.stringify({ fill8B: u5svg.includes('fill="#8B0000"'), ellipses: (u5svg.match(/<ellipse/g) ?? []).length })
+  );
+  check(
+    "U5 nothing clips the artwork on the FAB chain (root, wrapper, trigger, layers)",
+    u5 && u5.overflow === "visible" && u5.rootOverflow === "visible" && u5.outlineOverflow === "visible",
+    JSON.stringify(u5 && { root: u5.rootOverflow, trigger: u5.overflow, layer: u5.outlineOverflow })
+  );
+  check(
+    "U5 FAB wrapper uses a snug 20px corner inset (float stays 20–30px from bottom)",
+    u5 &&
+      u5.rootRight === "20px" &&
+      u5.rootBottom === "20px" &&
+      u5.vw - u5.right >= 19.5 &&
+      u5.vh - u5.bottom >= 19.5 &&
+      u5.vh - u5.bottom <= 30.5,
+    JSON.stringify(u5 && { rootRight: u5.rootRight, rootBottom: u5.rootBottom, right: u5.vw - u5.right, bottom: u5.vh - u5.bottom })
+  );
   check("U5 visible + aria-expanded=false + aria-label", u5 && u5.visible && u5.expanded === "false" && Boolean(u5.label), JSON.stringify(u5));
+
+  // --- U5b symmetry + viewBox-margin proof, measured on the artwork itself:
+  // rasterize the served asset, mirror the alpha columns and read the bbox in
+  // viewBox units. Asymmetry (the previous asset leaked 3.5 units further on the
+  // right than the left and overflowed the 64-unit viewBox) fails both.
+  const u5b = await page.evaluate(async () => {
+    const response = await fetch("/images/ghost-icon.svg");
+    if (!response.ok) return null;
+    const xml = await response.text();
+    const img = new Image();
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(xml)));
+    await img.decode();
+    const size = 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, size, size);
+    const data = ctx.getImageData(0, 0, size, size).data;
+    let minX = size;
+    let maxX = -1;
+    let minY = size;
+    let maxY = -1;
+    let worstMirrorDiff = 0;
+    let leftMass = 0;
+    let rightMass = 0;
+    for (let y = 0; y < size; y += 1) {
+      for (let x = 0; x < size; x += 1) {
+        const alpha = data[(y * size + x) * 4 + 3];
+        if (alpha > 8) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    for (let x = 0; x < size / 2; x += 1) {
+      let a = 0;
+      let b = 0;
+      for (let y = 0; y < size; y += 1) {
+        a += data[(y * size + x) * 4 + 3];
+        b += data[(y * size + (size - 1 - x)) * 4 + 3];
+      }
+      leftMass += a;
+      rightMass += b;
+      worstMirrorDiff = Math.max(worstMirrorDiff, Math.abs(a - b) / 255);
+    }
+    const unit = size / 64;
+    return {
+      minX: minX / unit,
+      maxX: maxX / unit,
+      minY: minY / unit,
+      maxY: maxY / unit,
+      centerX: (minX + maxX) / 2 / unit,
+      worstMirrorDiff,
+      massImbalancePct: Math.abs((leftMass - rightMass) / ((leftMass + rightMass) / 2)) * 100,
+    };
+  });
+  const r1 = (v) => (typeof v === "number" ? Math.round(v * 10) / 10 : v);
+  check(
+    "U5b ghost is horizontally mirror-symmetrical (silhouette + features)",
+    u5b && u5b.worstMirrorDiff <= 3 && u5b.massImbalancePct <= 1 && Math.abs(u5b.centerX - 32) <= 0.6,
+    JSON.stringify(u5b && { centerX: r1(u5b.centerX), worstMirrorDiff: r1(u5b.worstMirrorDiff), massImbalancePct: r1(u5b.massImbalancePct) })
+  );
+  check(
+    "U5b artwork stays inside the 64-unit viewBox with ≥8 units of margin",
+    u5b && u5b.minX >= 8 && u5b.maxX <= 56 && u5b.minY >= 8 && u5b.maxY <= 56,
+    JSON.stringify(u5b && { minX: r1(u5b.minX), maxX: r1(u5b.maxX), minY: r1(u5b.minY), maxY: r1(u5b.maxY) })
+  );
+  // Tight crop on the trigger box so the red artwork + edge insets are visually
+  // verifiable (an element screenshot cannot clip the artwork the page clipped).
+  const u5shot = await page.$('[data-testid="assistant-trigger"]');
+  if (u5shot) await u5shot.screenshot({ path: `${OUT}/u-ghost-01-desktop.png` });
 
   // --- U6 mobile 375×812
   await page.setViewport({ width: 375, height: 812 });
@@ -168,10 +310,10 @@ try {
     const d = document.querySelector('[role="dialog"]');
     if (!d) return null;
     const read = (cls) => { const s = d.querySelector(`svg.${cls}`); if (!s) return null; const r = s.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height), stroke: getComputedStyle(s).strokeWidth }; };
-    return { search: read("lucide-search"), luggage: read("lucide-luggage") };
+    return { search: read("lucide-search"), account: read("lucide-user-round") };
   });
-  check("U6 sheet link icons 20×20", u6sheet && [u6sheet.search, u6sheet.luggage].every((s) => s && near(s.w, 20) && near(s.h, 20)), JSON.stringify(u6sheet));
-  check("U6 sheet link strokes ≤1.5", u6sheet && [u6sheet.search, u6sheet.luggage].every((s) => s && fs(s.stroke) <= 1.5), JSON.stringify(u6sheet));
+  check("U6 sheet link icons 20×20", u6sheet && [u6sheet.search, u6sheet.account].every((s) => s && near(s.w, 20) && near(s.h, 20)), JSON.stringify(u6sheet));
+  check("U6 sheet link strokes ≤1.5", u6sheet && [u6sheet.search, u6sheet.account].every((s) => s && fs(s.stroke) <= 1.5), JSON.stringify(u6sheet));
   await page.keyboard.press("Escape");
   await sleep(500);
   const u6t = await page.evaluate(() => {
@@ -180,7 +322,7 @@ try {
     const r = b.getBoundingClientRect();
     return { w: r.width, h: r.height, right: r.right, bottom: r.bottom, vw: window.innerWidth, vh: window.innerHeight };
   });
-  check("U6 trigger 58±1, right≤375, bottom≤viewport", u6t && near(u6t.w, 58) && near(u6t.h, 58) && u6t.right <= u6t.vw && u6t.bottom <= u6t.vh, JSON.stringify(u6t));
+  check("U6 trigger 64±1, right≤375, bottom≤viewport", u6t && near(u6t.w, 64) && near(u6t.h, 64) && u6t.right <= u6t.vw && u6t.bottom <= u6t.vh, JSON.stringify(u6t));
   await page.screenshot({ path: `${OUT}/u-icons-01-mobile.png` });
 
   // --- U7 price prominence, homepage cards
@@ -257,7 +399,7 @@ try {
     }
     // BookingForm unmounts the whole form (incl. pricing section) once
     // `confirmed` flips — the live pricing total only exists BEFORE submit.
-    const u8total = await readStyle(page, 'section[aria-labelledby="booking-pricing-heading"] span.tabular-nums', ["fontSize", "fontWeight"]);
+    const u8total = await readStyle(page, 'section[aria-labelledby="booking-pricing-heading"] [data-testid="price-payable"]', ["fontSize", "fontWeight"]);
     check("U8 checkout pricing total 28–29px + fw 600–700", u8total && fs(u8total.fontSize) >= 28 && fs(u8total.fontSize) <= 29 && fw(u8total.fontWeight) >= 600 && fw(u8total.fontWeight) <= 700, JSON.stringify(u8total));
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);

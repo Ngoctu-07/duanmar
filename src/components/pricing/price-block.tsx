@@ -7,10 +7,11 @@ interface PriceBlockProps {
 }
 
 /**
- * Detailed price breakdown, placed directly under the tour description.
- * Red is used as an accent (label + per-guest prices) instead of colouring the
- * whole block, so the card stays compact and readable.
- * Renders nothing when no tiers are available — never shows made-up prices.
+ * Detailed price breakdown, placed at the bottom of the tour text column.
+ * Plain typography only — no card, border or fill: the heading, column labels
+ * and weight/size hierarchy separate the data. Red stays an accent on the
+ * heading + per-guest prices. Renders nothing when no tiers are available —
+ * never shows made-up prices.
  */
 export async function PriceBlock({ tiers, locale }: PriceBlockProps) {
   if (tiers.length === 0) return null;
@@ -21,7 +22,7 @@ export async function PriceBlock({ tiers, locale }: PriceBlockProps) {
   return (
     <section
       aria-labelledby="tour-price-heading"
-      className="mb-6 mt-6 rounded-xl border bg-card p-5"
+      className="mt-4 mb-8"
     >
       <h2
         id="tour-price-heading"
@@ -38,7 +39,7 @@ export async function PriceBlock({ tiers, locale }: PriceBlockProps) {
       >
         <table className="w-full min-w-[20rem] border-collapse text-sm">
           <thead>
-            <tr className="border-b border-border text-xs uppercase tracking-widest text-muted-foreground">
+            <tr className="text-xs uppercase tracking-widest text-muted-foreground">
               <th scope="col" className="py-2 pr-4 text-left font-medium">
                 {t("tier")}
               </th>
@@ -65,15 +66,14 @@ export async function PriceBlock({ tiers, locale }: PriceBlockProps) {
               return (
                 <tr
                   key={`${tier.minGuests}-${tier.maxGuests ?? "open"}-${index}`}
-                  className="border-b border-border/60 last:border-0"
                 >
-                  <th scope="row" className="py-2.5 pr-4 text-left font-semibold">
+                  <th scope="row" className="py-3 pr-4 text-left font-semibold">
                     {label}
                   </th>
-                  <td className="py-2.5 pl-4 text-right text-[1.4rem] font-semibold tabular-nums text-link">
+                  <td className="py-3 pl-4 text-right text-[1.4rem] font-semibold tabular-nums text-link">
                     {formatPrice(tier.pricePerGuest, locale, currency)}
                   </td>
-                  <td className="py-2.5 pl-4 text-right text-[1.4rem] font-semibold tabular-nums text-muted-foreground">
+                  <td className="py-3 pl-4 text-right text-[1.4rem] font-semibold tabular-nums text-muted-foreground">
                     {formatPrice(tier.groupTotal, locale, currency)}
                   </td>
                 </tr>

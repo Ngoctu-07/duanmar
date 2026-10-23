@@ -139,6 +139,24 @@ try {
         JSON.stringify({ video: Boolean(videoNode), posterBox })
       );
     }
+    const overlayInfo = await sections[0].evaluate((section) => {
+      const slot = section.querySelector('[data-testid="about-promo-video"]');
+      return {
+        crtNodes: section.querySelectorAll(
+          '[data-testid="about-promo-crt"], .crt-scanlines, .crt-rgb, .crt-band, .crt-glitch'
+        ).length,
+        overflow: slot ? getComputedStyle(slot).overflow : null,
+      };
+    });
+    check(
+      "J2 promo video carries zero noise/CRT/glitch layers",
+      overlayInfo.crtNodes === 0,
+      JSON.stringify(overlayInfo)
+    );
+    if (videoNode) {
+      const grade = await videoNode.evaluate((v) => getComputedStyle(v).filter);
+      check("J2 promo video dimmed exactly 7% (brightness 0.93)", grade === "brightness(0.93)", grade);
+    }
     await sections[0].screenshot({ path: `${OUT}/j2-about-section.png` });
   }
 

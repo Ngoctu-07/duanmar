@@ -2,7 +2,7 @@ import { defineQuery } from "next-sanity";
 import { imageFragment } from "../fragments/image";
 
 export const DESTINATIONS_QUERY = defineQuery(`
-  *[_type == "destination" && ($region == "" || region == $region)] | order(name asc) {
+  *[_type == "destination"] | order(name asc) {
     _id,
     name,
     slug,
@@ -15,8 +15,9 @@ export const DESTINATIONS_QUERY = defineQuery(`
     lat,
     lng,
     location,
-    image { ${imageFragment} },
-    galleryImages[] { ${imageFragment} }
+    // Single poster: the Studio field wins; legacy gallery[0] is only the
+    // pre-backfill bridge (remove after the destination-poster backfill).
+    "posterImage": coalesce(posterImage, galleryImages[0]) { ${imageFragment} }
   }
 `);
 
@@ -44,8 +45,9 @@ export const DESTINATION_BY_SLUG_QUERY = defineQuery(`
     lat,
     lng,
     location,
-    image { ${imageFragment} },
-    galleryImages[] { ${imageFragment} }
+    // Single poster: the Studio field wins; legacy gallery[0] is only the
+    // pre-backfill bridge (remove after the destination-poster backfill).
+    "posterImage": coalesce(posterImage, galleryImages[0]) { ${imageFragment} }
   }
 `);
 
@@ -63,8 +65,9 @@ export const DESTINATIONS_BY_CATEGORY_QUERY = defineQuery(`
     lat,
     lng,
     location,
-    image { ${imageFragment} },
-    galleryImages[] { ${imageFragment} }
+    // Single poster: the Studio field wins; legacy gallery[0] is only the
+    // pre-backfill bridge (remove after the destination-poster backfill).
+    "posterImage": coalesce(posterImage, galleryImages[0]) { ${imageFragment} }
   }
 `);
 

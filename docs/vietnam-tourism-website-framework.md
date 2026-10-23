@@ -126,7 +126,7 @@ Home
 
 ## 3. Homepage Layout (Wireframe Description)
 
-1. **Header** — Logo, primary nav, language selector (EN/VI/KR/JP/ZH/FR/DE...), search icon, "Plan Your Trip" CTA button.
+1. **Header** — Dual-state sticky bar. Over the hero (top of page) it is a frameless transparent overlay showing only the centered primary nav links; after scrolling past 50% of the hero it slides down as a solid dark bar with logo, primary nav, language selector, search icon and account icon.
 2. **Hero Section** — Full-width video/image carousel with rotating destination highlights + prominent search bar ("Where do you want to go?").
 3. **Quick Access Icons** — Visa Info | Best Time to Visit | Top Destinations | Deals | Interactive Map.
 4. **Featured Destinations** — Card grid (image, name, short teaser, "Explore" link) for 6–8 top spots.

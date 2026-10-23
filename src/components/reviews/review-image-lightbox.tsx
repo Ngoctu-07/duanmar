@@ -38,7 +38,7 @@ export function ReviewImageLightbox({
           <img
             src={src}
             alt={t("reviews.lightboxImageAlt", { author })}
-            className="mx-auto block max-h-[80vh] w-auto max-w-full rounded-md object-contain"
+            className="mx-auto block max-h-[80vh] w-auto max-w-full rounded-none object-contain"
           />
         )}
       </DialogContent>

@@ -51,7 +51,11 @@ try {
   await page.goto("http://localhost:3000/vi", { waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
   const headerIcon = await page.$('a[href="/vi/my-trips"], button[aria-label="Chuyến đi của tôi"]');
-  check("header My Trips entry exists", Boolean(headerIcon));
+  check("header My Trips entry removed", !headerIcon);
+  check(
+    "header Account entry present",
+    Boolean(await page.$('a[href="/vi/account"], a[aria-label="Tài khoản"]'))
+  );
 
   await page.goto("http://localhost:3000/vi/my-trips", { waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
@@ -171,8 +175,8 @@ try {
   const rec = store[0] || {};
   check("F8 record complete", rec.reference === reference && rec.travelDate === tomorrow && rec.guests === 2 && rec.total === 300000 && rec.tourName === "HCM" && rec.currency === "VND" && Boolean(rec.paidAt), JSON.stringify(rec));
 
-  const paidLink = await page.$('a[href="/vi/my-trips"]');
-  check("F8 'view my trips' link after success", Boolean(paidLink));
+  const paidLink = await page.$('a[href="/vi/account"]');
+  check("F8 'view my trips' link after success (account)", Boolean(paidLink));
 
   await page.click('input[name="payment-method"][value="bank"]');
   await sleep(3600);

@@ -46,7 +46,7 @@ export function ItineraryDayRow({
 
   if (!expandable) {
     return (
-      <li className="px-2 py-3">
+      <li className="py-3">
         <h3 className="font-normal">{heading}</h3>
       </li>
     );
@@ -60,7 +60,7 @@ export function ItineraryDayRow({
           onClick={() => setOpen((value) => !value)}
           aria-expanded={open}
           aria-controls={panelId}
-          className="flex w-full cursor-pointer items-start gap-3 rounded-lg px-2 py-3 text-left transition-colors hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="flex w-full cursor-pointer items-start gap-3 py-3 text-left transition-colors hover:text-link focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
           <span className="min-w-0 flex-1">{heading}</span>
           <ChevronRight
@@ -83,7 +83,7 @@ export function ItineraryDayRow({
         )}
       >
         <div className="overflow-hidden">
-          <div className="border-t border-border/60 px-2 pt-3 pb-4 text-sm leading-relaxed text-muted-foreground">
+          <div className="pt-1 pb-4 text-sm leading-relaxed text-muted-foreground">
             {children}
           </div>
         </div>

@@ -5,10 +5,11 @@ import { dismissPromo } from "../helpers/promo.mjs";
 /**
  * Plan 260929-2254 — unified /blog social-style feed.
  * Data-driven against live CMS articles: vertical stream of
- * FeedArticleBlocks — oversized title (4xl/5xl), full-width image,
+ * FeedArticleBlocks — shared centered title (30/36), full-width image,
  * single-column max-w-4xl body (NO newspaper columns), reaction bar
  * (like button) per block, dividers, NO ordinals (EN+VI), /news
- * redirects, /blog/<slug> detail renders the same block as h1.
+ * redirects. /blog/<slug> renders the same block/title as h1, so the
+ * homepage Read More path and the header Blog path share one article UI.
  */
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
@@ -68,12 +69,18 @@ try {
     const dom = await page.evaluate(() => {
       const blocks = [...document.querySelectorAll('[data-testid="feed-article-block"]')];
       const first = blocks[0] ?? null;
+      const firstTitle = first?.querySelector('[data-testid="feed-article-title"]');
+      const titleStyle = firstTitle ? getComputedStyle(firstTitle) : null;
       const links = blocks.map((b) => b.querySelector("h2 a")?.getAttribute("href") ?? "");
       return {
         h1: (document.querySelector("h1")?.textContent ?? "").trim(),
         blockCount: blocks.length,
         bodyText: document.body.innerText,
-        firstH2Class: first?.querySelector("h2")?.className ?? "",
+        firstH2Class: firstTitle?.className ?? "",
+        firstH2Color: titleStyle?.color ?? null,
+        firstTitleFont: titleStyle?.fontFamily ?? null,
+        firstTitleSize: titleStyle ? Number.parseFloat(titleStyle.fontSize) : null,
+        firstTitleAlign: titleStyle?.textAlign ?? null,
         firstHrefs: links.filter(Boolean),
         hasTime: first ? Boolean(first.querySelector("time[datetime]")) : null,
         hasExcerpt: first ? Boolean(first.querySelector("p.italic")) : null,
@@ -86,6 +93,7 @@ try {
           [...b.querySelectorAll("div")].some((d) => d.className.includes("max-w-4xl"))
         ).length,
         hasEmptyState: Boolean(document.querySelector("p.mx-auto.max-w-3xl.text-center")),
+        exploreMoreCount: document.querySelectorAll('[data-testid="blog-explore-more"]').length,
         sepia: document.body.innerHTML.match(/sepia|grayscale/i)?.[0] ?? null,
       };
     });
@@ -100,8 +108,25 @@ try {
     } else {
       check(`X5 /${locale} no ordinals ("Article N" or "Bài N")`,
         !/Article\s*\d+/i.test(dom.bodyText) && !/Bài\s*\d+/.test(dom.bodyText));
-      check(`X6 /${locale} oversized headline (text-4xl|5xl)`, /text-(4xl|5xl)/.test(dom.firstH2Class),
-        dom.firstH2Class.slice(0, 80));
+      check(`X6 /${locale} shared centered article title (30-36px, white Gypsy)`,
+        /text-center/.test(dom.firstH2Class) &&
+          /\btext-3xl\b/.test(dom.firstH2Class) &&
+          /md:text-4xl/.test(dom.firstH2Class) &&
+          !/text-(5xl|6xl)/.test(dom.firstH2Class) &&
+          /gypsy.?curse/i.test(dom.firstTitleFont ?? "") &&
+          dom.firstTitleAlign === "center" &&
+          dom.firstTitleSize >= 30 &&
+          dom.firstTitleSize <= 36 &&
+          dom.firstH2Color === "rgb(255, 255, 255)",
+        JSON.stringify({
+          class: dom.firstH2Class.slice(0, 120),
+          font: dom.firstTitleFont,
+          size: dom.firstTitleSize,
+          align: dom.firstTitleAlign,
+          color: dom.firstH2Color,
+        }));
+      check(`X6b /${locale} feed headline defaults to white`, dom.firstH2Color === "rgb(255, 255, 255)",
+        String(dom.firstH2Color));
       check(`X7 /${locale} divider rule lines on blocks`, dom.rules === dom.blockCount,
         `rules=${dom.rules}/${dom.blockCount}`);
       check(`X8 /${locale} links point to /blog/<slug>`,
@@ -117,6 +142,8 @@ try {
         JSON.stringify({ noColumns: dom.columnWrappers, wrappers: dom.readingWrappers, blocks: dom.blockCount }));
       check(`X10b /${locale} reaction bar (like button) per block`, dom.likeButtons === dom.blockCount,
         `buttons=${dom.likeButtons}/${dom.blockCount}`);
+      check(`X10c /${locale} archive feed has no per-article explore CTA`, dom.exploreMoreCount === 0,
+        `count=${dom.exploreMoreCount}`);
       await page.screenshot({ path: `${OUT}/x-blog-feed-${locale}.png`, fullPage: false });
     }
 
@@ -136,18 +163,89 @@ try {
         const backEl = [...document.querySelectorAll("main a")].find((a) =>
           (a.getAttribute("href") ?? "").endsWith("/blog")
         );
+        const h1 = document.querySelector("h1");
+        const titleEl = document.querySelector('[data-testid="feed-article-title"]');
+        const titleStyle = titleEl ? getComputedStyle(titleEl) : null;
+        const cta = document.querySelector('[data-testid="blog-explore-more"]');
+        const like = document.querySelector('[data-testid="like-button"]');
+        const ctaStyle = cta ? getComputedStyle(cta) : null;
         return {
-          h1: (document.querySelector("h1")?.textContent ?? "").trim(),
+          h1: (h1?.textContent ?? "").trim(),
+          h1Font: titleStyle?.fontFamily ?? null,
+          h1Align: titleStyle?.textAlign ?? null,
+          h1Size: titleStyle ? Number.parseFloat(titleStyle.fontSize) : null,
+          h1Color: titleStyle?.color ?? null,
+          h1Class: titleEl?.className ?? null,
           hasBlock: Boolean(document.querySelector('[data-testid="feed-article-block"]')),
           hasLike: Boolean(document.querySelector('[data-testid="like-button"]')),
           backHref: backEl?.getAttribute("href") ?? null,
+          ctaPresent: Boolean(cta),
+          ctaHref: cta?.getAttribute("href") ?? null,
+          ctaText: (cta?.textContent ?? "").trim(),
+          ctaBg: ctaStyle?.backgroundColor ?? null,
+          ctaColor: ctaStyle?.color ?? null,
+          ctaFontSize: ctaStyle ? Number.parseFloat(ctaStyle.fontSize) : null,
+          ctaFontWeight: ctaStyle ? Number.parseInt(ctaStyle.fontWeight, 10) : null,
+          ctaBorder: ctaStyle ? Number.parseFloat(ctaStyle.borderTopWidth) : null,
+          ctaPadding: ctaStyle ? Number.parseFloat(ctaStyle.paddingLeft) : null,
+          ctaDisplay: ctaStyle?.display ?? null,
+          ctaUppercase: ctaStyle?.textTransform ?? null,
+          ctaBeforeLike: Boolean(cta && like && (cta.compareDocumentPosition(like) & Node.DOCUMENT_POSITION_FOLLOWING)),
         };
       });
       check(`X13 /${locale}/blog/<slug> → 200, unified block, h1 title`,
         detailSt === 200 && detail.hasBlock && detail.hasLike && detail.h1.length > 0,
         JSON.stringify({ detailSt, ...detail }));
+      check(`X13b /${locale}/blog/<slug> centered scaled-down white Gypsy title (30-36px)`,
+        /gypsy.?curse/i.test(detail.h1Font ?? "") &&
+          detail.h1Align === "center" &&
+          detail.h1Size >= 30 &&
+          detail.h1Size <= 36 &&
+          detail.h1Color === "rgb(255, 255, 255)",
+        JSON.stringify({ font: detail.h1Font, align: detail.h1Align, size: detail.h1Size, color: detail.h1Color }));
+      check(`X13c /${locale} feed + detail article titles share one style`,
+        dom.firstTitleFont === detail.h1Font &&
+          dom.firstTitleSize === detail.h1Size &&
+          dom.firstTitleAlign === detail.h1Align &&
+          dom.firstH2Color === detail.h1Color &&
+          dom.firstH2Class === detail.h1Class,
+        JSON.stringify({
+          feed: {
+            font: dom.firstTitleFont,
+            size: dom.firstTitleSize,
+            align: dom.firstTitleAlign,
+            color: dom.firstH2Color,
+            class: dom.firstH2Class,
+          },
+          detail: {
+            font: detail.h1Font,
+            size: detail.h1Size,
+            align: detail.h1Align,
+            color: detail.h1Color,
+            class: detail.h1Class,
+          },
+        }));
       check(`X14 /${locale} detail back-link → /blog`, (detail.backHref ?? "").includes("/blog"),
         String(detail.backHref));
+      check(`X15 /${locale} detail CTA → /blog archive, above the reaction bar`,
+        detail.ctaPresent &&
+          (detail.ctaHref ?? "").endsWith("/blog") &&
+          detail.ctaBeforeLike === true,
+        JSON.stringify({ href: detail.ctaHref, beforeLike: detail.ctaBeforeLike }));
+      check(`X15b /${locale} CTA is a bare text link (transparent, no box, no padding)`,
+        detail.ctaBg === "rgba(0, 0, 0, 0)" &&
+          detail.ctaBorder === 0 &&
+          detail.ctaPadding === 0 &&
+          detail.ctaDisplay === "inline-flex",
+        JSON.stringify({ bg: detail.ctaBg, border: detail.ctaBorder, padding: detail.ctaPadding, display: detail.ctaDisplay }));
+      check(`X15c /${locale} CTA stays compact in highlight red (uppercased)`,
+        detail.ctaText === messages.blog.exploreMore &&
+          detail.ctaUppercase === "uppercase" &&
+          detail.ctaColor === "rgb(221, 133, 120)" &&
+          detail.ctaFontSize >= 12 &&
+          detail.ctaFontSize <= 16 &&
+          detail.ctaFontWeight >= 600,
+        JSON.stringify({ got: detail.ctaText, want: messages.blog.exploreMore, color: detail.ctaColor, size: detail.ctaFontSize, weight: detail.ctaFontWeight, transform: detail.ctaUppercase }));
     } else {
       const missingSt = (await page.goto(`${BASE}/${locale}/blog/no-such-article-xyz`, { waitUntil: "networkidle2", timeout: 60000 }))?.status();
       check(`X13 /${locale}/blog/<missing> → 404`, missingSt === 404, `status=${missingSt}`);

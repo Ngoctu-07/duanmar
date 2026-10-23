@@ -1,4 +1,4 @@
-import type { Destination } from "../../src/components/explore/destination-card.ts";
+import type { Destination } from "../../src/components/tours/tour-card.ts";
 import {
   buildToursHref,
   filterDestinations,

@@ -33,7 +33,8 @@ try {
   const links = await page.$$eval("header a", (els) => els.map((el) => el.getAttribute("href")));
   check("G6 no /trip-planner link in header", !links.some((h) => h && h.includes("trip-planner")), JSON.stringify(links));
   check("G6 search icon kept", Boolean(await page.$('header a[aria-label="Tìm kiếm"]')));
-  check("G6 My Trips icon kept", Boolean(await page.$('header a[aria-label="Chuyến đi của tôi"]')));
+  check("G6 My Trips icon removed", !(await page.$('header a[aria-label="Chuyến đi của tôi"]')));
+  check("G6 Account icon kept", Boolean(await page.$('header a[aria-label="Tài khoản"]')));
   const headerText = await page.$eval("header", (el) => el.textContent);
   check("G6 no trip badge text leak", !headerText.includes("My trip"), headerText.slice(0, 120));
   check("G6 zero trip-planner anchors site-wide", !(await page.$('a[href*="trip-planner"]')));
@@ -50,7 +51,8 @@ try {
   if (sheet) {
     const sheetLinks = await sheet.evaluate((el) => [...el.querySelectorAll("a")].map((a) => a.getAttribute("href")));
     check("G6 sheet has no /trip-planner", !sheetLinks.some((h) => h && h.includes("trip-planner")), JSON.stringify(sheetLinks));
-    check("G6 sheet keeps /my-trips", sheetLinks.some((h) => h && h.includes("my-trips")), JSON.stringify(sheetLinks));
+    check("G6 sheet drops /my-trips", !sheetLinks.some((h) => h && h.includes("my-trips")), JSON.stringify(sheetLinks));
+    check("G6 sheet keeps /account", sheetLinks.some((h) => h && h.includes("/account")), JSON.stringify(sheetLinks));
     check("G6 sheet keeps /search", sheetLinks.some((h) => h && h.includes("/search")));
     await sheet.screenshot({ path: `${OUT}/g6-header-mobile-sheet.png` });
   }

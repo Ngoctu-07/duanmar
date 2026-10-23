@@ -7,10 +7,23 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-body: var(--body-text);
+  /* Display-heading ink (pure white on the locked dark canvas). Kept separate
+     from `--font-display` so selecting the Gypsy face never implies a red
+     color. */
+  --color-heading: var(--heading-color);
   --font-sans: var(--font-sans);
+  /* Generic heading/UI face — the global body sans (Barlow Semi Condensed). */
   --font-heading: var(--font-sans);
   --font-brand: var(--font-brand);
-  --font-display: var(--font-display);
+  /* Tall condensed accent face (Oswald) for prominent CTAs only. */
+  --font-condensed: var(--font-oswald);
+  /* Display face for primary headings and tour titles only (Gypsy Curse,
+     Vietnamese-localized build). The fallbacks only cover glyphs outside the
+     font's coverage (never Vietnamese text). */
+  --font-display: var(--font-gypsy);
+  --font-gypsy: var(--font-gypsy-curse), var(--font-oswald), ui-sans-serif,
+    system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -51,56 +64,28 @@
   --radius-4xl: calc(var(--radius) * 2.6);
   --shadow-soft: var(--elevation-soft);
   --font-weight-body: 450;
-}
-
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  /* Brand red = muted burgundy red-900 #7f1d1d (global, both themes). */
-  --primary: #7f1d1d;
-  --primary-foreground: #ffffff;
-  /* Accent/link text: same brand red on light, re-tuned lighter on dark (see .dark). */
-  --link: #7f1d1d;
-  --secondary: oklch(0.968 0.006 75);
-  --secondary-foreground: oklch(0.205 0.005 285);
-  --muted: oklch(0.968 0.006 75);
-  --muted-foreground: oklch(0.52 0.015 60);
-  --accent: oklch(0.968 0.006 75);
-  --accent-foreground: oklch(0.205 0.005 285);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.915 0.006 75);
-  --input: oklch(0.915 0.006 75);
-  --ring: #7f1d1d;
-  --chart-1: oklch(0.444 0.177 25.331);
-  --chart-2: oklch(0.72 0.14 25);
-  --chart-3: oklch(0.42 0.02 285);
-  --chart-4: oklch(0.62 0.02 75);
-  --chart-5: oklch(0.86 0.03 80);
-  --radius: 0.625rem;
-  --elevation-soft: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 12px -2px rgb(0 0 0 / 0.06);
-  --sidebar: oklch(0.985 0.004 75);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: #7f1d1d;
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.968 0.006 75);
-  --sidebar-accent-foreground: oklch(0.205 0.005 285);
-  --sidebar-border: oklch(0.915 0.006 75);
-  --sidebar-ring: #7f1d1d;
+  /* Body/UI type scale, one notch up from the Tailwind defaults (14 → 15px,
+     16 → 17px) so the condensed Barlow face reads at a comfortable size.
+     Display/heading steps stay untouched. */
+  --text-sm: 0.9375rem;
+  --text-base: 1.0625rem;
 }
 
 /* ---------------------------------------------------------------------------
-   Soft dark theme (global, applied via `dark` on <html>).
+   Locked dark theme (the only theme).
+
+   The application ships a single palette: the near-black "zinc-900" canvas
+   below. There is no light theme and no runtime toggle, so these tokens live
+   on `:root` directly (no `.dark` override layer, no `prefers-color-scheme`
+   branch). The `dark` class on `<html>` is kept so Tailwind `dark:` variants
+   in third-party/shadcn primitives keep matching.
+
    Canvas = zinc-900 #18181b (never pure #000), elevated surfaces = zinc-800
-   #27272a (cards/popovers/muted/secondary/accent), typography = zinc-50 #fafafa
-   with zinc-400 #a1a1aa for secondary text, borders = transparent white strokes.
-   `:root` above stays light so the Studio / a future theme toggle keep working.
+   #27272a (cards/popovers/muted/secondary/accent), typography = zinc-50
+   #fafafa with zinc-400 #a1a1aa for secondary text, borders = transparent
+   white strokes.
 --------------------------------------------------------------------------- */
-.dark {
+:root {
   color-scheme: dark;
   --background: #18181b;
   --foreground: #fafafa;
@@ -109,11 +94,15 @@
   --popover: #27272a;
   --popover-foreground: #fafafa;
   /* Muted burgundy #7f1d1d: keeps white button/footer text >= 4.5:1 (m2 contract)
-     while killing the vibrancy of the old crimson on the zinc-900 canvas.
-     Accent text and icons get their own lighter, desaturated tint below. */
+     while killing the vibrancy of the old crimson on the zinc-900 canvas. */
   --primary: #7f1d1d;
   --primary-foreground: #ffffff;
+  /* Accent/link text: lighter, desaturated red tint on the dark canvas. */
   --link: #dd8578;
+  /* Blog/body copy uses off-white; display headings are pure white (never
+     red) so the Gypsy face reads as type, not as an alert state. */
+  --body-text: #d9d9d9;
+  --heading-color: #ffffff;
   --secondary: #27272a;
   --secondary-foreground: #fafafa;
   --muted: #27272a;
@@ -140,6 +129,27 @@
   --sidebar-accent-foreground: #fafafa;
   --sidebar-border: rgb(255 255 255 / 12%);
   --sidebar-ring: #dd8578;
+  /* One shared size for primary section titles: 48px → 60px → 72px.
+     Components opt in with `.display-title` instead of hardcoding text-5xl/
+     text-6xl/text-7xl (or the old 2x scale). */
+  --display-title-size: 3rem;
+  --display-title-leading: 1.05;
+  /* Strict 90° box aesthetic: every radius token resolves to zero. */
+  --radius: 0rem;
+  --elevation-soft: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 12px -2px rgb(0 0 0 / 0.06);
+}
+
+/* Responsive steps for the shared primary-title size. */
+@media (min-width: 768px) {
+  :root {
+    --display-title-size: 3.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --display-title-size: 4.5rem;
+  }
 }
 
 @layer base {
@@ -147,24 +157,209 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background font-body text-body text-base;
   }
   html {
     @apply font-sans;
   }
+
+  /* -------------------------------------------------------------------------
+     Display typography
+     Gypsy Curse is reserved for primary page titles (every h1), tour titles and
+     elements explicitly opted in with `.font-display` (editorial headings,
+     blog cards, article heroes). Font family and color are separate concerns:
+     `--font-display` only selects the face, while `--heading-color` decides
+     the ink (white on the dark canvas). There is no red heading token.
+     Everything else inherits the clean body sans (Barlow Semi Condensed); `font-condensed` is
+     reserved for prominent CTAs.
+  ------------------------------------------------------------------------- */
+  :where(h1) {
+    font-family: var(--font-display);
+    color: var(--heading-color);
+    /* Gypsy Curse ships one weight: never synthesise bold (it smears the thin
+       distressed strokes) and never let a stale clip/stroke/blend effect turn
+       the glyph counters transparent. */
+    font-synthesis: none;
+    -webkit-text-fill-color: currentColor;
+    -webkit-text-stroke: 0;
+    background: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    mix-blend-mode: normal;
+  }
 }
 
 @layer components {
-  .rounded-xl.border {
-    box-shadow: var(--elevation-soft);
+  /* Single source of truth for every page-level title (primary section
+     headings and secondary page h1s: booking, my-trips, search, legal, about,
+     explore, support…). The font, ink and size are independently tokenized so
+     changing the scale never re-couples the Gypsy face to a color. Used by the
+     featured gallery heading, category/deals pages, the how-to-book section,
+     the blog page title and tour detail heroes. */
+  .display-title {
+    font-family: var(--font-display);
+    color: var(--heading-color);
+    font-size: var(--display-title-size);
+    font-weight: 400;
+    line-height: var(--display-title-leading);
+    letter-spacing: normal;
+    /* Homepage headings are the brand reference: every primary/section title
+       renders uppercase (Vietnamese diacritics included via the localized
+       Gypsy build), so secondary pages never drift back to sentence case. */
+    text-transform: uppercase;
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    font-synthesis: none;
+    -webkit-text-fill-color: currentColor;
+    -webkit-text-stroke: 0;
+    background: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    mix-blend-mode: normal;
   }
 }
 
 /* ---------------------------------------------------------------------------
-   Floating chatbot ghost silhouette (assistant-widget): slow vertical hover
-   bob. Transform-only keyframes + will-change keep it on the compositor;
-   disabled under prefers-reduced-motion.
+   Horror / escape-room homepage canvas (scoped).
+   Overrides the design tokens for the homepage subtree only, so the rest of
+   the site (and the brand-red footer owned by the locale layout) keeps its
+   existing palette. Deep near-black canvas + blood-red CTAs + bright red
+   accent text for critical copy.
 --------------------------------------------------------------------------- */
+.horror-canvas {
+  --background: #121212;
+  --foreground: #f5f5f5;
+  --card: #171717;
+  --card-foreground: #f5f5f5;
+  --popover: #171717;
+  --popover-foreground: #f5f5f5;
+  /* Blood red CTA (white text ≈ 7:1 on #b3151b). */
+  --primary: #b3151b;
+  --primary-foreground: #ffffff;
+  /* Stark red accent text (≈ 4.9:1 on #121212). */
+  --link: #e5484d;
+  /* Body copy is off-white; display headings are pure white. */
+  --body-text: #d9d9d9;
+  --heading-color: #ffffff;
+  --secondary: #1b1b1b;
+  --secondary-foreground: #f5f5f5;
+  --muted: #1b1b1b;
+  --muted-foreground: #a3a3a3;
+  --accent: #1b1b1b;
+  --accent-foreground: #f5f5f5;
+  --border: rgb(255 255 255 / 10%);
+  --input: rgb(255 255 255 / 22%);
+  --ring: #e5484d;
+  /* Breakout promo film: 50vw capped at 768px (16:9), with 40% of its height
+     hanging below the hero. 0.4 × 0.5625 × 50vw = 11.25vw (max 10.8rem). The
+     search section uses this to reserve clear space below the overhang. */
+  --hero-video-overhang: min(11.25vw, 10.8rem);
+  background-color: var(--background);
+  color: var(--body-text);
+  color-scheme: dark;
+}
+
+/* Background-only media grade for the hero: native clarity (no sepia, contrast
+   or blur) dimmed 5% on top of the previous 93% → 88%. No noise/CRT/glitch
+   overlay is layered on top, so the footage stays perfectly clear. */
+.hero-background-media {
+  filter: brightness(0.88);
+}
+
+/* Gypsy Curse ships a Vietnamese-localized build (see src/app/fonts and
+   scripts/build-vietnamese-gypsy-font.py), so `--font-display` stays selected
+   for the whole `vi` subtree — diacritics render in the display face, not
+   Oswald. */
+
+/* ---------------------------------------------------------------------------
+   Ambient horror backdrop (hero). Transform/opacity-only animation so the
+   layers stay on the compositor; every effect is disabled when the visitor
+   prefers reduced motion.
+--------------------------------------------------------------------------- */
+@keyframes horror-fog-a {
+  0%,
+  100% {
+    transform: translate3d(-8%, -4%, 0) scale(1.15);
+  }
+  50% {
+    transform: translate3d(7%, 6%, 0) scale(1.3);
+  }
+}
+@keyframes horror-fog-b {
+  0%,
+  100% {
+    transform: translate3d(9%, 5%, 0) scale(1.25);
+  }
+  50% {
+    transform: translate3d(-7%, -5%, 0) scale(1.12);
+  }
+}
+@keyframes horror-ember {
+  0%,
+  100% {
+    opacity: 0.16;
+  }
+  50% {
+    opacity: 0.32;
+  }
+}
+.horror-fog {
+  position: absolute;
+  inset: -25%;
+  filter: blur(60px);
+  will-change: transform;
+}
+.horror-fog-a {
+  background:
+    radial-gradient(42% 48% at 28% 42%, rgb(127 29 29 / 32%), transparent 70%),
+    radial-gradient(38% 42% at 74% 62%, rgb(120 113 108 / 22%), transparent 72%);
+  animation: horror-fog-a 38s ease-in-out infinite;
+}
+.horror-fog-b {
+  background:
+    radial-gradient(36% 40% at 68% 32%, rgb(80 15 18 / 38%), transparent 70%),
+    radial-gradient(44% 46% at 24% 72%, rgb(64 64 64 / 24%), transparent 74%);
+  animation: horror-fog-b 54s ease-in-out infinite;
+}
+.horror-ember {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    60% 50% at 50% 100%,
+    rgb(179 21 27 / 45%),
+    transparent 70%
+  );
+  animation: horror-ember 9s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .horror-fog-a,
+  .horror-fog-b,
+  .horror-ember {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Floating chatbot ghost silhouette (assistant-widget): real artwork painted
+   as a background image (brand-red body + near-black oval eyes/mouth), with a
+   white line-art twin used for the footer inversion seam. Both layers share the
+   same geometry, so the clip boundary never shows a gap. The bob keyframes
+   below are transform-only so they stay on the compositor, and are disabled
+   under prefers-reduced-motion.
+--------------------------------------------------------------------------- */
+.assistant-ghost-solid,
+.assistant-ghost-outline {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.assistant-ghost-solid {
+  background-image: url("/images/ghost-icon.svg");
+}
+.assistant-ghost-outline {
+  background-image: url("/images/ghost-icon-outline.svg");
+}
+
 @keyframes assistant-float {
   0%,
   100% {
@@ -181,5 +376,262 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-assistant-float {
     animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Event-driven CRT static overlay (crt-static-overlay.tsx).
+   Fires on the first landing (500ms) and on critical CTAs (300ms) only —
+   standard navigation stays silent. The page itself is never transformed:
+   strong scanlines, RGB-split noise and a rolling refresh band carry the
+   "old TV lost its signal" look. All motion is gated by no-preference.
+--------------------------------------------------------------------------- */
+.crt-static {
+  --crt-duration: 300ms;
+  --crt-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: block;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+.crt-static__noise,
+.crt-static__scanlines,
+.crt-static__chroma,
+.crt-static__vignette {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+/* Moving analogue grain. */
+.crt-static__noise {
+  background-image: var(--crt-noise);
+  background-size: 140px 140px;
+  mix-blend-mode: screen;
+  opacity: 0.3;
+}
+
+/* Prominent horizontal scanlines + one rolling refresh band. */
+.crt-static__scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.14) 0,
+    rgb(255 255 255 / 0.14) 1px,
+    rgb(0 0 0 / 0.62) 1px,
+    rgb(0 0 0 / 0.62) 3px,
+    rgb(0 0 0 / 0.24) 3px,
+    rgb(0 0 0 / 0.24) 4px
+  );
+  opacity: 0.85;
+  overflow: hidden;
+}
+
+.crt-static__scanlines::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 16%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgb(255 255 255 / 0.36),
+    transparent
+  );
+}
+
+/* Chromatic aberration: the same grain duplicated in red and cyan, offset. */
+.crt-static__chroma {
+  mix-blend-mode: screen;
+}
+
+.crt-static__chroma::before,
+.crt-static__chroma::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  background-color: #ff2d55;
+  -webkit-mask-image: var(--crt-noise);
+  mask-image: var(--crt-noise);
+  -webkit-mask-size: 140px 140px;
+  mask-size: 140px 140px;
+  opacity: 0.55;
+}
+
+.crt-static__chroma::before {
+  transform: translateX(-4px);
+}
+
+.crt-static__chroma::after {
+  background-color: #11e0ff;
+  transform: translateX(4px);
+}
+
+/* CRT bezel falloff + a horizontal tear band. */
+.crt-static__vignette {
+  box-shadow:
+    inset 0 0 140px rgb(0 0 0 / 0.72),
+    inset 0 0 26px rgb(255 0 64 / 0.2);
+}
+
+.crt-static__vignette::before {
+  content: "";
+  position: absolute;
+  left: -5%;
+  right: -5%;
+  top: 38%;
+  height: 5%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgb(255 255 255 / 0.32),
+    rgb(255 0 64 / 0.22),
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .crt-static[data-active="true"] {
+    visibility: visible;
+    animation: crt-static-flicker var(--crt-duration) linear both;
+  }
+
+  .crt-static[data-active="true"] .crt-static__noise {
+    animation: crt-static-grain 90ms steps(1, end) infinite;
+  }
+
+  .crt-static[data-active="true"] .crt-static__scanlines {
+    animation: crt-static-scan-shift 70ms steps(2, end) infinite;
+  }
+
+  .crt-static[data-active="true"] .crt-static__scanlines::after {
+    animation: crt-static-roll var(--crt-duration) linear both;
+  }
+
+  .crt-static[data-active="true"] .crt-static__chroma::before {
+    animation: crt-static-split-red var(--crt-duration) steps(3, end) both;
+  }
+
+  .crt-static[data-active="true"] .crt-static__chroma::after {
+    animation: crt-static-split-cyan var(--crt-duration) steps(3, end) both;
+  }
+}
+
+@keyframes crt-static-flicker {
+  0% {
+    opacity: 0;
+  }
+  6% {
+    opacity: 0.92;
+  }
+  14% {
+    opacity: 0.34;
+  }
+  26% {
+    opacity: 0.88;
+  }
+  38% {
+    opacity: 0.5;
+  }
+  52% {
+    opacity: 0.95;
+  }
+  68% {
+    opacity: 0.42;
+  }
+  82% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes crt-static-grain {
+  0% {
+    background-position: 0 0;
+  }
+  14% {
+    background-position: -18px 11px;
+  }
+  28% {
+    background-position: 12px -9px;
+  }
+  42% {
+    background-position: -7px 17px;
+  }
+  56% {
+    background-position: 21px 6px;
+  }
+  70% {
+    background-position: -13px -14px;
+  }
+  84% {
+    background-position: 9px 4px;
+  }
+  100% {
+    background-position: -22px 13px;
+  }
+}
+
+@keyframes crt-static-scan-shift {
+  0% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 0 2px;
+  }
+  100% {
+    background-position: 0 4px;
+  }
+}
+
+@keyframes crt-static-roll {
+  0% {
+    transform: translateY(-110%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(640%);
+    opacity: 0;
+  }
+}
+
+@keyframes crt-static-split-red {
+  0% {
+    transform: translateX(-1px);
+  }
+  45% {
+    transform: translateX(-8px);
+  }
+  75% {
+    transform: translateX(-3px);
+  }
+  100% {
+    transform: translateX(-1px);
+  }
+}
+
+@keyframes crt-static-split-cyan {
+  0% {
+    transform: translateX(1px);
+  }
+  45% {
+    transform: translateX(8px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+  100% {
+    transform: translateX(1px);
   }
 }

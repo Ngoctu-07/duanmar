@@ -1,8 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import {
-  DestinationCard,
-  type Destination,
-} from "@/components/explore/destination-card";
+import { TourCard, TOUR_CARD_GRID, type Destination } from "@/components/tours/tour-card";
 import { buildPriceRangeLabels } from "@/lib/pricing";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { DESTINATIONS_BY_CATEGORY_QUERY } from "@/sanity/queries/destinations";
@@ -45,9 +42,9 @@ export async function TourCategorySection({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className={TOUR_CARD_GRID}>
       {destinations.map((dest: Destination) => (
-        <DestinationCard
+        <TourCard
           key={dest._id}
           destination={dest}
           actionLabel={t("viewDetails")}

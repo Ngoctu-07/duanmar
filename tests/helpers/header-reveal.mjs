@@ -1,8 +1,9 @@
 /**
- * The homepage header sits transparent/hidden over the full-viewport hero and
- * only slides down once the visitor scrolls past 50% of the hero height
+ * Above 50% of the homepage hero the header is a frameless transparent
+ * overlay that paints only the centered nav links — the logo, search, account
+ * and locale switcher stay hidden until the visitor scrolls past the hero
  * (see src/components/layout/header.tsx). Header-level tests that run on `/`
- * must reveal it first — otherwise `page.click`/`page.hover` land off-screen.
+ * must reveal it first, otherwise utility clicks land on invisible nodes.
  */
 export async function revealHomeHeader(page) {
   await page.evaluate(() => {

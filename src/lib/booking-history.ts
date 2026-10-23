@@ -22,6 +22,12 @@ export interface TripBooking {
   difficulty?: string;
   pricePerGuest: number | null;
   total: number | null;
+  /** Pre-voucher total (present on orders that applied a voucher). */
+  subtotal?: number | null;
+  /** Voucher amount removed from `subtotal` (present only when > 0). */
+  discount?: number | null;
+  /** Voucher code used for the order (display only). */
+  voucherCode?: string;
   currency: PriceCurrency;
   locale: string;
   paidAt: string;
@@ -32,11 +38,22 @@ export interface TripBooking {
    * transaction hash captured after broadcast, used for order verification.
    */
   txHash?: string;
+  /**
+   * Optional mission telemetry captured at completion. When absent, the
+   * account view derives a stable placeholder from the reference hash
+   * (see `src/lib/missions.ts`).
+   */
+  mission?: {
+    outcome: "success" | "failed";
+    clearTimeMs: number;
+    cluesUsed: number;
+    cluesTotal: number;
+  };
 }
 
 export const BOOKINGS_STORAGE_KEY = "vn-my-trips:v1";
 
-function isTripBooking(value: unknown): value is TripBooking {
+export function isTripBooking(value: unknown): value is TripBooking {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
   const isString = (field: string) => typeof record[field] === "string";
@@ -44,7 +61,9 @@ function isTripBooking(value: unknown): value is TripBooking {
     record[field] === null ||
     (typeof record[field] === "number" && Number.isFinite(record[field]));
   return (
-    isString("reference") &&
+    typeof record.reference === "string" &&
+    record.reference.trim().length > 0 &&
+    record.reference.length <= 120 &&
     isString("slug") &&
     isString("tourName") &&
     isString("travelDate") &&
@@ -68,7 +87,11 @@ function isTripBooking(value: unknown): value is TripBooking {
     Number.isInteger(record.guests) &&
     record.guests >= 1 &&
     isAmount("total") &&
-    isAmount("pricePerGuest")
+    isAmount("pricePerGuest") &&
+    // Optional voucher breakdown — must be well-formed when present.
+    (record.subtotal === undefined || isAmount("subtotal")) &&
+    (record.discount === undefined || isAmount("discount")) &&
+    (record.voucherCode === undefined || isString("voucherCode"))
   );
 }
 
@@ -89,6 +112,20 @@ export function listBookings(): TripBooking[] {
 
 export function getBooking(reference: string): TripBooking | null {
   return listBookings().find((booking) => booking.reference === reference) ?? null;
+}
+
+/**
+ * Merge account-backed bookings with this device's legacy/local records.
+ * Server rows win on a shared reference; the result is newest-first.
+ */
+export function mergeBookings(
+  server: TripBooking[],
+  local: TripBooking[]
+): TripBooking[] {
+  const merged = new Map<string, TripBooking>();
+  for (const booking of local) merged.set(booking.reference, booking);
+  for (const booking of server) merged.set(booking.reference, booking);
+  return [...merged.values()].sort((a, b) => b.paidAt.localeCompare(a.paidAt));
 }
 
 export function saveBooking(booking: TripBooking): void {

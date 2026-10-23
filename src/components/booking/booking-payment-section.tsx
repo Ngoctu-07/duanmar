@@ -110,7 +110,7 @@ export function BookingPaymentSection({
   // data → don't invent a price).
   if (total === null) {
     return (
-      <p className="mt-5 rounded-xl border bg-muted/40 p-5 text-sm text-muted-foreground">
+      <p className="mt-5 rounded-none border bg-muted/40 p-5 text-sm text-muted-foreground">
         {t("priceMissingNote")}
       </p>
     );
@@ -141,7 +141,7 @@ export function BookingPaymentSection({
   return (
     <section
       aria-labelledby="booking-payment-heading"
-      className="mt-5 rounded-xl border bg-card p-5"
+      className="mt-5 rounded-none border bg-card p-5"
     >
       <h2
         id="booking-payment-heading"
@@ -158,7 +158,8 @@ export function BookingPaymentSection({
         {PAYMENT_METHODS.map((value) => (
           <label
             key={value}
-            className={`flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm font-medium transition-colors ${
+            data-crt-static="300"
+            className={`flex cursor-pointer items-center gap-2 rounded-none border p-3 text-sm font-medium transition-colors ${
               method === value
                 ? "border-primary bg-primary/10"
                 : "hover:bg-muted"
@@ -187,9 +188,9 @@ export function BookingPaymentSection({
       )}
 
       {isFiat && (
-        <div className="mt-4 rounded-lg bg-muted/40 p-4">
+        <div className="mt-4 rounded-none bg-muted/40 p-4">
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-            <div className="rounded-lg bg-background p-2">
+            <div className="rounded-none bg-background p-2">
               {qrUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element -- QR comes from a client-generated data URL
                 <img
@@ -202,7 +203,7 @@ export function BookingPaymentSection({
               ) : (
                 <div
                   aria-hidden="true"
-                  className="h-48 w-48 animate-pulse rounded bg-muted"
+                  className="h-48 w-48 animate-pulse rounded-none bg-muted"
                 />
               )}
             </div>
@@ -226,7 +227,7 @@ export function BookingPaymentSection({
               <p className="text-xs text-muted-foreground">{t("demoQr")}</p>
               {status === "success" && (
                 <Link
-                  href="/my-trips"
+                  href="/account"
                   className="mt-3 inline-block text-sm font-medium text-link hover:underline"
                 >
                   {t("viewMyTrips")}

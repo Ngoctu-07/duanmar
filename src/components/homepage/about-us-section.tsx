@@ -32,7 +32,9 @@ export async function AboutUsSection({
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-12">
           <div className="min-w-0">
-            <h2 className="text-3xl font-bold">{t("aboutSection.title")}</h2>
+            <h2 className="display-title text-balance">
+              {t("aboutSection.title")}
+            </h2>
             <AboutNarrative storyEn={storyEn} storyVi={storyVi} locale={locale} />
             <Button
               nativeButton={false}

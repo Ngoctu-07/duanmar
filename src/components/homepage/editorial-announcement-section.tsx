@@ -20,7 +20,7 @@ export interface EditorialAnnouncementData {
 }
 
 const CTA_CLASS =
-  "inline-flex items-center justify-center rounded-sm bg-[#2F110F] px-5 py-2.5 text-xs uppercase tracking-wider text-[#D9D9D9] transition-colors hover:bg-[#2F110F]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9D9D9]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212]";
+  "inline-flex items-center justify-center rounded-none bg-[#2F110F] px-5 py-2.5 text-xs uppercase tracking-wider text-[#D9D9D9] transition-colors hover:bg-[#2F110F]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9D9D9]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212]";
 
 /**
  * Fail-closed CTA: unsafe/empty hrefs render nothing; site-relative paths use
@@ -92,7 +92,7 @@ export function EditorialAnnouncementSection({
           <div className="lg:col-span-5">
             <div className="relative mx-auto min-h-[360px] w-full max-w-xs lg:mx-0 lg:max-w-sm">
               {bgUrl && (
-                <div className="relative aspect-[3/4] w-[72%] overflow-hidden rounded-sm bg-[#2F110F]/20 shadow-md">
+                <div className="relative aspect-[3/4] w-[72%] overflow-hidden rounded-none bg-[#2F110F]/20 shadow-md">
                   <Image
                     src={bgUrl}
                     alt={imageAlt}
@@ -103,7 +103,7 @@ export function EditorialAnnouncementSection({
                 </div>
               )}
               {fgUrl && (
-                <div className="absolute -right-2 -bottom-6 aspect-[3/4] w-[62%] overflow-hidden rounded-sm border border-[#D9D9D9]/15 shadow-2xl">
+                <div className="absolute -right-2 -bottom-6 aspect-[3/4] w-[62%] overflow-hidden rounded-none border border-[#D9D9D9]/15 shadow-2xl">
                   <Image
                     src={fgUrl}
                     alt={data.foregroundImage?.alt?.trim() || imageAlt}
@@ -124,12 +124,12 @@ export function EditorialAnnouncementSection({
                 </p>
               )}
               {heading && (
-                <h2 className="mb-4 font-heading text-2xl font-medium text-[#D9D9D9] lg:text-3xl">
+                <h2 className="mb-4 font-display text-2xl font-normal text-heading lg:text-3xl">
                   {heading}
                 </h2>
               )}
               {body && (
-                <p className="mb-6 whitespace-pre-line text-sm leading-relaxed text-[#D9D9D9]/80">
+                <p className="mb-6 whitespace-pre-line text-sm leading-relaxed text-body">
                   {body}
                 </p>
               )}

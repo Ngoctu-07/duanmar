@@ -41,7 +41,7 @@ interface RawArticle {
  */
 export async function buildGroundingContext(locale: AssistantLocale): Promise<string> {
   const [destinations, pricing, articles] = await Promise.all([
-    fetchPublished(DESTINATIONS_QUERY, { region: "" }),
+    fetchPublished(DESTINATIONS_QUERY, {}),
     fetchPublished(ALL_TOUR_PRICING_QUERY, {}),
     fetchPublished(ARTICLES_QUERY, {}),
   ]);

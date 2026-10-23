@@ -13,10 +13,6 @@ import { useHeroReveal } from "@/components/layout/use-hero-reveal";
 
 type DisplayMessage = AssistantMessage & { seeded?: boolean };
 
-// Shared ghost silhouette (body + 2 eye cutouts via evenodd).
-const GHOST_PATH =
-  "M7.528 20.472a1.6 1.6 0 012.277 0l1.057 1.056a1.6 1.6 0 002.276 0l1.057-1.056a1.6 1.6 0 012.277 0l1.114 1.114a1.4 1.4 0 002.414-1V10a8 8 0 00-16 0v10.586a1.4 1.4 0 002.414 1zM7.8 10.5a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0-2.4 0zM13.8 10.5a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0-2.4 0z";
-
 /**
  * Floating tour-assistant widget (plan 260929-2335): trigger bottom-right →
  * chat panel; replies stream from POST /api/assistant (server-side grounded).
@@ -25,9 +21,9 @@ const GHOST_PATH =
 export function AssistantWidget() {
   const t = useTranslations("assistant");
   const locale = useLocale();
-  // Mirror the header: the ghost FAB shares the homepage hero reveal gate, so
-  // it stays hidden over the "DECODE TRAVEL" video and appears together with
-  // the nav bar once the visitor scrolls past 50% of the hero height.
+  // The ghost FAB shares the homepage hero reveal gate: it stays hidden while
+  // the transparent hero nav floats over the full-viewport media, and appears
+  // with the solid navbar once the visitor scrolls past 50% of the hero height.
   const revealed = useHeroReveal();
   const [open, setOpen] = React.useState(false);
   const [input, setInput] = React.useState("");
@@ -40,8 +36,8 @@ export function AssistantWidget() {
   const listRef = React.useRef<HTMLDivElement>(null);
   const abortRef = React.useRef<AbortController | null>(null);
   const fabRef = React.useRef<HTMLDivElement>(null);
-  const solidRef = React.useRef<SVGSVGElement>(null);
-  const outlineRef = React.useRef<SVGSVGElement>(null);
+  const solidRef = React.useRef<HTMLSpanElement>(null);
+  const outlineRef = React.useRef<HTMLSpanElement>(null);
   // Footer-boundary inversion paints layer clips directly (rAF, no
   // per-frame state) — see use-fab-footer-inversion.
   useFabFooterInversion(fabRef, solidRef, outlineRef);
@@ -150,7 +146,7 @@ export function AssistantWidget() {
       // the video (`inert` also drops it from the tab order for keyboard users).
       inert={!revealed}
       className={cn(
-        "fixed right-4 bottom-4 z-40 print:hidden transition-all duration-300 ease-in-out",
+        "fixed right-5 bottom-5 z-40 overflow-visible print:hidden transition-all duration-300 ease-in-out",
         revealed
           ? "translate-y-0 opacity-100 pointer-events-auto"
           : "translate-y-4 opacity-0 pointer-events-none"
@@ -161,7 +157,7 @@ export function AssistantWidget() {
           id={panelId}
           data-testid="assistant-panel"
           aria-label={t("title")}
-          className="mb-3 flex h-[min(70vh,32rem)] w-[min(92vw,24rem)] flex-col overflow-hidden rounded-xl border bg-card shadow-soft"
+          className="mb-3 flex h-[min(70vh,32rem)] w-[min(92vw,24rem)] flex-col overflow-hidden rounded-none border bg-card shadow-soft"
         >
           <header className="flex items-center justify-between border-b px-4 py-3">
             <h2 className="font-semibold">{t("title")}</h2>
@@ -187,7 +183,7 @@ export function AssistantWidget() {
               <div
                 key={index}
                 className={cn(
-                  "max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm",
+                  "max-w-[85%] whitespace-pre-wrap rounded-none px-3 py-2 text-sm",
                   message.role === "user"
                     ? "ml-auto bg-primary text-primary-foreground"
                     : "bg-muted"
@@ -230,15 +226,26 @@ export function AssistantWidget() {
       )}
 
       {/*
-        Ghost FAB: two SVGs stacked at identical coords (absolute inset-0).
-        transition-transform ONLY — clip-path must apply instantly or the
-        seam lags scroll and opens a background gap (black streak) / bleeds
-        white above the footer boundary.
+        Ghost FAB: two SVG artworks stacked at identical coords
+        (absolute inset-0, `background-size: contain` inside a 64px square box,
+        i.e. the artwork is letterboxed — never stretched, cropped or trimmed).
+        The solid brand-red ghost (#8B0000) carries the near-black oval eyes and
+        the open mouth; the white line-art twin paints over the red
+        footer. The root, this wrapper and the button all set `overflow-visible`
+        so no container can slice the silhouette, and the snug 20px inset
+        (right-5 / bottom-5 on the root) keeps it clear of every viewport edge
+        while staying close to the corner. The inner float adds at most 10px of
+        lift, so the visual bottom gap stays in a 20–30px band and can never
+        touch the edge.
+        transition-transform ONLY — clip-path must apply instantly or the seam
+        lags scroll and opens a background gap (black streak) / bleeds white
+        above the footer boundary. All float/hover/footer-inversion physics is
+        unchanged.
       */}
       <div
         ref={fabRef}
         data-overlap="0.00"
-        className="animate-assistant-float relative size-[58px] transition-transform duration-300 hover:scale-110 hover:drop-shadow-[0_4px_14px_rgba(127,29,29,0.55)]"
+        className="animate-assistant-float relative size-16 overflow-visible transition-transform duration-300 hover:scale-110 hover:drop-shadow-[0_4px_14px_rgba(127,29,29,0.55)]"
       >
         <Button
           data-testid="assistant-trigger"
@@ -246,36 +253,25 @@ export function AssistantWidget() {
           aria-expanded={open}
           aria-controls={open ? panelId : undefined}
           size="icon"
-          className="relative size-[58px] overflow-hidden rounded-none border-0 bg-transparent p-0 shadow-none hover:bg-transparent"
+          className="relative size-16 aspect-square overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none hover:bg-transparent"
           onClick={() => setOpen((value) => !value)}
         >
-          {/* Solid red ghost — visible above the footer boundary. */}
-          <svg
+          {/* Solid brand-red ghost — visible above the footer boundary. */}
+          <span
             ref={solidRef}
-            viewBox="0 0 24 24"
             data-testid="ghost-body"
-            className="absolute inset-0 top-0 left-0 block size-full text-primary"
-            fill="currentColor"
-            fillRule="evenodd"
+            className="assistant-ghost-solid absolute inset-0 top-0 left-0 block size-full"
             aria-hidden
-          >
-            <path d={GHOST_PATH} />
-          </svg>
+          />
           {/* White line-art ghost — visible inside the footer boundary.
               Starts hidden (below fold) to avoid a pre-paint white flash. */}
-          <svg
+          <span
             ref={outlineRef}
-            viewBox="0 0 24 24"
             data-testid="ghost-outline"
-            className="absolute inset-0 top-0 left-0 block size-full text-white"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={0.7}
+            className="assistant-ghost-outline absolute inset-0 top-0 left-0 block size-full"
             style={{ clipPath: "inset(100% 0 0 0)" }}
             aria-hidden
-          >
-            <path d={GHOST_PATH} />
-          </svg>
+          />
         </Button>
       </div>
     </div>

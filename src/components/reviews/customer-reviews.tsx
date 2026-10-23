@@ -97,7 +97,7 @@ export function CustomerReviews({ tourSlug, locale, initialReviews }: CustomerRe
       />
 
       {!loaded || reviews.length === 0 ? (
-        <div className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
+        <div className="rounded-none border border-dashed p-8 text-center text-muted-foreground">
           {t("reviews.empty")}
         </div>
       ) : (

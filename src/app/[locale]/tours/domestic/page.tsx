@@ -13,7 +13,7 @@ export default async function DomesticToursPage() {
   return (
     <>
       <div className="mb-10 text-center">
-        <h1 className="mb-3 text-4xl font-bold">{t("domestic.title")}</h1>
+        <h1 className="display-title mb-3">{t("domestic.title")}</h1>
         <p className="text-lg text-muted-foreground">{t("domestic.subtitle")}</p>
       </div>
       <TourCategorySection category="domestic" />

@@ -70,10 +70,10 @@ export default defineType({
     }),
     defineField({
       name: "region",
-      title: "Region",
+      title: "Region (legacy)",
       type: "string",
       description:
-        "Deprecated — legacy North/Central/South filter (listing/map/search). Frontend card/detail display uses Country.",
+        "Deprecated. Kept only for existing documents — the destinations page no longer filters by region. Use Country for display instead.",
       options: {
         list: [
           { title: "North", value: "north" },
@@ -81,7 +81,6 @@ export default defineType({
           { title: "South", value: "south" },
         ],
       },
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "isSpecialTour",
@@ -176,13 +175,13 @@ export default defineType({
       of: [itineraryDayMember],
     }),
     defineField({
-      name: "galleryImages",
-      title: "Gallery Images",
-      type: "array",
+      name: "posterImage",
+      title: "Poster Image",
+      type: "image",
       description:
-        "At least 3 images. The first one (galleryImages[0]) is the cover thumbnail on every listing card; all of them feed the tour detail hero carousel.",
-      of: [{ type: "image", options: { hotspot: true } }],
-      validation: (rule) => rule.min(3).required(),
+        "Single featured image. Rendered as the portrait poster on the tour detail page and as the cover on every listing card. No gallery, no carousel.",
+      options: { hotspot: true },
+      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "location",
@@ -217,6 +216,6 @@ export default defineType({
     }),
   ],
   preview: {
-    select: { title: "name", subtitle: "region", media: "galleryImages" },
+    select: { title: "name", subtitle: "category", media: "posterImage" },
   },
 });

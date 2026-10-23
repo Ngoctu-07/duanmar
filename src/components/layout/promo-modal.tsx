@@ -70,7 +70,7 @@ function PromoModal({ imageSrc, width = 1200, height = 800, enableEntryPopup }: 
           width={width}
           height={height}
           priority
-          className="h-auto w-full rounded-xl"
+          className="h-auto w-full rounded-none"
         />
       </DialogContent>
     </Dialog>
