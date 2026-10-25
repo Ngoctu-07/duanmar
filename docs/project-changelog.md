@@ -1,5 +1,21 @@
 # Project Changelog
 
+## 2026-10-26
+
+### Changed
+- **[Feature] Đặt tour không cần đăng nhập — chỉ áp dụng voucher mới bắt login**
+  - `book-ticket-button.tsx` bỏ `requireAuth`: khách vào thẳng checkout. Vé của khách chỉ lưu trên thiết bị (`POST /api/bookings` vẫn 401 khi không có session); email xác nhận vẫn gửi.
+  - `booking-voucher-section.tsx`: CTA "Đăng nhập" mở auth modal tại chỗ rồi `router.refresh()` → ví voucher hiện ra mà không mất dữ liệu form.
+- **[UX] Ẩn form "Viết đánh giá" sau khi đã đánh giá**
+  - `write-review-form.tsx`: có review rồi → ẩn form (chỉ hiện dòng cảm ơn ngay sau khi gửi); menu ⋮ "Chỉnh sửa" phát `vn-reviews:edit` (`requestReviewEdit` trong `src/lib/reviews.ts`) để mở lại form điền sẵn + nút "Hủy" (`destinations.reviews.cancelEdit`). Xoá review → form tạo mới hiện lại.
+  - Browser suites `g-reviews` (R7/R8) và `k-review-actions` (K3/K5) cập nhật theo hành vi mới.
+- **[UX] Nút "Quay lại đặt tour" từ phần voucher**
+  - Link từ checkout sang `/deals` / `/account` mang `?returnTo=/booking/checkout?tour=<slug>`; hai trang hiện `BackToBookingLink` (`booking.backToBooking`). `safeBookingReturn` chỉ nhận path checkout (chống open redirect).
+
+### Fixed
+- **`/api/bookings` thiếu `await`** trên `listBookingsForUser` / `saveBookingForUser` / `clearBookingsForUser` sau khi store chuyển async → GET trả `{}`, lỗi DB bị nuốt.
+- **Verified** `tsc --noEmit` 0 · `eslint .` 0 · `npm test` **56/56 files** · `npm run build` exit 0 · curl: checkout 200 khi chưa đăng nhập, back-link render đúng và bị bỏ qua với `returnTo` ngoài checkout. Browser suites chưa chạy (thiếu helper local `.claude/skills/chrome-devtools`).
+
 ## 2026-10-25
 
 ### Fixed
