@@ -1,5 +1,11 @@
 import { createHash, randomUUID } from "node:crypto";
-import { getDb, withTransaction } from "@/lib/db/sqlite-store";
+import {
+  getDb,
+  queryRow,
+  queryRows,
+  runStatement,
+  withTransaction,
+} from "@/lib/db/sqlite-store";
 
 /**
  * Voucher wallet store (server only).
@@ -117,51 +123,57 @@ function mapRow(row: VoucherRow): Voucher {
   };
 }
 
-export function listVouchers(userId: string): Voucher[] {
-  const db = getDb();
+export async function listVouchers(userId: string): Promise<Voucher[]> {
+  const db = await getDb();
   if (!db) return [];
-  const rows = db
-    .prepare(`SELECT ${COLUMNS} FROM vouchers WHERE user_id = ? ORDER BY claimed_at DESC`)
-    .all(userId) as unknown as VoucherRow[];
+  const rows = await queryRows<VoucherRow>(
+    db,
+    `SELECT ${COLUMNS} FROM vouchers WHERE user_id = ? ORDER BY claimed_at DESC`,
+    [userId]
+  );
   return rows.map(mapRow);
 }
 
 /** Idempotent claim: insert once, then always return the stored snapshot. */
-export function claimVoucher(
+export async function claimVoucher(
   userId: string,
   input: ClaimVoucherInput,
   nowIso = new Date().toISOString()
-): ClaimVoucherResult {
+): Promise<ClaimVoucherResult> {
   const snapshot = sanitize(input);
   if (!snapshot) return { ok: false, code: "invalid" };
 
   try {
-    return withTransaction((db) => {
-      const existing = db
-        .prepare(`SELECT ${COLUMNS} FROM vouchers WHERE user_id = ? AND promotion_id = ?`)
-        .get(userId, snapshot.promotionId) as VoucherRow | undefined;
+    return await withTransaction(async (db) => {
+      const existing = await queryRow<VoucherRow>(
+        db,
+        `SELECT ${COLUMNS} FROM vouchers WHERE user_id = ? AND promotion_id = ?`,
+        [userId, snapshot.promotionId]
+      );
       if (existing) {
         return { ok: true as const, voucher: mapRow(existing), created: false };
       }
 
       const id = randomUUID();
-      db.prepare(
+      await runStatement(
+        db,
         "INSERT INTO vouchers (id, user_id, promotion_id, code, title, description, price, " +
           "original_price, badge, valid_until, tour_slug, claimed_at) " +
-          "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-      ).run(
-        id,
-        userId,
-        snapshot.promotionId,
-        snapshot.code,
-        snapshot.title,
-        snapshot.description,
-        snapshot.price,
-        snapshot.originalPrice,
-        snapshot.badge,
-        snapshot.validUntil,
-        snapshot.tourSlug,
-        nowIso
+          "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          id,
+          userId,
+          snapshot.promotionId,
+          snapshot.code,
+          snapshot.title,
+          snapshot.description,
+          snapshot.price,
+          snapshot.originalPrice,
+          snapshot.badge,
+          snapshot.validUntil,
+          snapshot.tourSlug,
+          nowIso,
+        ]
       );
 
       return {

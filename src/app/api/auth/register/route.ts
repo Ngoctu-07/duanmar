@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_password" }, { status: 400 });
   }
 
-  const result = createUser({ email, name, password });
+  const result = await createUser({ email, name, password });
   if (!result.ok) {
     if (result.code === "duplicate") {
       return NextResponse.json({ error: "email_taken" }, { status: 409 });

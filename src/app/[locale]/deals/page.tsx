@@ -28,7 +28,7 @@ export default async function DealsPage({ params }: PageProps) {
   // Reading the session makes this page dynamic, which is what keeps the state
   // fresh after a claim (the button also calls `router.refresh()`).
   const claimedIds = new Set(
-    user ? listVouchers(user.id).map((voucher) => voucher.promotionId) : []
+    user ? (await listVouchers(user.id)).map((voucher) => voucher.promotionId) : []
   );
 
   const cards = filterLivePromotions((promotions ?? []) as PromotionRecord[]).map((promo) =>

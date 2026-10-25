@@ -78,8 +78,8 @@ export default async function DestinationDetailPage({ params }: PageProps) {
   let initialReviews: PublicReview[] | undefined;
   let initialAggregate: RatingAggregate | null | undefined;
   try {
-    initialReviews = listReviewsForSlug(slug, readVisitor(await cookies()));
-    initialAggregate = getRatingAggregates([slug]).get(slug) ?? null;
+    initialReviews = await listReviewsForSlug(slug, readVisitor(await cookies()));
+    initialAggregate = (await getRatingAggregates([slug])).get(slug) ?? null;
   } catch {
     initialReviews = undefined;
     initialAggregate = undefined;

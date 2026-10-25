@@ -44,9 +44,9 @@ export async function GET(req: NextRequest) {
 
   const current = readVisitor(req);
   const visitor = isValidVisitor(current) ? current : newVisitorId();
-  const counts = getArticleLikeCounts(slugs);
-  const liked = getVisitorLikedSlugs(slugs, visitor);
-  const degraded = getDb() === null;
+  const counts = await getArticleLikeCounts(slugs);
+  const liked = await getVisitorLikedSlugs(slugs, visitor);
+  const degraded = (await getDb()) === null;
   const payload = degraded
     ? { counts: {}, liked: {} }
     : {

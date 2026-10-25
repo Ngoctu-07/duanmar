@@ -16,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function TripDetailPage({ params }: PageProps) {
   const { locale, reference } = await params;
   const [t, user] = await Promise.all([getTranslations("myTrips"), currentUser()]);
-  const serverBooking = user ? getBookingForUser(user.id, reference) : null;
+  const serverBooking = user ? await getBookingForUser(user.id, reference) : null;
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-16">

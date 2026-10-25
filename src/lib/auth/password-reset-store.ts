@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomInt, randomUUID, timingSafeEqual } from "node:crypto";
-import { getDb } from "@/lib/db/sqlite-store";
+import { getDb, queryRow, runStatement } from "@/lib/db/sqlite-store";
 import { findUserByEmail, normalizeEmail, updateUserPassword } from "@/lib/auth/user-store";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 
@@ -60,24 +60,24 @@ interface OtpRow {
 }
 
 /** Creates a fresh OTP, invalidating any previous unconsumed one. */
-export function issuePasswordResetOtp(
+export async function issuePasswordResetOtp(
   rawEmail: string,
   now: number = Date.now()
-): IssueOtpResult {
+): Promise<IssueOtpResult> {
   const email = normalizeEmail(rawEmail);
-  const user = findUserByEmail(email);
+  const user = await findUserByEmail(email);
   if (!user) return { ok: false, reason: "no_account" };
 
-  const db = getDb();
+  const db = await getDb();
   if (!db) return { ok: false, reason: "db_unavailable" };
 
   try {
-    const latest = db
-      .prepare(
-        "SELECT created_at FROM password_reset_otps " +
-          "WHERE user_id = ? AND consumed_at IS NULL ORDER BY created_at DESC LIMIT 1"
-      )
-      .get(user.id) as { created_at: number } | undefined;
+    const latest = await queryRow<{ created_at: number }>(
+      db,
+      "SELECT created_at FROM password_reset_otps " +
+        "WHERE user_id = ? AND consumed_at IS NULL ORDER BY created_at DESC LIMIT 1",
+      [user.id]
+    );
 
     if (latest) {
       const elapsed = now - Number(latest.created_at);
@@ -93,15 +93,21 @@ export function issuePasswordResetOtp(
     const code = generateOtpCode();
     const otpId = randomUUID();
 
-    db.prepare("DELETE FROM password_reset_otps WHERE created_at < ?").run(now - RETENTION_MS);
-    db.prepare(
-      "UPDATE password_reset_otps SET consumed_at = ? WHERE user_id = ? AND consumed_at IS NULL"
-    ).run(now, user.id);
-    db.prepare(
+    await runStatement(db, "DELETE FROM password_reset_otps WHERE created_at < ?", [
+      now - RETENTION_MS,
+    ]);
+    await runStatement(
+      db,
+      "UPDATE password_reset_otps SET consumed_at = ? WHERE user_id = ? AND consumed_at IS NULL",
+      [now, user.id]
+    );
+    await runStatement(
+      db,
       "INSERT INTO password_reset_otps " +
         "(id, user_id, email, code_hash, expires_at, attempts, created_at) " +
-        "VALUES (?, ?, ?, ?, ?, 0, ?)"
-    ).run(otpId, user.id, user.email, digest(code), now + TTL_MS, now);
+        "VALUES (?, ?, ?, ?, ?, 0, ?)",
+      [otpId, user.id, user.email, digest(code), now + TTL_MS, now]
+    );
 
     return {
       ok: true,
@@ -119,12 +125,14 @@ export function issuePasswordResetOtp(
 }
 
 /** Called when delivery fails so the user is not locked out by the cooldown. */
-export function discardPasswordResetOtp(otpId: string): void {
-  const db = getDb();
+export async function discardPasswordResetOtp(otpId: string): Promise<void> {
+  const db = await getDb();
   if (!db) return;
   try {
-    db.prepare("DELETE FROM password_reset_otps WHERE id = ? AND reset_token_hash IS NULL").run(
-      otpId
+    await runStatement(
+      db,
+      "DELETE FROM password_reset_otps WHERE id = ? AND reset_token_hash IS NULL",
+      [otpId]
     );
   } catch {
     // Best effort — the row expires on its own.
@@ -142,33 +150,36 @@ export type VerifyOtpResult =
         | "db_unavailable";
     };
 
-export function verifyPasswordResetOtp(
+export async function verifyPasswordResetOtp(
   rawEmail: string,
   rawCode: string,
   now: number = Date.now()
-): VerifyOtpResult {
+): Promise<VerifyOtpResult> {
   const code = rawCode.trim();
   if (!new RegExp(`^\\d{${OTP_LENGTH}}$`).test(code)) return { ok: false, reason: "invalid" };
 
-  const user = findUserByEmail(rawEmail);
+  const user = await findUserByEmail(rawEmail);
   if (!user) return { ok: false, reason: "invalid" };
 
-  const db = getDb();
+  const db = await getDb();
   if (!db) return { ok: false, reason: "db_unavailable" };
 
   try {
-    const row = db
-      .prepare(
-        "SELECT id, email, code_hash, expires_at, attempts FROM password_reset_otps " +
-          "WHERE user_id = ? AND consumed_at IS NULL AND reset_token_hash IS NULL " +
-          "ORDER BY created_at DESC LIMIT 1"
-      )
-      .get(user.id) as OtpRow | undefined;
+    const row = await queryRow<OtpRow>(
+      db,
+      "SELECT id, email, code_hash, expires_at, attempts FROM password_reset_otps " +
+        "WHERE user_id = ? AND consumed_at IS NULL AND reset_token_hash IS NULL " +
+        "ORDER BY created_at DESC LIMIT 1",
+      [user.id]
+    );
 
     if (!row) return { ok: false, reason: "invalid" };
 
     if (now > Number(row.expires_at)) {
-      db.prepare("UPDATE password_reset_otps SET consumed_at = ? WHERE id = ?").run(now, row.id);
+      await runStatement(db, "UPDATE password_reset_otps SET consumed_at = ? WHERE id = ?", [
+        now,
+        row.id,
+      ]);
       return { ok: false, reason: "expired" };
     }
 
@@ -182,7 +193,10 @@ export function verifyPasswordResetOtp(
 
     if (!matches) {
       const attempts = Number(row.attempts) + 1;
-      db.prepare("UPDATE password_reset_otps SET attempts = ? WHERE id = ?").run(attempts, row.id);
+      await runStatement(db, "UPDATE password_reset_otps SET attempts = ? WHERE id = ?", [
+        attempts,
+        row.id,
+      ]);
       return {
         ok: false,
         reason: attempts >= OTP_MAX_ATTEMPTS ? "too_many_attempts" : "invalid",
@@ -190,10 +204,12 @@ export function verifyPasswordResetOtp(
     }
 
     const token = randomBytes(TOKEN_BYTES).toString("hex");
-    db.prepare(
+    await runStatement(
+      db,
       "UPDATE password_reset_otps " +
-        "SET reset_token_hash = ?, token_expires_at = ?, verified_at = ? WHERE id = ?"
-    ).run(digest(token), now + TOKEN_TTL_MS, now, row.id);
+        "SET reset_token_hash = ?, token_expires_at = ?, verified_at = ? WHERE id = ?",
+      [digest(token), now + TOKEN_TTL_MS, now, row.id]
+    );
 
     return { ok: true, token, expiresInSeconds: RESET_TOKEN_TTL_SECONDS };
   } catch (error) {
@@ -216,41 +232,46 @@ export type ConfirmResetResult =
     };
 
 /** Applies the new password and burns every outstanding reset for the user. */
-export function confirmPasswordReset(
+export async function confirmPasswordReset(
   token: string,
   newPassword: string,
   now: number = Date.now()
-): ConfirmResetResult {
+): Promise<ConfirmResetResult> {
   if (newPassword.length < MIN_PASSWORD_LENGTH || newPassword.length > MAX_PASSWORD_LENGTH) {
     return { ok: false, reason: "invalid_password" };
   }
   if (!TOKEN_PATTERN.test(token)) return { ok: false, reason: "invalid_token" };
 
-  const db = getDb();
+  const db = await getDb();
   if (!db) return { ok: false, reason: "db_unavailable" };
 
   try {
-    const row = db
-      .prepare(
-        "SELECT id, user_id, email, token_expires_at FROM password_reset_otps " +
-          "WHERE reset_token_hash = ? AND consumed_at IS NULL LIMIT 1"
-      )
-      .get(digest(token)) as
-      | { id: string; user_id: string; email: string; token_expires_at: number | null }
-      | undefined;
+    const row = await queryRow<{
+      id: string;
+      user_id: string;
+      email: string;
+      token_expires_at: number | null;
+    }>(
+      db,
+      "SELECT id, user_id, email, token_expires_at FROM password_reset_otps " +
+        "WHERE reset_token_hash = ? AND consumed_at IS NULL LIMIT 1",
+      [digest(token)]
+    );
 
     if (!row) return { ok: false, reason: "invalid_token" };
     if (!row.token_expires_at || now > Number(row.token_expires_at)) {
       return { ok: false, reason: "expired_token" };
     }
 
-    if (!updateUserPassword(row.user_id, newPassword)) {
+    if (!(await updateUserPassword(row.user_id, newPassword))) {
       return { ok: false, reason: "db_unavailable" };
     }
 
-    db.prepare(
-      "UPDATE password_reset_otps SET consumed_at = ? WHERE user_id = ? AND consumed_at IS NULL"
-    ).run(now, row.user_id);
+    await runStatement(
+      db,
+      "UPDATE password_reset_otps SET consumed_at = ? WHERE user_id = ? AND consumed_at IS NULL",
+      [now, row.user_id]
+    );
 
     return { ok: true, email: row.email };
   } catch (error) {

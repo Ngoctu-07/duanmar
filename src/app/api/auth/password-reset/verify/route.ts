@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const code = typeof body.code === "string" ? body.code.trim() : "";
   if (!email) return NextResponse.json({ error: "invalid_email" }, { status: 400 });
 
-  const result = verifyPasswordResetOtp(email, code);
+  const result = await verifyPasswordResetOtp(email, code);
   if (!result.ok) {
     switch (result.reason) {
       case "expired":

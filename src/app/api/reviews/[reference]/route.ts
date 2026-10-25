@@ -32,8 +32,9 @@ export async function DELETE(
   if (!visitor) return Response.json({ error: "Not owner" }, { status: 403 });
 
   try {
-    const deleted = deleteReview(reference, visitor);
-    const aggregate = getRatingAggregates([deleted.tourSlug]).get(deleted.tourSlug) ?? null;
+    const deleted = await deleteReview(reference, visitor);
+    const aggregate =
+      (await getRatingAggregates([deleted.tourSlug])).get(deleted.tourSlug) ?? null;
     return Response.json({ reference: deleted.reference, aggregate });
   } catch (error) {
     if (error instanceof ReviewStoreError) {

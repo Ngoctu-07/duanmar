@@ -1,4 +1,9 @@
-import { withTransaction, getDb } from "@/lib/db/sqlite-store";
+import {
+  getDb,
+  queryRows,
+  runStatement,
+  withTransaction,
+} from "@/lib/db/sqlite-store";
 import { isTripBooking, type TripBooking } from "@/lib/booking-history";
 
 /**
@@ -15,19 +20,21 @@ interface BookingRow {
   payload: string;
 }
 
-export function saveBookingForUser(
+export async function saveBookingForUser(
   userId: string,
   booking: TripBooking,
   nowIso = new Date().toISOString()
-): boolean {
+): Promise<boolean> {
   if (!isTripBooking(booking)) return false;
   try {
-    withTransaction((db) => {
-      db.prepare(
+    await withTransaction(async (db) => {
+      await runStatement(
+        db,
         "INSERT INTO bookings (reference, user_id, payload, created_at) VALUES (?, ?, ?, ?) " +
           "ON CONFLICT(reference) DO UPDATE SET payload = excluded.payload " +
-          "WHERE bookings.user_id = excluded.user_id"
-      ).run(booking.reference, userId, JSON.stringify(booking), nowIso);
+          "WHERE bookings.user_id = excluded.user_id",
+        [booking.reference, userId, JSON.stringify(booking), nowIso]
+      );
     });
     return true;
   } catch {
@@ -36,14 +43,14 @@ export function saveBookingForUser(
 }
 
 /** Newest first; malformed rows are ignored rather than crashing the page. */
-export function listBookingsForUser(userId: string): TripBooking[] {
-  const db = getDb();
+export async function listBookingsForUser(userId: string): Promise<TripBooking[]> {
+  const db = await getDb();
   if (!db) return [];
-  const rows = db
-    .prepare(
-      "SELECT payload FROM bookings WHERE user_id = ? ORDER BY created_at DESC"
-    )
-    .all(userId) as unknown as BookingRow[];
+  const rows = await queryRows<BookingRow>(
+    db,
+    "SELECT payload FROM bookings WHERE user_id = ? ORDER BY created_at DESC",
+    [userId]
+  );
   return rows
     .map((row) => {
       try {
@@ -55,19 +62,20 @@ export function listBookingsForUser(userId: string): TripBooking[] {
     .filter((value): value is TripBooking => isTripBooking(value));
 }
 
-export function getBookingForUser(
+export async function getBookingForUser(
   userId: string,
   reference: string
-): TripBooking | null {
+): Promise<TripBooking | null> {
   return (
-    listBookingsForUser(userId).find((booking) => booking.reference === reference) ??
-    null
+    (await listBookingsForUser(userId)).find(
+      (booking) => booking.reference === reference
+    ) ?? null
   );
 }
 
-export function clearBookingsForUser(userId: string): boolean {
-  const db = getDb();
+export async function clearBookingsForUser(userId: string): Promise<boolean> {
+  const db = await getDb();
   if (!db) return false;
-  db.prepare("DELETE FROM bookings WHERE user_id = ?").run(userId);
+  await runStatement(db, "DELETE FROM bookings WHERE user_id = ?", [userId]);
   return true;
 }

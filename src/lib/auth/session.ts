@@ -22,7 +22,7 @@ export async function currentUser(): Promise<CurrentUser | null> {
   const id = session?.user?.id;
   if (!id) return null;
 
-  const stored = findUserById(id);
+  const stored = await findUserById(id);
   if (stored) return stored;
 
   // Storage degraded: fall back to the JWT claims so the app stays usable.

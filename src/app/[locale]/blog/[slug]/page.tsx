@@ -39,8 +39,8 @@ export default async function BlogArticlePage({ params }: PageProps) {
   const t = await getTranslations("news");
   const blogT = await getTranslations("blog");
   const visitor = readVisitor(await cookies());
-  const likeCounts = getArticleLikeCounts([slug]);
-  const likedSlugs = getVisitorLikedSlugs([slug], visitor);
+  const likeCounts = await getArticleLikeCounts([slug]);
+  const likedSlugs = await getVisitorLikedSlugs([slug], visitor);
 
   return (
     <div className="container mx-auto px-4 py-16">

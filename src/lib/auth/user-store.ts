@@ -1,5 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { getDb, withTransaction } from "@/lib/db/sqlite-store";
+import {
+  getDb,
+  queryRow,
+  runStatement,
+  withTransaction,
+} from "@/lib/db/sqlite-store";
 import {
   hashPassword,
   needsPasswordRehash,
@@ -65,23 +70,25 @@ const DUMMY_HASH = hashPassword(randomUUID());
  * Case-insensitive lookup: legacy rows (seeded demos, hand-edited DBs) may
  * still hold mixed-case emails, and those accounts must keep working.
  */
-export function findUserByEmail(email: string): StoredUser | null {
-  const db = getDb();
+export async function findUserByEmail(email: string): Promise<StoredUser | null> {
+  const db = await getDb();
   if (!db) return null;
-  const row = db
-    .prepare(`SELECT ${SELECT_COLUMNS} FROM users WHERE lower(email) = ?`)
-    .get(normalizeEmail(email)) as Record<string, unknown> | undefined;
+  const row = await queryRow<Record<string, unknown>>(
+    db,
+    `SELECT ${SELECT_COLUMNS} FROM users WHERE lower(email) = ?`,
+    [normalizeEmail(email)]
+  );
   return row ? mapRow(row) : null;
 }
 
-export function findUserById(id: string): PublicUser | null {
-  const db = getDb();
+export async function findUserById(id: string): Promise<PublicUser | null> {
+  const db = await getDb();
   if (!db) return null;
-  const row = db
-    .prepare(
-      "SELECT id, email, name, avatar_preset_id, avatar_url FROM users WHERE id = ?"
-    )
-    .get(id) as Record<string, unknown> | undefined;
+  const row = await queryRow<Record<string, unknown>>(
+    db,
+    "SELECT id, email, name, avatar_preset_id, avatar_url FROM users WHERE id = ?",
+    [id]
+  );
   if (!row) return null;
   return {
     id: String(row.id),
@@ -96,16 +103,18 @@ export function findUserById(id: string): PublicUser | null {
  * Persists the selected CMS preset. Returns the refreshed public user, or
  * `null` when the row/storage is unavailable.
  */
-export function updateUserAvatar(
+export async function updateUserAvatar(
   id: string,
   avatar: { presetId: string | null; url: string | null }
-): PublicUser | null {
-  const db = getDb();
+): Promise<PublicUser | null> {
+  const db = await getDb();
   if (!db) return null;
-  const result = db
-    .prepare("UPDATE users SET avatar_preset_id = ?, avatar_url = ? WHERE id = ?")
-    .run(avatar.presetId, avatar.url, id);
-  if (result.changes === 0) return null;
+  const changes = await runStatement(
+    db,
+    "UPDATE users SET avatar_preset_id = ?, avatar_url = ? WHERE id = ?",
+    [avatar.presetId, avatar.url, id]
+  );
+  if (changes === 0) return null;
   return findUserById(id);
 }
 
@@ -113,16 +122,16 @@ export function updateUserAvatar(
  * Creates a user with a scrypt hash. Duplicate emails resolve to a typed code
  * (never a thrown constraint error) so the route can answer 409.
  */
-export function createUser(input: {
+export async function createUser(input: {
   email: string;
   name: string;
   password: string;
-}): CreateUserResult {
+}): Promise<CreateUserResult> {
   const email = normalizeEmail(input.email);
 
   // Explicit case-insensitive check: SQLite's UNIQUE index is byte-wise, so a
   // legacy `User@Example.com` row would otherwise let a duplicate slip in.
-  if (findUserByEmail(email)) return { ok: false, code: "duplicate" };
+  if (await findUserByEmail(email)) return { ok: false, code: "duplicate" };
 
   const passwordHash = hashPassword(input.password);
   const user: PublicUser = {
@@ -134,10 +143,12 @@ export function createUser(input: {
   };
 
   try {
-    withTransaction((db) => {
-      db.prepare(
-        "INSERT INTO users (id, email, name, password_hash, created_at) VALUES (?, ?, ?, ?, ?)"
-      ).run(user.id, user.email, user.name, passwordHash, new Date().toISOString());
+    await withTransaction(async (db) => {
+      await runStatement(
+        db,
+        "INSERT INTO users (id, email, name, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
+        [user.id, user.email, user.name, passwordHash, new Date().toISOString()]
+      );
     });
     return { ok: true, user };
   } catch (error) {
@@ -153,20 +164,24 @@ export function createUser(input: {
  * Overwrites the credentials hash (password recovery). Returns `false` when the
  * row or the database is unavailable.
  */
-export function updateUserPassword(id: string, password: string): boolean {
-  const db = getDb();
+export async function updateUserPassword(id: string, password: string): Promise<boolean> {
+  const db = await getDb();
   if (!db) return false;
-  const result = db
-    .prepare("UPDATE users SET password_hash = ? WHERE id = ?")
-    .run(hashPassword(password), id);
-  return result.changes > 0;
+  const changes = await runStatement(db, "UPDATE users SET password_hash = ? WHERE id = ?", [
+    hashPassword(password),
+    id,
+  ]);
+  return changes > 0;
 }
 
 /** Credentials check used by Auth.js `authorize`; `null` = reject. */
-export function authenticate(email: string, password: string): PublicUser | null {
+export async function authenticate(
+  email: string,
+  password: string
+): Promise<PublicUser | null> {
   if (!email || !password) return null;
   const normalized = normalizeEmail(email);
-  const user = findUserByEmail(normalized);
+  const user = await findUserByEmail(normalized);
   if (!user) {
     // Still burn a hash so unknown emails do not answer measurably faster.
     verifyPassword(password, DUMMY_HASH);
@@ -178,7 +193,7 @@ export function authenticate(email: string, password: string): PublicUser | null
   // Without this, old rows (shorter scrypt keys / SHA-256 prototypes) keep
   // failing on every sign-in.
   if (needsPasswordRehash(user.passwordHash)) {
-    updateUserPassword(user.id, password);
+    await updateUserPassword(user.id, password);
   }
 
   // Repair mixed-case rows once the owner proves they own the account. A legacy
@@ -186,12 +201,16 @@ export function authenticate(email: string, password: string): PublicUser | null
   // break a valid login.
   if (user.email !== normalized) {
     try {
-      const db = getDb();
+      const db = await getDb();
       const clash = db
-        ?.prepare("SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? LIMIT 1")
-        .get(normalized, user.id);
-      if (!clash) {
-        db?.prepare("UPDATE users SET email = ? WHERE id = ?").run(normalized, user.id);
+        ? await queryRow(
+            db,
+            "SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? LIMIT 1",
+            [normalized, user.id]
+          )
+        : null;
+      if (!clash && db) {
+        await runStatement(db, "UPDATE users SET email = ? WHERE id = ?", [normalized, user.id]);
       }
     } catch {
       // Best effort.

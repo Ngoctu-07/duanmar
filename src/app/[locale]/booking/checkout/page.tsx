@@ -61,7 +61,7 @@ export default async function CheckoutPage({
   // claim-time snapshots, so without this step a voucher claimed in Vietnamese
   // kept Vietnamese text on the English checkout (the mixed-language list).
   const user = await currentUser();
-  const wallet = user ? listVouchers(user.id) : [];
+  const wallet = user ? await listVouchers(user.id) : [];
   const promotionIds = [...new Set(wallet.map((voucher) => voucher.promotionId))];
   const promotions =
     promotionIds.length > 0

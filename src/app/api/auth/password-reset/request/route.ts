@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const result = issuePasswordResetOtp(email);
+  const result = await issuePasswordResetOtp(email);
 
   if (!result.ok) {
     if (result.reason === "db_unavailable") {
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     // Free the cooldown so the visitor can retry immediately.
-    discardPasswordResetOtp(result.otpId);
+    await discardPasswordResetOtp(result.otpId);
     const failure = error instanceof EmailDeliveryError ? error : null;
     const reason = failure?.reason ?? "provider_error";
     console.error("[password-reset] email delivery failed", {

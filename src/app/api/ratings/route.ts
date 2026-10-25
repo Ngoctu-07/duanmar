@@ -19,11 +19,11 @@ export async function GET(req: NextRequest) {
   if (slugs.length === 0 || slugs.length > MAX_SLUGS) {
     return Response.json({ error: "Invalid slugs" }, { status: 400 });
   }
-  if (!getDb()) {
+  if (!(await getDb())) {
     return Response.json({ error: "Storage unavailable" }, { status: 503 });
   }
 
-  const found = getRatingAggregates(slugs);
+  const found = await getRatingAggregates(slugs);
   const aggregates: Record<string, RatingAggregate> = {};
   for (const slug of new Set(slugs)) {
     const entry = found.get(slug);

@@ -27,8 +27,8 @@ export default async function DestinationsPage() {
   const priceRanges = buildPriceRangeLabels(pricingDocs, locale, priceT("label"));
   // Batch AVG/COUNT for the card badges; storage degraded → `undefined` per
   // card so each badge falls back to its own client-side `/api/ratings` fetch.
-  const aggregates = getDb()
-    ? getRatingAggregates(destinations.map((dest: Destination) => dest.slug.current))
+  const aggregates = (await getDb())
+    ? await getRatingAggregates(destinations.map((dest: Destination) => dest.slug.current))
     : null;
   const aggregateFor = (slug: string) =>
     aggregates ? (aggregates.get(slug) ?? null) : undefined;

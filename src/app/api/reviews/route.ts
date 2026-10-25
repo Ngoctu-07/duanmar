@@ -45,14 +45,14 @@ export async function GET(req: NextRequest) {
   const visitor = readVisitor(req);
   let reviews: PublicReview[];
   try {
-    reviews = listReviewsForSlug(slug, visitor);
+    reviews = await listReviewsForSlug(slug, visitor);
   } catch (error) {
     if (isDbUnavailable(error)) return errorJson("Storage unavailable", 503);
     console.error("[review] list failed", { slug, status: 500 });
     return errorJson("Reviews unavailable", 500);
   }
 
-  const aggregate = getRatingAggregates([slug]).get(slug) ?? null;
+  const aggregate = (await getRatingAggregates([slug])).get(slug) ?? null;
   const response = NextResponse.json(
     { reviews, aggregate },
     { headers: { "Cache-Control": "no-store" } }
@@ -95,8 +95,8 @@ export async function POST(req: NextRequest) {
   let review: PublicReview;
   let aggregate: RatingAggregate | null;
   try {
-    review = upsertReview(validateReviewPayload(body, nowIso), visitor, nowIso);
-    aggregate = getRatingAggregates([review.tourSlug]).get(review.tourSlug) ?? null;
+    review = await upsertReview(validateReviewPayload(body, nowIso), visitor, nowIso);
+    aggregate = (await getRatingAggregates([review.tourSlug])).get(review.tourSlug) ?? null;
   } catch (error) {
     if (error instanceof ReviewValidationError) return errorJson(error.message, 400);
     if (error instanceof ReviewStoreError) {

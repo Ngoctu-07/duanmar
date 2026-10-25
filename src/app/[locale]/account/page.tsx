@@ -28,7 +28,7 @@ export default async function AccountPage() {
   const user = await currentUser();
   if (!user) return <AccountSignIn />;
 
-  const vouchers = listVouchers(user.id);
+  const vouchers = await listVouchers(user.id);
   const promotionIds = [...new Set(vouchers.map((voucher) => voucher.promotionId))];
   const [locale, avatarPresets, promotions] = await Promise.all([
     getLocale(),
@@ -51,7 +51,7 @@ export default async function AccountPage() {
         locale
       )}
       avatarPresets={avatarPresets}
-      serverBookings={listBookingsForUser(user.id)}
+      serverBookings={await listBookingsForUser(user.id)}
     />
   );
 }

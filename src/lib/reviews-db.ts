@@ -1,4 +1,10 @@
-import { getDb, withTransaction } from "@/lib/db/sqlite-store";
+import {
+  getDb,
+  queryRow,
+  queryRows,
+  runStatement,
+  withTransaction,
+} from "@/lib/db/sqlite-store";
 import { isEditWindowExpired } from "@/lib/edit-window";
 import { isValidReference, isValidTourSlug, type ReviewInput } from "@/lib/reviews-validation";
 
@@ -91,30 +97,38 @@ function writtenReview(input: ReviewInput, createdAt: string): PublicReview {
 }
 
 /** Insert when the reference is new, else owner+window edit. Throws typed errors. */
-export function upsertReview(input: ReviewInput, visitor: string, nowIso: string): PublicReview {
-  return withTransaction((db) => {
-    const existing = db
-      .prepare("SELECT visitor, created_at FROM reviews WHERE reference = ?")
-      .get(input.reference) as { visitor: string; created_at: string } | undefined;
+export async function upsertReview(
+  input: ReviewInput,
+  visitor: string,
+  nowIso: string
+): Promise<PublicReview> {
+  return withTransaction(async (db) => {
+    const existing = await queryRow<{ visitor: string; created_at: string }>(
+      db,
+      "SELECT visitor, created_at FROM reviews WHERE reference = ?",
+      [input.reference]
+    );
 
     if (!existing) {
       const createdAt = input.createdAt ?? nowIso;
-      db.prepare(
+      await runStatement(
+        db,
         "INSERT INTO reviews (reference, tour_slug, booking_reference, visitor, " +
           "author_name, author_email, rating, comment, images, created_at, updated_at) " +
-          "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-      ).run(
-        input.reference,
-        input.tourSlug,
-        input.bookingReference,
-        visitor,
-        input.authorName,
-        input.authorEmail,
-        input.rating,
-        input.comment,
-        JSON.stringify(input.images),
-        createdAt,
-        nowIso
+          "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          input.reference,
+          input.tourSlug,
+          input.bookingReference,
+          visitor,
+          input.authorName,
+          input.authorEmail,
+          input.rating,
+          input.comment,
+          JSON.stringify(input.images),
+          createdAt,
+          nowIso,
+        ]
       );
       return writtenReview(input, createdAt);
     }
@@ -125,67 +139,79 @@ export function upsertReview(input: ReviewInput, visitor: string, nowIso: string
     if (isEditWindowExpired(existing.created_at, nowIso)) {
       throw new ReviewStoreError("window_closed", "edit window closed");
     }
-    db.prepare(
+    await runStatement(
+      db,
       "UPDATE reviews SET author_name = ?, author_email = ?, rating = ?, comment = ?, " +
-        "images = ?, updated_at = ? WHERE reference = ? AND visitor = ?"
-    ).run(
-      input.authorName,
-      input.authorEmail,
-      input.rating,
-      input.comment,
-      JSON.stringify(input.images),
-      nowIso,
-      input.reference,
-      visitor
+        "images = ?, updated_at = ? WHERE reference = ? AND visitor = ?",
+      [
+        input.authorName,
+        input.authorEmail,
+        input.rating,
+        input.comment,
+        JSON.stringify(input.images),
+        nowIso,
+        input.reference,
+        visitor,
+      ]
     );
     return writtenReview(input, existing.created_at);
   });
 }
 
 /** Newest first, ≤100 rows, each carrying `owned` for the requesting visitor. */
-export function listReviewsForSlug(slug: string, visitor: string | null): PublicReview[] {
+export async function listReviewsForSlug(
+  slug: string,
+  visitor: string | null
+): Promise<PublicReview[]> {
   if (!isValidTourSlug(slug)) throw new Error("invalid slug");
-  const db = getDb();
+  const db = await getDb();
   if (!db) throw new Error("db unavailable");
-  const rows = db
-    .prepare(
-      `SELECT ${LIST_COLUMNS} FROM reviews WHERE tour_slug = ? ORDER BY created_at DESC LIMIT 100`
-    )
-    .all(slug) as unknown as ReviewRow[];
+  const rows = await queryRows<ReviewRow>(
+    db,
+    `SELECT ${LIST_COLUMNS} FROM reviews WHERE tour_slug = ? ORDER BY created_at DESC LIMIT 100`,
+    [slug]
+  );
   return rows.map((row) => toPublic(row, visitor));
 }
 
 /** Owner-only at any age; only edits stay behind the 3h window. */
-export function deleteReview(
+export async function deleteReview(
   reference: string,
   visitor: string
-): { reference: string; tourSlug: string } {
+): Promise<{ reference: string; tourSlug: string }> {
   if (!isValidReference(reference)) throw new Error("invalid reference");
-  return withTransaction((db) => {
-    const row = db
-      .prepare("SELECT visitor, tour_slug, created_at FROM reviews WHERE reference = ?")
-      .get(reference) as { visitor: string; tour_slug: string; created_at: string } | undefined;
+  return withTransaction(async (db) => {
+    const row = await queryRow<{ visitor: string; tour_slug: string; created_at: string }>(
+      db,
+      "SELECT visitor, tour_slug, created_at FROM reviews WHERE reference = ?",
+      [reference]
+    );
     if (!row) throw new ReviewStoreError("not_found", "review not found");
     if (row.visitor !== visitor) throw new ReviewStoreError("not_owner", "not owner");
-    db.prepare("DELETE FROM reviews WHERE reference = ? AND visitor = ?").run(reference, visitor);
+    await runStatement(db, "DELETE FROM reviews WHERE reference = ? AND visitor = ?", [
+      reference,
+      visitor,
+    ]);
     return { reference, tourSlug: row.tour_slug };
   });
 }
 
 /** Batch AVG/COUNT (mirrors `getArticleLikeCounts`): unknown slugs absent, no DB → empty map. */
-export function getRatingAggregates(slugs: string[]): Map<string, RatingAggregate> {
+export async function getRatingAggregates(
+  slugs: string[]
+): Promise<Map<string, RatingAggregate>> {
   const aggregates = new Map<string, RatingAggregate>();
   const valid = [...new Set(slugs.filter((slug) => isValidTourSlug(slug)))];
   if (valid.length === 0) return aggregates;
-  const db = getDb();
+  const db = await getDb();
   if (!db) return aggregates;
   const placeholders = valid.map(() => "?").join(",");
-  const rows = db
-    .prepare(
-      `SELECT tour_slug, AVG(rating) AS avg, COUNT(*) AS n FROM reviews ` +
-        `WHERE tour_slug IN (${placeholders}) GROUP BY tour_slug`
-    )
-    .all(...valid) as Array<{ tour_slug: string; avg: number | null; n: number }>;
+  const rows = await queryRows<{ tour_slug: string; avg: number | null; n: number }>(
+    db,
+    `SELECT tour_slug, AVG(rating) AS avg, COUNT(*) AS n FROM reviews ` +
+      `WHERE tour_slug IN (${placeholders}) GROUP BY tour_slug`,
+    valid
+  );
   for (const row of rows) {
     if (row.avg === null) continue;
     aggregates.set(row.tour_slug, { avg: Number(row.avg), count: Number(row.n) });

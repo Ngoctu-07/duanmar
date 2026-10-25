@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
-  const result = claimVoucher(user.id, body);
+  const result = await claimVoucher(user.id, body);
   if (!result.ok) {
     const status = result.code === "invalid" ? 400 : 503;
     return NextResponse.json({ error: result.code }, { status });

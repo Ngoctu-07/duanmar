@@ -5,6 +5,10 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // libSQL ships a native SQLite binding for local `file:` databases; keep it
+  // outside the bundler so Turbopack never tries to inline the .node binary.
+  // Remote Turso URLs (libsql:// / https://) only use the pure-JS hrana client.
+  serverExternalPackages: ["@libsql/client", "libsql"],
   redirects: async () => [
     // /news retired in favor of unified /blog routes (plan 260929-2254).
     { source: "/news", destination: "/blog", permanent: true },

@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_password" }, { status: 400 });
   }
 
-  const result = confirmPasswordReset(token, password);
+  const result = await confirmPasswordReset(token, password);
   if (!result.ok) {
     switch (result.reason) {
       case "expired_token":

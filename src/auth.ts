@@ -40,7 +40,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             : "";
         const password =
           typeof credentials?.password === "string" ? credentials.password : "";
-        const user = authenticate(email, password);
+        const user = await authenticate(email, password);
         if (!user) return null;
         return { id: user.id, email: user.email, name: user.name };
       },

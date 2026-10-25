@@ -47,7 +47,7 @@ export async function POST(
   const visitor = isValidVisitor(current) ? current : newVisitorId();
 
   try {
-    const { count, isLiked } = toggleArticleLike(slug, visitor);
+    const { count, isLiked } = await toggleArticleLike(slug, visitor);
     const response = NextResponse.json({ slug, count, isLiked });
     if (visitor !== current) {
       response.cookies.set(VISITOR_COOKIE, visitor, visitorCookieOptions());
