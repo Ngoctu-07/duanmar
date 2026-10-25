@@ -1,5 +1,16 @@
 # Project Changelog
 
+## 2026-10-25
+
+### Fixed
+- **[P0] Đăng nhập hỏng trên Vercel — tầng dữ liệu chuyển sang libSQL/Turso** (task "Login works locally but not on Vercel")
+  - **Root cause** `data/` nằm trong `.gitignore` nên file `article-likes.db` (chứa `users`) không được deploy; FS của Vercel read-only (trừ `/tmp`) và per-instance → `mkdirSync(process.cwd()/data)` ném `EROFS` → `getDb()` trả `null` → `authenticate()` trả `null` → UI báo `invalidCredentials`. `/api/auth/register` trả 503 `db_unavailable`.
+  - **Store** `src/lib/db/sqlite-store.ts` viết lại trên `@libsql/client`: `TURSO_DATABASE_URL` (+ `TURSO_AUTH_TOKEN`) → remote Turso; unset → `file:` local (`VN_INTERACTIONS_DB_PATH` / `ARTICLE_LIKES_DB_PATH` / `data/article-likes.db`) nên dev zero-config. `getDb()` async + cache theo target; `withTransaction()` dùng interactive write tx (commit/rollback/close); helper `queryRows` / `queryRow` / `runStatement`; DDL chạy 1 batch idempotent mỗi cold start; lỗi local latch, lỗi remote thì không (tránh poison process sau blip mạng).
+  - **Stores async** `user-store`, `password-reset-store`, `voucher-store`, `booking-store`, `reviews-db`, `article-likes-db` + 17 call site (RSC pages, route handlers, `auth.ts` `authorize`, `session.ts`).
+  - **Config** `next.config.ts` thêm `serverExternalPackages: ["@libsql/client", "libsql"]` (native binding không bị bundle); `package.json` pin `engines.node = "24.x"` (`node:sqlite` legacy cần Node 24).
+  - **Env** `.env.example` bổ sung `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`, `PASSWORD_RESET_MAILDROP_DIR`, `PASSWORD_RESET_IP_MAX`, `SANITY_STUDIO_API_VERSION`/`NEXT_PUBLIC_SANITY_API_VERSION`.
+  - **Verified** `tsc --noEmit` 0 · `npm run build` exit 0 · `npm test` **56/56 files** · round-trip local bằng curl: `register 201` → `signIn 200` → `/api/auth/session` trả đúng user · user smoke đã xoá khỏi DB dev.
+
 ## 2026-10-23
 
 ### Changed
