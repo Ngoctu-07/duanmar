@@ -37,6 +37,17 @@ export function notifyReviewsChanged(): void {
   }
 }
 
+/** Card menu "Edit" → reopens the (hidden) write-review form for the owner. */
+export const REVIEW_EDIT_EVENT = "vn-reviews:edit";
+
+export function requestReviewEdit(): void {
+  try {
+    window.dispatchEvent(new Event(REVIEW_EDIT_EVENT));
+  } catch {
+    // Non-browser runtimes have no EventTarget
+  }
+}
+
 export function isReview(value: unknown): value is StoredReview {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;

@@ -199,6 +199,7 @@
       "menuLabel": "Review actions",
       "menuEdit": "Edit",
       "menuDelete": "Delete",
+      "cancelEdit": "Cancel",
       "deleteConfirm": "Delete this review? This cannot be undone.",
       "editWindowClosed": "Reviews can only be edited within 3 hours of posting.",
       "lightboxClose": "Close",

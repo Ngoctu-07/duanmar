@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { EllipsisVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { deleteReviewApi } from "@/lib/reviews-api";
-import type { TourReview } from "@/lib/reviews";
+import { requestReviewEdit, type TourReview } from "@/lib/reviews";
 import { fetchServerNow, isEditWindowExpired } from "@/lib/edit-window";
 
 interface ReviewActionsMenuProps {
@@ -12,7 +12,7 @@ interface ReviewActionsMenuProps {
 }
 
 /**
- * Owner-only kebab menu on a review card: Edit (scrolls/focuses the write
+ * Owner-only kebab menu on a review card: Edit (reopens + focuses the write
  * form; native `disabled` once the 3h window vs SERVER time is closed) and
  * Delete (confirm → `DELETE /api/reviews/[reference]` → the change event
  * refreshes badge, list and count everywhere; a failed delete changes
@@ -54,11 +54,11 @@ export function ReviewActionsMenu({ review }: ReviewActionsMenuProps) {
     };
   }, [open]);
 
+  // The form is hidden once a review exists; it reopens itself and handles
+  // scroll/focus on this event.
   const onEdit = () => {
     setOpen(false);
-    const form = document.querySelector('[data-testid="write-review-form"]');
-    form?.scrollIntoView({ behavior: "smooth", block: "center" });
-    form?.querySelector("textarea")?.focus();
+    requestReviewEdit();
   };
 
   const onDelete = async () => {

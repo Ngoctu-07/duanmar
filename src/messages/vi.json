@@ -199,6 +199,7 @@
       "menuLabel": "Thao tác đánh giá",
       "menuEdit": "Chỉnh sửa",
       "menuDelete": "Xóa",
+      "cancelEdit": "Hủy",
       "deleteConfirm": "Xóa đánh giá này? Thao tác này không thể hoàn tác.",
       "editWindowClosed": "Chỉ có thể chỉnh sửa đánh giá trong vòng 3 giờ sau khi đăng.",
       "lightboxClose": "Đóng",
