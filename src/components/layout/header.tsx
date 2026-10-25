@@ -131,7 +131,10 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-1 justify-self-end sm:gap-2 md:gap-4">
+        {/* col-start-3: the nav is display:none on mobile, so without it this
+            group auto-places into the middle column and the hamburger drifts
+            ~90px in from the right edge. */}
+        <div className="col-start-3 flex items-center gap-1 justify-self-end sm:gap-2 md:gap-4">
           <div
             aria-hidden={floating || undefined}
             data-testid="header-utilities"

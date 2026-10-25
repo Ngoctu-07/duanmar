@@ -13,6 +13,8 @@
   - Link từ checkout sang `/deals` / `/account` mang `?returnTo=/booking/checkout?tour=<slug>`; hai trang hiện `BackToBookingLink` (`booking.backToBooking`). `safeBookingReturn` chỉ nhận path checkout (chống open redirect).
 
 ### Fixed
+- **[Mobile] Nút menu ☰ lệch vào giữa header** — `header.tsx` dùng grid `1fr auto 1fr` nhưng `<nav>` là `display:none` dưới `md`, nên cụm phải auto-place vào cột giữa (lệch ~90px). Thêm `col-start-3`. Đo bằng Puppeteer: cách mép phải 12px ở 320/375px, cả trạng thái hero lẫn khi cuộn. Rà 35 trang ở 375px + 320px: không tràn ngang.
+- **`MISSING_MESSAGE destinations.ratingAria`** (trang chủ "1 Issue") — `tour-rating-badge.tsx` và `review-card.tsx` đổi sang `reviews.ratingAria`.
 - **`/api/bookings` thiếu `await`** trên `listBookingsForUser` / `saveBookingForUser` / `clearBookingsForUser` sau khi store chuyển async → GET trả `{}`, lỗi DB bị nuốt.
 - **Verified** `tsc --noEmit` 0 · `eslint .` 0 · `npm test` **56/56 files** · `npm run build` exit 0 · curl: checkout 200 khi chưa đăng nhập, back-link render đúng và bị bỏ qua với `returnTo` ngoài checkout. Browser suites chưa chạy (thiếu helper local `.claude/skills/chrome-devtools`).
 
