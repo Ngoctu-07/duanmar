@@ -6,9 +6,9 @@ import type { TripBooking } from "../../src/lib/booking-history.ts";
 
 let passed = 0;
 let failed = 0;
-const check = (name: string, fn: () => void) => {
+const check = async (name: string, fn: () => Promise<void> | void) => {
   try {
-    fn();
+    await fn();
     passed += 1;
     console.log(`ok   ${name}`);
   } catch (error) {
@@ -19,6 +19,7 @@ const check = (name: string, fn: () => void) => {
 
 const dir = mkdtempSync(join(tmpdir(), "duanmar-bookings-"));
 process.env.VN_INTERACTIONS_DB_PATH = join(dir, "test.db");
+delete process.env.TURSO_DATABASE_URL;
 
 const { createUser } = await import("../../src/lib/auth/user-store.ts");
 const {
@@ -29,12 +30,12 @@ const {
 } = await import("../../src/lib/bookings/booking-store.ts");
 const { mergeBookings } = await import("../../src/lib/booking-history.ts");
 
-const owner = createUser({
+const owner = await createUser({
   email: "owner@duanmar.test",
   name: "Owner",
   password: "booking-owner",
 });
-const other = createUser({
+const other = await createUser({
   email: "other@duanmar.test",
   name: "Other",
   password: "booking-other",
@@ -62,54 +63,54 @@ const base: TripBooking = {
   paymentMethod: "momo",
 };
 
-check("paid ticket is persisted to the account", () => {
-  assert.equal(saveBookingForUser(ownerId, base), true);
-  const rows = listBookingsForUser(ownerId);
+await check("paid ticket is persisted to the account", async () => {
+  assert.equal(await saveBookingForUser(ownerId, base), true);
+  const rows = await listBookingsForUser(ownerId);
   assert.equal(rows.length, 1);
   assert.equal(rows[0].reference, "VN-BOOK-1");
   assert.equal(rows[0].tourName, "HCM Ghost Tour");
 });
 
-check("re-paying the same reference upserts instead of duplicating", () => {
-  saveBookingForUser(ownerId, { ...base, paymentMethod: "bank" });
-  const rows = listBookingsForUser(ownerId);
+await check("re-paying the same reference upserts instead of duplicating", async () => {
+  await saveBookingForUser(ownerId, { ...base, paymentMethod: "bank" });
+  const rows = await listBookingsForUser(ownerId);
   assert.equal(rows.length, 1);
   assert.equal(rows[0].paymentMethod, "bank");
 });
 
-check("tickets are scoped to the signed-in account", () => {
-  assert.equal(listBookingsForUser(otherId).length, 0);
-  assert.equal(getBookingForUser(otherId, "VN-BOOK-1"), null);
+await check("tickets are scoped to the signed-in account", async () => {
+  assert.equal((await listBookingsForUser(otherId)).length, 0);
+  assert.equal(await getBookingForUser(otherId, "VN-BOOK-1"), null);
 });
 
-check("fresh read by reference (ticket detail across sessions)", () => {
-  assert.equal(getBookingForUser(ownerId, "VN-BOOK-1")?.tourName, "HCM Ghost Tour");
-  assert.equal(getBookingForUser(ownerId, "VN-UNKNOWN"), null);
+await check("fresh read by reference (ticket detail across sessions)", async () => {
+  assert.equal((await getBookingForUser(ownerId, "VN-BOOK-1"))?.tourName, "HCM Ghost Tour");
+  assert.equal(await getBookingForUser(ownerId, "VN-UNKNOWN"), null);
 });
 
-check("malformed payloads are rejected before hitting the table", () => {
-  assert.equal(saveBookingForUser(ownerId, { ...base, reference: "" }), false);
-  assert.equal(saveBookingForUser(ownerId, { ...base, guests: 0 } as TripBooking), false);
-  assert.equal(listBookingsForUser(ownerId).length, 1);
+await check("malformed payloads are rejected before hitting the table", async () => {
+  assert.equal(await saveBookingForUser(ownerId, { ...base, reference: "" }), false);
+  assert.equal(await saveBookingForUser(ownerId, { ...base, guests: 0 } as TripBooking), false);
+  assert.equal((await listBookingsForUser(ownerId)).length, 1);
 });
 
-check("multiple trips list newest first", () => {
-  saveBookingForUser(ownerId, {
+await check("multiple trips list newest first", async () => {
+  await saveBookingForUser(ownerId, {
     ...base,
     reference: "VN-BOOK-2",
     paidAt: "2026-10-23T10:00:00.000Z",
   });
-  const rows = listBookingsForUser(ownerId);
+  const rows = await listBookingsForUser(ownerId);
   assert.deepEqual(rows.map((row) => row.reference), ["VN-BOOK-2", "VN-BOOK-1"]);
 });
 
-check("clear removes only that account's trips", () => {
-  assert.equal(clearBookingsForUser(ownerId), true);
-  assert.equal(listBookingsForUser(ownerId).length, 0);
-  assert.equal(clearBookingsForUser(otherId), true);
+await check("clear removes only that account's trips", async () => {
+  assert.equal(await clearBookingsForUser(ownerId), true);
+  assert.equal((await listBookingsForUser(ownerId)).length, 0);
+  assert.equal(await clearBookingsForUser(otherId), true);
 });
 
-check("mergeBookings dedupes by reference and lets the server row win", () => {
+await check("mergeBookings dedupes by reference and lets the server row win", async () => {
   const local = [{ ...base, reference: "A", tourName: "Local A", paidAt: "2026-01-01T00:00:00.000Z" }];
   const server = [{ ...base, reference: "A", tourName: "Server A", paidAt: "2026-01-01T00:00:00.000Z" }];
   const merged = mergeBookings(server, local);
@@ -117,7 +118,7 @@ check("mergeBookings dedupes by reference and lets the server row win", () => {
   assert.equal(merged[0].tourName, "Server A");
 });
 
-check("mergeBookings keeps local-only legacy tickets", () => {
+await check("mergeBookings keeps local-only legacy tickets", async () => {
   const local = [{ ...base, reference: "LEGACY", paidAt: "2026-01-01T00:00:00.000Z" }];
   const server = [{ ...base, reference: "SERVER", paidAt: "2026-02-01T00:00:00.000Z" }];
   const merged = mergeBookings(server, local);

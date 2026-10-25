@@ -6,9 +6,9 @@ import { readFileSync } from "node:fs";
 
 let passed = 0;
 let failed = 0;
-const check = (name: string, fn: () => void) => {
+const check = async (name: string, fn: () => Promise<void> | void) => {
   try {
-    fn();
+    await fn();
     passed += 1;
     console.log(`ok   ${name}`);
   } catch (error) {
@@ -19,6 +19,7 @@ const check = (name: string, fn: () => void) => {
 
 const dir = mkdtempSync(join(tmpdir(), "duanmar-avatar-"));
 process.env.VN_INTERACTIONS_DB_PATH = join(dir, "test.db");
+delete process.env.TURSO_DATABASE_URL;
 
 const { createUser, findUserById, updateUserAvatar, authenticate } = await import(
   "../../src/lib/auth/user-store.ts"
@@ -31,7 +32,7 @@ const { default: schema } = await import(
 );
 const { parse } = await import("groq-js");
 
-const userResult = createUser({
+const userResult = await createUser({
   email: "avatar@duanmar.test",
   name: "Avatar Tester",
   password: "persistent-avatar",
@@ -39,15 +40,15 @@ const userResult = createUser({
 assert.equal(userResult.ok, true);
 const user = userResult.ok ? userResult.user : null;
 
-check("new user starts without a preset avatar", () => {
+await check("new user starts without a preset avatar", () => {
   assert.ok(user);
   assert.equal(user?.avatarPresetId, null);
   assert.equal(user?.avatarUrl, null);
 });
 
-check("selected preset id + CMS URL persist on the user row", () => {
+await check("selected preset id + CMS URL persist on the user row", async () => {
   assert.ok(user);
-  const updated = updateUserAvatar(user!.id, {
+  const updated = await updateUserAvatar(user!.id, {
     presetId: "avatar-preset-1",
     url: "https://cdn.sanity.io/images/demo/avatar-1.webp",
   });
@@ -56,28 +57,28 @@ check("selected preset id + CMS URL persist on the user row", () => {
   assert.equal(updated?.avatarUrl, "https://cdn.sanity.io/images/demo/avatar-1.webp");
 });
 
-check("fresh DB read sees the persisted avatar (new session, same account)", () => {
+await check("fresh DB read sees the persisted avatar (new session, same account)", async () => {
   assert.ok(user);
-  const row = findUserById(user!.id);
+  const row = await findUserById(user!.id);
   assert.equal(row?.avatarPresetId, "avatar-preset-1");
   assert.equal(row?.avatarUrl, "https://cdn.sanity.io/images/demo/avatar-1.webp");
-  const login = authenticate("avatar@duanmar.test", "persistent-avatar");
+  const login = await authenticate("avatar@duanmar.test", "persistent-avatar");
   assert.equal(login?.avatarPresetId, "avatar-preset-1");
 });
 
-check("switching presets overwrites the previous selection", () => {
+await check("switching presets overwrites the previous selection", async () => {
   assert.ok(user);
-  updateUserAvatar(user!.id, { presetId: "avatar-preset-2", url: "https://cdn/2.webp" });
-  const row = findUserById(user!.id);
+  await updateUserAvatar(user!.id, { presetId: "avatar-preset-2", url: "https://cdn/2.webp" });
+  const row = await findUserById(user!.id);
   assert.equal(row?.avatarPresetId, "avatar-preset-2");
   assert.equal(row?.avatarUrl, "https://cdn/2.webp");
 });
 
-check("unknown user id does not fabricate a row", () => {
-  assert.equal(updateUserAvatar("missing-user", { presetId: "x", url: "y" }), null);
+await check("unknown user id does not fabricate a row", async () => {
+  assert.equal(await updateUserAvatar("missing-user", { presetId: "x", url: "y" }), null);
 });
 
-check("avatarPreset schema exposes the CMS contract", () => {
+await check("avatarPreset schema exposes the CMS contract", () => {
   const fields = new Map(schema.fields.map((field) => [field.name, field]));
   assert.ok(fields.has("name"), "name missing");
   assert.ok(fields.has("image"), "image missing");
@@ -86,7 +87,7 @@ check("avatarPreset schema exposes the CMS contract", () => {
   assert.equal(fields.get("image")?.type, "image");
 });
 
-check("preset query is active-only, ordered, and projects the asset URL", () => {
+await check("preset query is active-only, ordered, and projects the asset URL", () => {
   assert.ok(AVATAR_PRESETS_QUERY.includes('_type == "avatarPreset"'));
   assert.ok(AVATAR_PRESETS_QUERY.includes("isActive == true"));
   assert.ok(AVATAR_PRESETS_QUERY.includes("order(order asc, name asc)"));
@@ -94,7 +95,7 @@ check("preset query is active-only, ordered, and projects the asset URL", () => 
   parse(AVATAR_PRESETS_QUERY);
 });
 
-check("avatar API trusts only the preset id and resolves the URL server-side", () => {
+await check("avatar API trusts only the preset id and resolves the URL server-side", () => {
   const route = readFileSync(
     new URL("../../src/app/api/account/avatar/route.ts", import.meta.url),
     "utf8"
@@ -107,7 +108,7 @@ check("avatar API trusts only the preset id and resolves the URL server-side", (
   assert.ok(route.includes('error: "unauthorized"'));
 });
 
-check("profile picker has no custom upload input", () => {
+await check("profile picker has no custom upload input", () => {
   const ui = readFileSync(
     new URL("../../src/components/account/account-avatar.tsx", import.meta.url),
     "utf8"
@@ -119,7 +120,7 @@ check("profile picker has no custom upload input", () => {
   assert.ok(ui.includes("/api/account/avatar"), "save endpoint missing");
 });
 
-check("schema is registered in the Studio index", () => {
+await check("schema is registered in the Studio index", () => {
   const index = readFileSync(
     new URL("../../src/sanity/schemaTypes/index.ts", import.meta.url),
     "utf8"

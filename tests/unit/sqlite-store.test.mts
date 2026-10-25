@@ -7,9 +7,9 @@ import { pathToFileURL } from "node:url";
 
 let passed = 0;
 let failed = 0;
-const check = (name: string, fn: () => void) => {
+const check = async (name: string, fn: () => Promise<void> | void) => {
   try {
-    fn();
+    await fn();
     passed += 1;
     console.log(`ok   ${name}`);
   } catch (error) {
@@ -30,24 +30,26 @@ legacy.close();
 
 process.env.ARTICLE_LIKES_DB_PATH = legacyFile;
 delete process.env.VN_INTERACTIONS_DB_PATH;
+delete process.env.TURSO_DATABASE_URL;
 const store = await import("../../src/lib/db/sqlite-store.ts");
 
-check("S1 legacy likes file opens, data intact, new tables created", () => {
-  const db = store.getDb();
+await check("S1 legacy likes file opens, data intact, new tables created", async () => {
+  const db = await store.getDb();
   assert.ok(db, "expected a connection");
-  const tables = (db
-    .prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
-    .all() as Array<{ name: string }>).map((row) => row.name);
-  for (const name of ["likes", "like_votes", "reviews"]) {
+  const tables = (
+    await store.queryRows<{ name: string }>(db, "SELECT name FROM sqlite_master WHERE type = 'table'")
+  ).map((row) => row.name);
+  for (const name of ["likes", "like_votes", "reviews", "users", "vouchers", "bookings"]) {
     assert.ok(tables.includes(name), `missing table ${name}`);
   }
-  const row = db
-    .prepare("SELECT count FROM likes WHERE slug = 'starup'")
-    .get() as { count: number } | undefined;
+  const row = await store.queryRow<{ count: number }>(
+    db,
+    "SELECT count FROM likes WHERE slug = 'starup'"
+  );
   assert.equal(row?.count, 7);
 });
 
-check("S2 path resolution: VN_INTERACTIONS_DB_PATH wins, then ARTICLE_LIKES_DB_PATH", () => {
+await check("S2 path resolution: VN_INTERACTIONS_DB_PATH wins, then ARTICLE_LIKES_DB_PATH", () => {
   assert.equal(store.dbPath(), legacyFile);
   process.env.VN_INTERACTIONS_DB_PATH = join(tempDir, "vn.db");
   assert.equal(store.dbPath(), join(tempDir, "vn.db"));
@@ -57,40 +59,42 @@ check("S2 path resolution: VN_INTERACTIONS_DB_PATH wins, then ARTICLE_LIKES_DB_P
 // fresh module instance against the same already-migrated file → DDL re-runs
 const reopened = await import(`${storeUrl}?idem=1`);
 
-check("S3 second open of a migrated file is idempotent", () => {
-  const db = reopened.getDb();
+await check("S3 second open of a migrated file is idempotent", async () => {
+  const db = await reopened.getDb();
   assert.ok(db, "re-open with DDL should succeed");
-  const row = db
-    .prepare("SELECT count FROM likes WHERE slug = 'starup'")
-    .get() as { count: number } | undefined;
+  const row = await store.queryRow<{ count: number }>(
+    db,
+    "SELECT count FROM likes WHERE slug = 'starup'"
+  );
   assert.equal(row?.count, 7);
-  const tables = (db
-    .prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
-    .all() as Array<{ name: string }>).map((row2) => row2.name);
+  const tables = (
+    await store.queryRows<{ name: string }>(db, "SELECT name FROM sqlite_master WHERE type = 'table'")
+  ).map((row2) => row2.name);
   assert.ok(tables.includes("like_votes"));
   assert.ok(tables.includes("reviews"));
 });
 
-check("S4 withTransaction commits on success, rolls back on throw", () => {
-  const db = store.getDb()!;
-  store.withTransaction((database) => {
-    database.exec("INSERT INTO likes(slug, count) VALUES('committed', 1)");
+await check("S4 withTransaction commits on success, rolls back on throw", async () => {
+  const db = (await store.getDb())!;
+  await store.withTransaction(async (tx) => {
+    await store.runStatement(tx, "INSERT INTO likes(slug, count) VALUES('committed', 1)");
   });
-  const committed = db
-    .prepare("SELECT count FROM likes WHERE slug = 'committed'")
-    .get() as { count: number } | undefined;
+  const committed = await store.queryRow<{ count: number }>(
+    db,
+    "SELECT count FROM likes WHERE slug = 'committed'"
+  );
   assert.equal(committed?.count, 1);
-  assert.throws(() =>
-    store.withTransaction((database) => {
-      database.exec("INSERT INTO likes(slug, count) VALUES('rolled-back', 1)");
-      throw new Error("boom");
-    }),
+
+  await assert.rejects(
+    () =>
+      store.withTransaction(async (tx) => {
+        await store.runStatement(tx, "INSERT INTO likes(slug, count) VALUES('rolled-back', 1)");
+        throw new Error("boom");
+      }),
     /boom/
   );
-  assert.equal(
-    db.prepare("SELECT count FROM likes WHERE slug = 'rolled-back'").get(),
-    undefined
-  );
+  const rolledBack = await store.queryRow(db, "SELECT count FROM likes WHERE slug = 'rolled-back'");
+  assert.equal(rolledBack, null);
 });
 
 // degrade path: a file where a directory must go (ENOTDIR), fresh module instance
@@ -99,16 +103,16 @@ writeFileSync(blockerFile, "not a directory");
 process.env.ARTICLE_LIKES_DB_PATH = join(blockerFile, "nested", "x.db");
 const degraded = await import(`${storeUrl}?degrade=1`);
 
-check("S5 unusable path → getDb() null, withTransaction throws db unavailable", () => {
-  assert.equal(degraded.getDb(), null);
-  assert.throws(() => degraded.withTransaction(() => 1), /db unavailable/);
+await check("S5 unusable path → getDb() null, withTransaction throws db unavailable", async () => {
+  assert.equal(await degraded.getDb(), null);
+  await assert.rejects(() => degraded.withTransaction(async () => 1), /db unavailable/);
 });
 
 delete process.env.ARTICLE_LIKES_DB_PATH;
 try {
   rmSync(tempDir, { recursive: true, force: true });
 } catch {
-  // Windows keeps the open SQLite handle locked — temp cleanup is best-effort.
+  // Windows keeps the SQLite handle locked — temp cleanup is best-effort.
 }
 
 console.log(`\n${passed}/${passed + failed} checks passed`);

@@ -11,6 +11,7 @@ import { createHash, randomBytes, scryptSync } from "node:crypto";
  */
 const dir = mkdtempSync(join(tmpdir(), "duanmar-credentials-"));
 process.env.VN_INTERACTIONS_DB_PATH = join(dir, "test.db");
+delete process.env.TURSO_DATABASE_URL;
 
 const {
   authenticate,
@@ -18,16 +19,16 @@ const {
   findUserByEmail,
   updateUserPassword,
 } = await import("../../src/lib/auth/user-store.ts");
-const { getDb } = await import("../../src/lib/db/sqlite-store.ts");
+const { getDb, queryRow, runStatement } = await import("../../src/lib/db/sqlite-store.ts");
 const { hashPassword, verifyPassword, needsPasswordRehash } = await import(
   "../../src/lib/auth/password.ts"
 );
 
 let passed = 0;
 let failed = 0;
-const check = (name: string, fn: () => void) => {
+const check = async (name: string, fn: () => Promise<void> | void) => {
   try {
-    fn();
+    await fn();
     passed += 1;
     console.log(`ok   ${name}`);
   } catch (error) {
@@ -36,15 +37,24 @@ const check = (name: string, fn: () => void) => {
   }
 };
 
-const db = getDb();
+const db = await getDb();
 assert.ok(db, "test database unavailable");
 
-const insertUser = (id: string, email: string, hash: string) => {
-  db!
-    .prepare(
-      "INSERT INTO users (id, email, name, password_hash, created_at) VALUES (?, ?, ?, ?, ?)"
-    )
-    .run(id, email, "Legacy User", hash, new Date().toISOString());
+const insertUser = async (id: string, email: string, hash: string) => {
+  await runStatement(
+    db!,
+    "INSERT INTO users (id, email, name, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
+    [id, email, "Legacy User", hash, new Date().toISOString()]
+  );
+};
+
+const hashOf = async (id: string) => {
+  const row = await queryRow<{ password_hash: string }>(
+    db!,
+    "SELECT password_hash FROM users WHERE id = ?",
+    [id]
+  );
+  return row?.password_hash ?? "";
 };
 
 const scryptHash = (password: string, keyLength: number, salt?: string) => {
@@ -54,8 +64,8 @@ const scryptHash = (password: string, keyLength: number, salt?: string) => {
 
 /* --- registration → login --- */
 
-check("a freshly registered user can sign in", () => {
-  const created = createUser({
+await check("a freshly registered user can sign in", async () => {
+  const created = await createUser({
     email: "  Fresh.User@Example.COM ",
     name: "Fresh User",
     password: "correct horse battery",
@@ -64,19 +74,19 @@ check("a freshly registered user can sign in", () => {
   if (!created.ok) return;
   assert.equal(created.user.email, "fresh.user@example.com");
 
-  const user = authenticate("FRESH.USER@example.com", "correct horse battery");
+  const user = await authenticate("FRESH.USER@example.com", "correct horse battery");
   assert.ok(user);
   assert.equal(user?.email, "fresh.user@example.com");
 });
 
-check("wrong passwords are rejected", () => {
-  assert.equal(authenticate("fresh.user@example.com", "wrong password"), null);
-  assert.equal(authenticate("fresh.user@example.com", ""), null);
-  assert.equal(authenticate("nobody@example.com", "whatever"), null);
+await check("wrong passwords are rejected", async () => {
+  assert.equal(await authenticate("fresh.user@example.com", "wrong password"), null);
+  assert.equal(await authenticate("fresh.user@example.com", ""), null);
+  assert.equal(await authenticate("nobody@example.com", "whatever"), null);
 });
 
-check("duplicate registration is case-insensitive", () => {
-  const duplicate = createUser({
+await check("duplicate registration is case-insensitive", async () => {
+  const duplicate = await createUser({
     email: "FRESH.USER@example.com",
     name: "Impostor",
     password: "another password",
@@ -86,65 +96,65 @@ check("duplicate registration is case-insensitive", () => {
 
 /* --- legacy hash formats --- */
 
-check("legacy 32-byte scrypt rows authenticate (old key length)", () => {
-  insertUser("legacy-32", "legacy32@example.com", scryptHash("passphrase-32", 32));
-  const user = authenticate("legacy32@example.com", "passphrase-32");
+await check("legacy 32-byte scrypt rows authenticate (old key length)", async () => {
+  await insertUser("legacy-32", "legacy32@example.com", scryptHash("passphrase-32", 32));
+  const user = await authenticate("legacy32@example.com", "passphrase-32");
   assert.ok(user, "legacy 32-byte scrypt should verify");
 
-  const row = db!
-    .prepare("SELECT password_hash FROM users WHERE id = ?")
-    .get("legacy-32") as { password_hash: string };
-  assert.equal(needsPasswordRehash(row.password_hash), false, "row should be upgraded");
-  assert.match(row.password_hash, /^scrypt\$[0-9a-f]{32}\$[0-9a-f]{128}$/);
-  assert.equal(authenticate("legacy32@example.com", "passphrase-32")?.id, "legacy-32");
+  const stored = await hashOf("legacy-32");
+  assert.equal(needsPasswordRehash(stored), false, "row should be upgraded");
+  assert.match(stored, /^scrypt\$[0-9a-f]{32}\$[0-9a-f]{128}$/);
+  assert.equal((await authenticate("legacy32@example.com", "passphrase-32"))?.id, "legacy-32");
 });
 
-check("legacy untagged salt$hash rows authenticate", () => {
+await check("legacy untagged salt$hash rows authenticate", async () => {
   const salt = randomBytes(16).toString("hex");
   const hash = scryptSync("untagged-pass", salt, 64).toString("hex");
-  insertUser("legacy-untagged", "untagged@example.com", `${salt}$${hash}`);
-  assert.ok(authenticate("untagged@example.com", "untagged-pass"));
+  await insertUser("legacy-untagged", "untagged@example.com", `${salt}$${hash}`);
+  assert.ok(await authenticate("untagged@example.com", "untagged-pass"));
 });
 
-check("legacy SHA-256 prototype rows authenticate and upgrade", () => {
+await check("legacy SHA-256 prototype rows authenticate and upgrade", async () => {
   const digest = createHash("sha256").update("prototype-pass").digest("hex");
-  insertUser("legacy-sha", "sha@example.com", digest);
-  assert.ok(authenticate("sha@example.com", "prototype-pass"), "sha256 should verify");
-  const row = db!
-    .prepare("SELECT password_hash FROM users WHERE id = ?")
-    .get("legacy-sha") as { password_hash: string };
-  assert.ok(row.password_hash.startsWith("scrypt$"), "upgraded to scrypt");
+  await insertUser("legacy-sha", "sha@example.com", digest);
+  assert.ok(
+    await authenticate("sha@example.com", "prototype-pass"),
+    "sha256 should verify"
+  );
+  assert.ok((await hashOf("legacy-sha")).startsWith("scrypt$"), "upgraded to scrypt");
 });
 
-check("short legacy passwords still log in (no 8-char gate on sign-in)", () => {
-  insertUser("legacy-short", "short@example.com", scryptHash("abc", 64));
-  assert.ok(authenticate("short@example.com", "abc"));
+await check("short legacy passwords still log in (no 8-char gate on sign-in)", async () => {
+  await insertUser("legacy-short", "short@example.com", scryptHash("abc", 64));
+  assert.ok(await authenticate("short@example.com", "abc"));
 });
 
-check("malformed hashes fail closed", () => {
+await check("malformed hashes fail closed", () => {
   for (const hash of ["", "scrypt$", "scrypt$zzzz$zzzz", "md5$abcd$ef01", "plaintext"]) {
     assert.equal(verifyPassword("whatever", hash), false, hash);
   }
 });
 
-check("mixed-case legacy emails are found and normalized after login", () => {
-  insertUser("legacy-case", "Mixed.Case@Example.COM", scryptHash("case-pass", 64));
-  const before = findUserByEmail("mixed.case@example.com");
+await check("mixed-case legacy emails are found and normalized after login", async () => {
+  await insertUser("legacy-case", "Mixed.Case@Example.COM", scryptHash("case-pass", 64));
+  const before = await findUserByEmail("mixed.case@example.com");
   assert.equal(before?.id, "legacy-case");
 
-  const user = authenticate("  MIXED.CASE@example.com  ", "case-pass");
+  const user = await authenticate("  MIXED.CASE@example.com  ", "case-pass");
   assert.equal(user?.email, "mixed.case@example.com");
 
-  const row = db!
-    .prepare("SELECT email FROM users WHERE id = ?")
-    .get("legacy-case") as { email: string };
-  assert.equal(row.email, "mixed.case@example.com");
+  const row = await queryRow<{ email: string }>(
+    db!,
+    "SELECT email FROM users WHERE id = ?",
+    ["legacy-case"]
+  );
+  assert.equal(row?.email, "mixed.case@example.com");
 });
 
 /* --- password updates (recovery) --- */
 
-check("updateUserPassword rotates the credential", () => {
-  const created = createUser({
+await check("updateUserPassword rotates the credential", async () => {
+  const created = await createUser({
     email: "rotate@example.com",
     name: "Rotate User",
     password: "old-password-1",
@@ -152,17 +162,14 @@ check("updateUserPassword rotates the credential", () => {
   assert.equal(created.ok, true);
   if (!created.ok) return;
 
-  assert.ok(updateUserPassword(created.user.id, "new-password-2"));
-  assert.equal(authenticate("rotate@example.com", "old-password-1"), null);
-  assert.ok(authenticate("rotate@example.com", "new-password-2"));
+  assert.ok(await updateUserPassword(created.user.id, "new-password-2"));
+  assert.equal(await authenticate("rotate@example.com", "old-password-1"), null);
+  assert.ok(await authenticate("rotate@example.com", "new-password-2"));
 
-  const stored = db!
-    .prepare("SELECT password_hash FROM users WHERE id = ?")
-    .get(created.user.id) as { password_hash: string };
-  assert.equal(needsPasswordRehash(stored.password_hash), false);
+  assert.equal(needsPasswordRehash(await hashOf(created.user.id)), false);
 });
 
-check("hashPassword is salted per call", () => {
+await check("hashPassword is salted per call", () => {
   assert.notEqual(hashPassword("same-password"), hashPassword("same-password"));
 });
 

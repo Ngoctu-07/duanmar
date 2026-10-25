@@ -9,9 +9,10 @@ import { join } from "node:path";
  */
 const dir = mkdtempSync(join(tmpdir(), "duanmar-otp-"));
 process.env.VN_INTERACTIONS_DB_PATH = join(dir, "test.db");
+delete process.env.TURSO_DATABASE_URL;
 
 const { createUser, authenticate } = await import("../../src/lib/auth/user-store.ts");
-const { getDb } = await import("../../src/lib/db/sqlite-store.ts");
+const { getDb, queryRow } = await import("../../src/lib/db/sqlite-store.ts");
 const {
   OTP_TTL_SECONDS,
   RESET_TOKEN_TTL_SECONDS,
@@ -22,9 +23,9 @@ const {
 
 let passed = 0;
 let failed = 0;
-const check = (name: string, fn: () => void) => {
+const check = async (name: string, fn: () => Promise<void> | void) => {
   try {
-    fn();
+    await fn();
     passed += 1;
     console.log(`ok   ${name}`);
   } catch (error) {
@@ -33,10 +34,10 @@ const check = (name: string, fn: () => void) => {
   }
 };
 
-const db = getDb();
+const db = await getDb();
 assert.ok(db, "test database unavailable");
 
-const created = createUser({
+const created = await createUser({
   email: "otp.user@example.com",
   name: "OTP User",
   password: "initial-password",
@@ -48,15 +49,15 @@ const userId = created.user.id;
 const T0 = 1_800_000_000_000;
 const SECONDS = 1000;
 
-check("TTL contract is 60 seconds (and token 10 minutes)", () => {
+await check("TTL contract is 60 seconds (and token 10 minutes)", () => {
   assert.equal(OTP_TTL_SECONDS, 60);
   assert.equal(RESET_TOKEN_TTL_SECONDS, 600);
 });
 
 let firstCode = "";
 
-check("issues a 6-digit OTP valid for 60 seconds", () => {
-  const issued = issuePasswordResetOtp("OTP.User@Example.com", T0);
+await check("issues a 6-digit OTP valid for 60 seconds", async () => {
+  const issued = await issuePasswordResetOtp("OTP.User@Example.com", T0);
   assert.equal(issued.ok, true);
   if (!issued.ok) return;
   assert.match(issued.code, /^\d{6}$/);
@@ -64,54 +65,58 @@ check("issues a 6-digit OTP valid for 60 seconds", () => {
   assert.equal(issued.email, "otp.user@example.com");
   firstCode = issued.code;
 
-  const row = db!
-    .prepare(
-      "SELECT code_hash, expires_at, created_at, attempts FROM password_reset_otps WHERE id = ?"
-    )
-    .get(issued.otpId) as {
+  const row = await queryRow<{
     code_hash: string;
     expires_at: number;
     created_at: number;
     attempts: number;
-  };
-  assert.notEqual(row.code_hash, firstCode, "code must never be stored in plaintext");
-  assert.equal(row.expires_at - row.created_at, 60 * SECONDS);
-  assert.equal(row.attempts, 0);
+  }>(
+    db!,
+    "SELECT code_hash, expires_at, created_at, attempts FROM password_reset_otps WHERE id = ?",
+    [issued.otpId]
+  );
+  assert.notEqual(row?.code_hash, firstCode, "code must never be stored in plaintext");
+  assert.equal(Number(row?.expires_at) - Number(row?.created_at), 60 * SECONDS);
+  assert.equal(Number(row?.attempts), 0);
 });
 
-check("unknown emails get no row (and the route can answer generically)", () => {
-  const issued = issuePasswordResetOtp("ghost@example.com", T0);
+await check("unknown emails get no row (and the route can answer generically)", async () => {
+  const issued = await issuePasswordResetOtp("ghost@example.com", T0);
   assert.deepEqual(issued, { ok: false, reason: "no_account" });
 });
 
-check("resend is blocked inside the 60-second window", () => {
-  const issued = issuePasswordResetOtp("otp.user@example.com", T0 + 30 * SECONDS);
+await check("resend is blocked inside the 60-second window", async () => {
+  const issued = await issuePasswordResetOtp("otp.user@example.com", T0 + 30 * SECONDS);
   assert.equal(issued.ok, false);
   if (issued.ok) return;
   assert.equal(issued.reason, "rate_limited");
   assert.equal(issued.retryAfterSeconds, 30);
 });
 
-check("new request after 60 seconds rotates the code", () => {
-  const issued = issuePasswordResetOtp("otp.user@example.com", T0 + 61 * SECONDS);
+await check("new request after 60 seconds rotates the code", async () => {
+  const issued = await issuePasswordResetOtp("otp.user@example.com", T0 + 61 * SECONDS);
   assert.equal(issued.ok, true);
   if (!issued.ok) return;
   firstCode = issued.code;
 });
 
-check("wrong codes are rejected and counted", () => {
-  const result = verifyPasswordResetOtp("otp.user@example.com", "000000", T0 + 62 * SECONDS);
+await check("wrong codes are rejected and counted", async () => {
+  const result = await verifyPasswordResetOtp(
+    "otp.user@example.com",
+    "000000",
+    T0 + 62 * SECONDS
+  );
   assert.equal(result.ok, false);
   if (result.ok) return;
   assert.equal(result.reason, "invalid");
 });
 
-check("five wrong attempts burn the code", () => {
+await check("five wrong attempts burn the code", async () => {
   const wrong = firstCode === "111111" ? "222222" : "111111";
   for (let attempt = 0; attempt < 4; attempt += 1) {
-    verifyPasswordResetOtp("otp.user@example.com", wrong, T0 + 63 * SECONDS);
+    await verifyPasswordResetOtp("otp.user@example.com", wrong, T0 + 63 * SECONDS);
   }
-  const locked = verifyPasswordResetOtp(
+  const locked = await verifyPasswordResetOtp(
     "otp.user@example.com",
     firstCode,
     T0 + 64 * SECONDS
@@ -126,13 +131,13 @@ check("five wrong attempts burn the code", () => {
 let freshCode = "";
 let resetToken = "";
 
-check("an OTP past its 60-second TTL reports expired", () => {
-  const issued = issuePasswordResetOtp("otp.user@example.com", T0 + 200 * SECONDS);
+await check("an OTP past its 60-second TTL reports expired", async () => {
+  const issued = await issuePasswordResetOtp("otp.user@example.com", T0 + 200 * SECONDS);
   assert.equal(issued.ok, true);
   if (!issued.ok) return;
   freshCode = issued.code;
 
-  const expired = verifyPasswordResetOtp(
+  const expired = await verifyPasswordResetOtp(
     "otp.user@example.com",
     freshCode,
     T0 + 200 * SECONDS + 61 * SECONDS
@@ -142,13 +147,13 @@ check("an OTP past its 60-second TTL reports expired", () => {
   assert.equal(expired.reason, "expired");
 });
 
-check("verifying inside the window mints a single-use reset token", () => {
-  const issued = issuePasswordResetOtp("otp.user@example.com", T0 + 400 * SECONDS);
+await check("verifying inside the window mints a single-use reset token", async () => {
+  const issued = await issuePasswordResetOtp("otp.user@example.com", T0 + 400 * SECONDS);
   assert.equal(issued.ok, true);
   if (!issued.ok) return;
   freshCode = issued.code;
 
-  const verified = verifyPasswordResetOtp(
+  const verified = await verifyPasswordResetOtp(
     "otp.user@example.com",
     freshCode,
     T0 + 400 * SECONDS + 59 * SECONDS
@@ -159,7 +164,7 @@ check("verifying inside the window mints a single-use reset token", () => {
   assert.equal(verified.expiresInSeconds, 600);
   resetToken = verified.token;
 
-  const again = verifyPasswordResetOtp(
+  const again = await verifyPasswordResetOtp(
     "otp.user@example.com",
     freshCode,
     T0 + 400 * SECONDS + 59 * SECONDS
@@ -167,14 +172,14 @@ check("verifying inside the window mints a single-use reset token", () => {
   assert.equal(again.ok, false, "the OTP itself must not be reusable");
 });
 
-check("confirm rejects bad tokens, short passwords and expiry", () => {
-  assert.deepEqual(confirmPasswordReset("not-a-token", "new-password-1", T0).ok, false);
+await check("confirm rejects bad tokens, short passwords and expiry", async () => {
+  assert.deepEqual((await confirmPasswordReset("not-a-token", "new-password-1", T0)).ok, false);
 
-  const short = confirmPasswordReset(resetToken, "short", T0 + 401 * SECONDS);
+  const short = await confirmPasswordReset(resetToken, "short", T0 + 401 * SECONDS);
   assert.equal(short.ok, false);
   if (!short.ok) assert.equal(short.reason, "invalid_password");
 
-  const late = confirmPasswordReset(
+  const late = await confirmPasswordReset(
     resetToken,
     "new-password-1",
     T0 + 400 * SECONDS + 11 * 60 * SECONDS
@@ -183,29 +188,33 @@ check("confirm rejects bad tokens, short passwords and expiry", () => {
   if (!late.ok) assert.equal(late.reason, "expired_token");
 });
 
-check("confirm swaps the password and enables auto sign-in", () => {
-  const result = confirmPasswordReset(resetToken, "brand-new-password", T0 + 401 * SECONDS);
+await check("confirm swaps the password and enables auto sign-in", async () => {
+  const result = await confirmPasswordReset(
+    resetToken,
+    "brand-new-password",
+    T0 + 401 * SECONDS
+  );
   assert.equal(result.ok, true);
   if (!result.ok) return;
   assert.equal(result.email, "otp.user@example.com");
 
-  assert.equal(authenticate("otp.user@example.com", "initial-password"), null);
-  const signedIn = authenticate("OTP.USER@example.com", "brand-new-password");
+  assert.equal(await authenticate("otp.user@example.com", "initial-password"), null);
+  const signedIn = await authenticate("OTP.USER@example.com", "brand-new-password");
   assert.equal(signedIn?.id, userId);
 });
 
-check("the reset token is single-use", () => {
-  const replay = confirmPasswordReset(resetToken, "another-password", T0 + 402 * SECONDS);
+await check("the reset token is single-use", async () => {
+  const replay = await confirmPasswordReset(resetToken, "another-password", T0 + 402 * SECONDS);
   assert.equal(replay.ok, false);
   if (!replay.ok) assert.equal(replay.reason, "invalid_token");
 });
 
-check("confirm also burns other outstanding OTPs for the account", () => {
-  const issued = issuePasswordResetOtp("otp.user@example.com", T0 + 600 * SECONDS);
+await check("confirm also burns other outstanding OTPs for the account", async () => {
+  const issued = await issuePasswordResetOtp("otp.user@example.com", T0 + 600 * SECONDS);
   assert.equal(issued.ok, true);
   if (!issued.ok) return;
 
-  const verified = verifyPasswordResetOtp(
+  const verified = await verifyPasswordResetOtp(
     "otp.user@example.com",
     issued.code,
     T0 + 601 * SECONDS
@@ -213,20 +222,24 @@ check("confirm also burns other outstanding OTPs for the account", () => {
   assert.equal(verified.ok, true);
   if (!verified.ok) return;
 
-  const confirmed = confirmPasswordReset(verified.token, "third-password-3", T0 + 602 * SECONDS);
+  const confirmed = await confirmPasswordReset(
+    verified.token,
+    "third-password-3",
+    T0 + 602 * SECONDS
+  );
   assert.equal(confirmed.ok, true);
 
-  const next = issuePasswordResetOtp("otp.user@example.com", T0 + 700 * SECONDS);
+  const next = await issuePasswordResetOtp("otp.user@example.com", T0 + 700 * SECONDS);
   assert.equal(next.ok, true, "a new OTP can be issued after consumption");
 });
 
-check("expiry outranks a wrong code, and a wrong code never mints a token", () => {
-  const issued = issuePasswordResetOtp("otp.user@example.com", T0 + 900 * SECONDS);
+await check("expiry outranks a wrong code, and a wrong code never mints a token", async () => {
+  const issued = await issuePasswordResetOtp("otp.user@example.com", T0 + 900 * SECONDS);
   assert.equal(issued.ok, true);
   if (!issued.ok) return;
 
   const wrong = issued.code === "000000" ? "111111" : "000000";
-  const inside = verifyPasswordResetOtp(
+  const inside = await verifyPasswordResetOtp(
     "otp.user@example.com",
     wrong,
     T0 + 900 * SECONDS + 30 * SECONDS
@@ -236,7 +249,7 @@ check("expiry outranks a wrong code, and a wrong code never mints a token", () =
   assert.ok(!("token" in inside), "a wrong code must never return a reset token");
 
   // Correct digits, but the 60-second window is gone → expired, not invalid.
-  const stale = verifyPasswordResetOtp(
+  const stale = await verifyPasswordResetOtp(
     "otp.user@example.com",
     issued.code,
     T0 + 900 * SECONDS + 61 * SECONDS
