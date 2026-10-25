@@ -159,11 +159,7 @@ try {
   const after = await page.evaluate(() => ({ y: window.scrollY, ta: document.activeElement?.tagName === "TEXTAREA" }));
   check("K3 disabled click is a no-op (no scroll, no focus)", after.y === before && !after.ta, `${before}->${after.y}`);
   await closeMenu(page);
-  await page.waitForFunction(
-    (sel) => document.querySelector(sel)?.getAttribute("aria-disabled") === "true",
-    { timeout: 15000 }, FORM
-  );
-  check("K3 FORM path gated + editWindowClosed hint", await page.$eval(FORM, (el, hint) => el.textContent.includes(hint), M.editWindowClosed));
+  check("K3 form stays hidden for an existing review", !(await page.$(FORM)));
   await page.screenshot({ path: `${OUT}/k-review-actions-03-expired.png`, fullPage: true });
   // --- K4 delete → dialog copy + badge/count/list/API recalc
   await load(page, [review(PROBE_REF, "K Owner", 60_000, 4, "Owned review")], [booking()]);
@@ -184,6 +180,7 @@ try {
   await page.screenshot({ path: `${OUT}/k-review-actions-04-deleted.png`, fullPage: true });
 
   // --- K5 else-fix: form re-enabled with cleared fields, gate reset
+  await page.waitForSelector(FORM, { timeout: 15000 });
   const cleared = await page.evaluate(
     (f) => {
       const form = document.querySelector(f);

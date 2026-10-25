@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { Ticket } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { useAuthGate } from "@/components/auth/auth-provider";
 import type { PriceCurrency } from "@/lib/pricing";
 import type { Voucher } from "@/lib/vouchers/voucher-store";
+import { withBookingReturn } from "@/lib/booking-return";
 import { BookingVoucherCard } from "./booking-voucher-card";
 
 interface BookingVoucherSectionProps {
@@ -22,6 +24,10 @@ interface BookingVoucherSectionProps {
 
 /**
  * "Apply offer / Choose voucher" block at the bottom of checkout.
+ *
+ * Guests can book without an account; applying a voucher needs one. The
+ * sign-in CTA opens the auth modal in place and refreshes the server props
+ * afterwards, so the wallet appears without losing what was typed in the form.
  *
  * One collapsible card per wallet voucher, one panel open at a time so a long
  * wallet stays scannable. There is no "No voucher" row: not choosing anything
@@ -40,6 +46,8 @@ export function BookingVoucherSection({
 }: BookingVoucherSectionProps) {
   const t = useTranslations("booking");
   const [openId, setOpenId] = useState<string | null>(null);
+  const router = useRouter();
+  const { requireAuth } = useAuthGate();
 
   const togglePanel = (id: string) => {
     setOpenId((current) => (current === id ? null : id));
@@ -65,12 +73,14 @@ export function BookingVoucherSection({
       {!signedIn && (
         <div className="mt-3 flex flex-col gap-2 border border-dashed p-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>{t("voucherSignIn")}</p>
-          <Link
-            href="/account"
+          <button
+            type="button"
+            data-testid="voucher-sign-in"
+            onClick={() => requireAuth(() => router.refresh())}
             className="inline-flex h-9 items-center justify-center bg-primary px-4 text-xs font-semibold uppercase tracking-[0.18em] text-primary-foreground"
           >
             {t("voucherSignInCta")}
-          </Link>
+          </button>
         </div>
       )}
 
@@ -81,7 +91,7 @@ export function BookingVoucherSection({
         >
           <p>{t("voucherEmpty")}</p>
           <Link
-            href="/deals"
+            href={withBookingReturn("/deals", slug)}
             className="inline-flex h-9 items-center justify-center border border-white/20 px-4 text-xs font-semibold uppercase tracking-[0.18em] text-white"
           >
             {t("voucherEmptyCta")}

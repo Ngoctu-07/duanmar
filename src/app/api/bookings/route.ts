@@ -11,7 +11,9 @@ export const runtime = "nodejs";
 
 /**
  * `GET /api/bookings`    — the signed-in user's trip history (newest first).
- * `POST /api/bookings`   — upsert one paid ticket by reference.
+ * `POST /api/bookings`   — upsert one paid ticket by reference. Guests (no
+ *                          session) get 401: their ticket lives only in the
+ *                          device cache, which checkout already wrote.
  * `DELETE /api/bookings` — remove every trip from the account.
  *
  * Local storage stays as an offline cache, but this table is the source of
@@ -20,7 +22,7 @@ export const runtime = "nodejs";
 export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  return NextResponse.json({ bookings: listBookingsForUser(user.id) });
+  return NextResponse.json({ bookings: await listBookingsForUser(user.id) });
 }
 
 export async function POST(request: Request) {
@@ -37,7 +39,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_booking" }, { status: 400 });
   }
 
-  const saved = saveBookingForUser(user.id, body as TripBooking);
+  const saved = await saveBookingForUser(user.id, body as TripBooking);
   if (!saved) {
     return NextResponse.json({ error: "db_unavailable" }, { status: 503 });
   }
@@ -47,7 +49,7 @@ export async function POST(request: Request) {
 export async function DELETE() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const cleared = clearBookingsForUser(user.id);
+  const cleared = await clearBookingsForUser(user.id);
   if (!cleared) {
     return NextResponse.json({ error: "db_unavailable" }, { status: 503 });
   }

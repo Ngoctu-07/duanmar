@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -10,20 +10,21 @@ import { ReviewImageInput } from "@/components/reviews/review-image-input";
 import { useEditWindowGate } from "@/components/reviews/use-edit-window-gate";
 import { useWriteReviewState } from "@/components/reviews/use-write-review-state";
 import { ReviewApiError, saveReviewApi } from "@/lib/reviews-api";
-import type { TourReview } from "@/lib/reviews";
+import { REVIEW_EDIT_EVENT, type TourReview } from "@/lib/reviews";
 
 interface WriteReviewFormProps {
   tourSlug: string;
   locale: string;
   /** API-backed review list from the parent — drives prefill/edit gating. */
   reviews: TourReview[];
-  onSaved: () => void;
+  onSaved: () => void | Promise<void>;
 }
 
 /**
  * Booking-gated review form: enabled only when this device holds a booking for
  * the tour (disabled + hint before that, no hint pre-hydration). One review per
- * booking per tour — an existing one is pre-filled and re-submitted as an edit.
+ * booking per tour — once it exists the form is hidden (only the thank-you
+ * line right after submitting); the card menu's Edit reopens it pre-filled.
  * Submit goes to `POST /api/reviews`; 409 surfaces the edit-window copy, any
  * other failure shows the generic save error (list/badge keep prior state).
  */
@@ -39,6 +40,8 @@ export function WriteReviewForm({
   const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Stable per-mount callback: prefill when an existing review matches,
   // clear fields on the create path (or right after a delete) so a submit
@@ -47,6 +50,11 @@ export function WriteReviewForm({
     setRating(review ? review.rating : 0);
     setComment(review ? review.comment : "");
     setImages(review ? review.images : []);
+    // Review gone (deleted) → back to the plain create form.
+    if (!review) {
+      setEditing(false);
+      setSaved(false);
+    }
   }, []);
   const { booking, existing, loaded } = useWriteReviewState(
     tourSlug,
@@ -57,6 +65,30 @@ export function WriteReviewForm({
   const enabled = loaded && booking !== null;
   const editExpired = useEditWindowGate(existing);
   const formEnabled = enabled && !editExpired;
+  const hidden = existing !== null && !editing;
+
+  useEffect(() => {
+    const onEdit = () => {
+      setEditing(true);
+      setSaved(false);
+      setError(null);
+    };
+    window.addEventListener(REVIEW_EDIT_EVENT, onEdit);
+    return () => window.removeEventListener(REVIEW_EDIT_EVENT, onEdit);
+  }, []);
+
+  useEffect(() => {
+    if (!editing) return;
+    const form = wrapperRef.current;
+    form?.scrollIntoView({ behavior: "smooth", block: "center" });
+    form?.querySelector("textarea")?.focus();
+  }, [editing]);
+
+  const onCancel = () => {
+    setEditing(false);
+    setError(null);
+    applyPrefill(existing);
+  };
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -79,12 +111,11 @@ export function WriteReviewForm({
     setSubmitting(true);
     try {
       await saveReviewApi(review);
+      // Refetch first so the saved review is in the list before the form hides.
+      await onSaved();
       setError(null);
       setSaved(true);
-      setRating(0);
-      setComment("");
-      setImages([]);
-      onSaved();
+      setEditing(false);
     } catch (failure) {
       setSaved(false);
       const closed =
@@ -95,8 +126,17 @@ export function WriteReviewForm({
     }
   };
 
+  if (hidden) {
+    return saved ? (
+      <p data-testid="review-submitted" className="mb-6 text-sm text-link">
+        {t("reviews.submitSuccess")}
+      </p>
+    ) : null;
+  }
+
   return (
     <div
+      ref={wrapperRef}
       data-testid="write-review-form"
       aria-disabled={!formEnabled}
       className={`mb-6 rounded-none border bg-card p-4 sm:p-5 ${
@@ -170,6 +210,11 @@ export function WriteReviewForm({
         >
           {submitting ? t("reviews.submitting") : t("reviews.submit")}
         </Button>
+        {editing && existing && (
+          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
+            {t("reviews.cancelEdit")}
+          </Button>
+        )}
         {error && <p className="text-sm text-destructive">{error}</p>}
         {!error && saved && (
           <p className="text-sm text-link">{t("reviews.submitSuccess")}</p>

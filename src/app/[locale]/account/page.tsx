@@ -10,6 +10,8 @@ import { PROMOTIONS_BY_IDS_QUERY } from "@/sanity/queries/promotions";
 import type { PromotionRecord } from "@/lib/promotions";
 import { AccountDashboard } from "@/components/account/account-dashboard";
 import { AccountSignIn } from "@/components/account/account-sign-in";
+import { BackToBookingLink } from "@/components/booking/back-to-booking-link";
+import { safeBookingReturn } from "@/lib/booking-return";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("account");
@@ -24,9 +26,27 @@ export async function generateMetadata(): Promise<Metadata> {
  * CMS. That is what makes a session two months later render the same profile
  * on any device.
  */
-export default async function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string }>;
+}) {
+  const returnTo = safeBookingReturn((await searchParams).returnTo);
+  const backLink = returnTo ? (
+    <div className="container mx-auto max-w-4xl px-4 pt-8">
+      <BackToBookingLink href={returnTo} />
+    </div>
+  ) : null;
+
   const user = await currentUser();
-  if (!user) return <AccountSignIn />;
+  if (!user) {
+    return (
+      <>
+        {backLink}
+        <AccountSignIn />
+      </>
+    );
+  }
 
   const vouchers = await listVouchers(user.id);
   const promotionIds = [...new Set(vouchers.map((voucher) => voucher.promotionId))];
@@ -43,15 +63,18 @@ export default async function AccountPage() {
   ]);
 
   return (
-    <AccountDashboard
-      user={user}
-      vouchers={localizeVouchers(
-        vouchers,
-        (promotions ?? []) as PromotionRecord[],
-        locale
-      )}
-      avatarPresets={avatarPresets}
-      serverBookings={await listBookingsForUser(user.id)}
-    />
+    <>
+      {backLink}
+      <AccountDashboard
+        user={user}
+        vouchers={localizeVouchers(
+          vouchers,
+          (promotions ?? []) as PromotionRecord[],
+          locale
+        )}
+        avatarPresets={avatarPresets}
+        serverBookings={await listBookingsForUser(user.id)}
+      />
+    </>
   );
 }

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { BackToBookingLink } from "@/components/booking/back-to-booking-link";
 import { PromotionCard } from "@/components/deals/promotion-card";
+import { safeBookingReturn } from "@/lib/booking-return";
 import { currentUser } from "@/lib/auth/session";
 import { listVouchers } from "@/lib/vouchers/voucher-store";
 import { filterLivePromotions, toPromotionCard, type PromotionRecord } from "@/lib/promotions";
@@ -14,10 +16,12 @@ export const metadata: Metadata = {
 
 interface PageProps {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ returnTo?: string }>;
 }
 
-export default async function DealsPage({ params }: PageProps) {
+export default async function DealsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
+  const returnTo = safeBookingReturn((await searchParams).returnTo);
   const [promotions, t, user] = await Promise.all([
     fetchPublished(PROMOTIONS_QUERY, {}, { tags: ["sanity:promotion:list"] }),
     getTranslations("deals"),
@@ -37,6 +41,11 @@ export default async function DealsPage({ params }: PageProps) {
 
   return (
     <div className="container mx-auto px-4 py-16">
+      {returnTo && (
+        <div className="mx-auto mb-6 max-w-6xl">
+          <BackToBookingLink href={returnTo} />
+        </div>
+      )}
       <div className="mb-10 text-center">
         <h1 className="display-title mb-3">{t("title")}</h1>
         <p className="text-lg text-muted-foreground">{t("subtitle")}</p>

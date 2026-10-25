@@ -272,13 +272,21 @@ try {
   await page.waitForSelector(CARD, { timeout: 15000 });
   check("R7 card persists after reload", Boolean(await page.$(CARD)));
   check("R7 badge persists after reload", Boolean(await page.$(BADGE)));
+  await page
+    .waitForFunction((sel) => !document.querySelector(sel), { timeout: 15000 }, TEXTAREA)
+    .catch(() => {});
+  check("R7 form hidden once a review exists", !(await page.$(TEXTAREA)));
+  // Card menu Edit reopens the form pre-filled with the saved review
+  await page.click('[data-testid="review-actions-trigger"]');
+  await page.waitForSelector('[data-testid="review-actions-edit"]:not([disabled])', { timeout: 15000 });
+  await page.click('[data-testid="review-actions-edit"]');
   await page.waitForFunction(
     (sel) => document.querySelector(sel)?.value?.includes("Amazing food"),
     { timeout: 15000 },
     TEXTAREA
   ).catch(() => {});
-  const prefilled = await page.$eval(TEXTAREA, (el) => el.value);
-  check("R7 form pre-fills existing review", prefilled.includes("Amazing food"), prefilled.slice(0, 40));
+  const prefilled = (await page.$(TEXTAREA)) ? await page.$eval(TEXTAREA, (el) => el.value) : "";
+  check("R7 Edit reopens form pre-filled", prefilled.includes("Amazing food"), prefilled.slice(0, 40));
 
   // --- R8 upsert: second submit keeps exactly 1 card, rating updates to 5.0
   await page.click(star(5));
@@ -288,6 +296,9 @@ try {
     const cards = document.querySelectorAll('[data-testid="review-card"]');
     return cards.length === 1 && (cards[0].textContent ?? "").includes("Second visit");
   }, { timeout: 15000 });
+  await page.waitForSelector('[data-testid="review-submitted"]', { timeout: 15000 }).catch(() => {});
+  check("R8 form hidden after edit, thank-you shown",
+    !(await page.$(TEXTAREA)) && Boolean(await page.$('[data-testid="review-submitted"]')));
   const cardCount = (await page.$$(CARD)).length;
   check("R8 still exactly 1 card (upsert)", cardCount === 1, `cards=${cardCount}`);
   const badgeAfter = (await page.$eval(BADGE, (el) => el.textContent ?? "")).trim();
