@@ -4,8 +4,10 @@ import { useState } from "react";
 import Image from "next/image";
 import { Star } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useAuthGate } from "@/components/auth/auth-provider";
 import { ReviewAvatar } from "@/components/reviews/review-avatar";
 import { ReviewActionsMenu } from "@/components/reviews/review-actions-menu";
+import { ReviewDeleteButton } from "@/components/reviews/review-delete-button";
 import { ReviewImageLightbox } from "@/components/reviews/review-image-lightbox";
 import { formatRating, type TourReview } from "@/lib/reviews";
 
@@ -13,6 +15,7 @@ interface ReviewCardProps {
   review: TourReview;
   locale: string;
   owned: boolean;
+  onDeleted?: () => void;
 }
 
 function formatDate(iso: string, locale: string): string {
@@ -28,9 +31,14 @@ function formatDate(iso: string, locale: string): string {
 }
 
 /** One review: avatar + author + date, star row, comment, up to 3 photos (click = lightbox). */
-export function ReviewCard({ review, locale, owned }: ReviewCardProps) {
+export function ReviewCard({ review, locale, owned, onDeleted }: ReviewCardProps) {
   const t = useTranslations("destinations");
+  const { user } = useAuthGate();
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  // Strict client-side ownership: only the signed-in author can see Delete.
+  const canDelete = Boolean(
+    user?.id && review.authorId && user.id === review.authorId
+  );
 
   return (
     <>
@@ -50,7 +58,12 @@ export function ReviewCard({ review, locale, owned }: ReviewCardProps) {
               </p>
             </div>
           </div>
-          {owned && <ReviewActionsMenu review={review} />}
+          <div className="flex shrink-0 items-center gap-1">
+            {owned && <ReviewActionsMenu review={review} />}
+            {canDelete && (
+              <ReviewDeleteButton reference={review.reference} onDeleted={onDeleted} />
+            )}
+          </div>
         </div>
 
         <div

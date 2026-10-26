@@ -6,13 +6,15 @@ import { listBookings } from "@/lib/booking-history";
  * is the composite upsert key `${bookingReference}:${tourSlug}` so each booking
  * can leave exactly one review per tour (re-submitting edits it). `authorEmail`
  * exists only in the local copy (the API never returns it); `owned` comes only
- * from the API (visitor-cookie match).
+ * from the API (account/visitor match), and `authorId` is the account id used
+ * for strict delete ownership (absent on legacy rows).
  */
 export interface TourReview {
   reference: string;
   tourSlug: string;
   authorName: string;
   authorEmail?: string;
+  authorId?: string | null;
   rating: number;
   comment: string;
   images: string[];

@@ -57,6 +57,7 @@ await check("R1 first insert stamps created_at from payload, owned, no PII keys"
   );
   assert.equal(review.createdAt, "2026-10-07T09:30:00.000Z");
   assert.equal(review.owned, true);
+  assert.equal(review.authorId, null);
   assert.equal(review.rating, 4);
   assert.equal("authorEmail" in review, false);
   assert.equal("visitor" in review, false);
@@ -163,6 +164,78 @@ await check("R8 AVG/COUNT aggregates: ratings 3+4+5 → avg 4, count 3", async (
   assert.equal(aggregates.size, 1);
   assert.equal((await db.getRatingAggregates([])).size, 0);
   assert.equal((await db.getRatingAggregates(["also bad!"])).size, 0);
+});
+
+await check("R8b account-owned review: only the same user can delete, list by author", async () => {
+  const ALICE = "33333333-3333-4333-8333-333333333333";
+  const BOB = "44444444-4444-4444-8444-444444444444";
+  const review = await db.upsertReview(
+    input({
+      reference: "VN-AUTH:hcm-auth",
+      tourSlug: "hcm-auth",
+      bookingReference: "VN-AUTH",
+    }),
+    "visitor-alice",
+    NOW,
+    ALICE
+  );
+  assert.equal(review.authorId, ALICE);
+  const seenByAlice = await db.listReviewsForSlug("hcm-auth", "visitor-alice", ALICE);
+  assert.equal(seenByAlice[0].owned, true);
+  assert.equal((await db.listReviewsForSlug("hcm-auth", "visitor-alice", BOB))[0].owned, false);
+
+  const mine = await db.listReviewsForAuthor(ALICE);
+  assert.deepEqual(mine.map((entry) => entry.reference), ["VN-AUTH:hcm-auth"]);
+  assert.deepEqual(await db.listReviewsForAuthor(BOB), []);
+  await assert.rejects(() => db.listReviewsForAuthor(" "), /invalid author/);
+
+  await expectStoreError(
+    () => db.deleteReview("VN-AUTH:hcm-auth", "visitor-alice", BOB),
+    "not_owner"
+  );
+  await expectStoreError(
+    () => db.deleteReview("VN-AUTH:hcm-auth", "visitor-alice", null),
+    "not_owner"
+  );
+  // The account owner may delete from a different device (visitor irrelevant).
+  assert.deepEqual(
+    await db.deleteReview("VN-AUTH:hcm-auth", "visitor-other-device", ALICE),
+    { reference: "VN-AUTH:hcm-auth", tourSlug: "hcm-auth" }
+  );
+  assert.equal((await db.getRatingAggregates(["hcm-auth"])).size, 0);
+});
+
+await check("R8c delete recalculates AVG/COUNT from remaining active rows", async () => {
+  const before = (await db.getRatingAggregates(["agg-slug"])).get("agg-slug");
+  assert.deepEqual(before, { avg: 4, count: 3 });
+  await db.deleteReview("BK3:agg-slug", OWNER);
+  const after = (await db.getRatingAggregates(["agg-slug"])).get("agg-slug");
+  assert.deepEqual(after, { avg: 3.5, count: 2 });
+});
+
+await check("R8d anonymous legacy row can be claimed by a signed-in edit", async () => {
+  const USER = "55555555-5555-4555-8555-555555555555";
+  await db.upsertReview(
+    input({ reference: "VN-CLAIM:hcm", bookingReference: "VN-CLAIM" }),
+    OWNER,
+    NOW
+  );
+  const claimed = await db.upsertReview(
+    input({ reference: "VN-CLAIM:hcm", bookingReference: "VN-CLAIM", rating: 5 }),
+    OWNER,
+    NOW,
+    USER
+  );
+  assert.equal(claimed.authorId, USER);
+  await expectStoreError(
+    () => db.upsertReview(
+      input({ reference: "VN-CLAIM:hcm", bookingReference: "VN-CLAIM", rating: 1 }),
+      OWNER,
+      NOW
+    ),
+    "not_owner"
+  );
+  await db.deleteReview("VN-CLAIM:hcm", OWNER, USER);
 });
 
 await check("R9 storage CHECK constraint rejects rating 0 and 6", async () => {

@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { signInReviewForeign, signInReviewOwner } from "../helpers/auth-session.mjs";
 import { setPageVisitorCookie } from "../helpers/reviews-api.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
@@ -22,18 +23,58 @@ const BOOKINGS_KEY = "vn-my-trips:v1";
 const PROBE_REF = "VN-K-REVIEW";
 const ORPHAN_REF = "VN-K-OTHER";
 const EXPIRED_REF = "VN-K-EXPIRED";
+const FOREIGN_REF = "VN-K-FOREIGN";
 /** Every server row this file can create (pre-cleaned each phase, belt-cleaned at K6). */
 const KNOWN_ROWS = [`${PROBE_REF}:${SLUG}`, `${ORPHAN_REF}:${SLUG}`, `${EXPIRED_REF}:${SLUG}`];
-/** Fixed visitor so this file's rows are always deletable via the API. */
+const FOREIGN_ROW = `${FOREIGN_REF}:${SLUG}`;
+/** Fixed visitor so legacy rows remain deletable; auth rows use the session id. */
 const VISITOR_K = "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb";
 const SECTION = "#customer-reviews";
 const CARD = '[data-testid="review-card"]';
 const TRIGGER = '[data-testid="review-actions-trigger"]';
 const MENU = '[data-testid="review-actions-menu"]';
 const EDIT = '[data-testid="review-actions-edit"]';
-const DELETE = '[data-testid="review-actions-delete"]';
+const DELETE = '[data-testid="review-delete"]';
 const FORM = `${SECTION} [data-testid="write-review-form"]`;
 const BADGE = '[data-testid="tour-rating-badge"]';
+
+/** Authenticated cleanup: account-owned rows need the owner session. */
+const deleteRows = (page, refs) =>
+  page.evaluate(async (list) => {
+    const statuses = [];
+    for (const ref of list) {
+      try {
+        const response = await fetch(`/api/reviews/${encodeURIComponent(ref)}`, {
+          method: "DELETE",
+        });
+        statuses.push(response.status);
+      } catch {
+        statuses.push(0);
+      }
+    }
+    return statuses;
+  }, refs);
+const seedForeignReview = (page) =>
+  page.evaluate(
+    async ({ reference, slug, bookingReference }) => {
+      const response = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reference,
+          tourSlug: slug,
+          bookingReference,
+          authorName: "K Foreign",
+          authorEmail: "kforeign@example.com",
+          rating: 4,
+          comment: "Foreign review",
+          images: [],
+        }),
+      });
+      if (!response.ok) throw new Error(`seed foreign ${response.status}`);
+    },
+    { reference: FOREIGN_ROW, slug: SLUG, bookingReference: FOREIGN_REF }
+  );
 
 const results = [];
 const errors = [];
@@ -56,7 +97,7 @@ const review = (ref, authorName, ageMs, rating, comment) => ({
   createdAt: new Date(Date.now() - ageMs).toISOString(), bookingReference: ref,
 });
 
-/** Rows seeded via localStorage migrate into SQLite on reload (fixed jar cookie owns them). */
+/** Rows seeded via localStorage migrate into SQLite on reload (session id owns them). */
 const load = async (page, reviews, bookings) => {
   await page.evaluate(([bk, rv, items, list]) => {
     localStorage.setItem(bk, JSON.stringify(items));
@@ -64,15 +105,7 @@ const load = async (page, reviews, bookings) => {
   }, [BOOKINGS_KEY, REVIEWS_KEY, bookings, reviews]);
   // Server rows persist across phases (upsert preserves the original created_at,
   // so a re-seeded reference can never become "4h old") → delete known refs first.
-  await page.evaluate(async (refs) => {
-    for (const ref of refs) {
-      try {
-        await fetch(`/api/reviews/${encodeURIComponent(ref)}`, { method: "DELETE" });
-      } catch {
-        /* tolerant pre-clean */
-      }
-    }
-  }, KNOWN_ROWS);
+  await deleteRows(page, KNOWN_ROWS);
   await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
 };
@@ -92,32 +125,68 @@ const closeMenu = async (page) => {
   await page.waitForFunction((sel) => !document.querySelector(sel), { timeout: 5000 }, MENU);
 };
 
+let browser;
+let page;
+let foreignContext;
+let foreignPage;
+
 try {
-  const browser = await getBrowser({ headless: true, viewport: { width: 1280, height: 1100 } });
-  const page = await getPage(browser);
+  browser = await getBrowser({ headless: true, viewport: { width: 1280, height: 1100 } });
+  page = await getPage(browser);
   page.on("pageerror", (e) => pageErrors.push(e.message));
+  await signInReviewOwner(page);
+
+  foreignContext = browser.createBrowserContext
+    ? await browser.createBrowserContext()
+    : await browser.createIncognitoBrowserContext();
+  foreignPage = await foreignContext.newPage();
+  await signInReviewForeign(foreignPage);
+  await deleteRows(foreignPage, [FOREIGN_ROW]);
+
   await page.goto(TOUR_URL, { waitUntil: "networkidle2", timeout: 60000 });
   await setPageVisitorCookie(page, VISITOR_K, ORIGIN);
   await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
 
-  // --- K1 ownership: owned card has the kebab, orphan card has none but is visible
+  // --- K1 auth ownership: own cards get the trash, a foreign author's does not
   await load(page, [review(PROBE_REF, "K Owner", 60_000, 4, "Owned review"), review(ORPHAN_REF, "K Orphan", 60_000, 2, "Orphan review")], [booking()]);
-  await page.waitForFunction((sel) => document.querySelectorAll(sel).length === 2, { timeout: 15000 }, CARD);
+  await seedForeignReview(foreignPage);
+  await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
+  await page.waitForFunction((sel) => document.querySelectorAll(sel).length === 3, { timeout: 15000 }, CARD);
+  await page.waitForFunction((sel) => document.querySelectorAll(sel).length === 2, { timeout: 15000 }, DELETE);
   const own = await page.$$eval(CARD, (els) =>
     els.map((el) => ({
+      foreign: el.textContent.includes("K Foreign"),
       orphan: el.textContent.includes("K Orphan"),
       triggers: el.querySelectorAll('[data-testid="review-actions-trigger"]').length,
+      deletes: el.querySelectorAll('[data-testid="review-delete"]').length,
       visible: el.offsetParent !== null,
     }))
   );
-  check("K1 two review cards", own.length === 2, JSON.stringify(own.map((c) => c.triggers)));
-  check("K1 exactly 1 trigger (owner card only)", own.filter((c) => c.triggers === 1).length === 1, JSON.stringify(own));
+  check("K1 three review cards", own.length === 3, JSON.stringify(own.map((c) => c.triggers)));
+  check("K1 exactly 1 trigger (owned booking card only)", own.filter((c) => c.triggers === 1).length === 1, JSON.stringify(own));
   check("K1 orphan card has 0 triggers", own.find((c) => c.orphan)?.triggers === 0, JSON.stringify(own));
   check("K1 orphan card still visible", own.find((c) => c.orphan)?.visible === true);
+  check("K1 own cards show Delete (2)", own.filter((c) => c.deletes === 1).length === 2, JSON.stringify(own));
+  check("K1 foreign author card hides Delete", own.find((c) => c.foreign)?.deletes === 0, JSON.stringify(own));
+  const foreignDeleteStatus = await page.evaluate(
+    async (ref) => {
+      const response = await fetch(`/api/reviews/${encodeURIComponent(ref)}`, {
+        method: "DELETE",
+      });
+      return response.status;
+    },
+    FOREIGN_ROW
+  );
+  check("K1 server rejects deleting another author's review (403)", foreignDeleteStatus === 403, String(foreignDeleteStatus));
   await page.screenshot({ path: `${OUT}/k-review-actions-01-owner.png`, fullPage: true });
+  await deleteRows(foreignPage, [FOREIGN_ROW]);
+  await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
+  await dismissPromo(page);
+  await page.waitForFunction((sel) => document.querySelectorAll(sel).length === 2, { timeout: 15000 }, CARD);
 
-  // --- K2 menu: server-time fetched, 2 menuitems, attrs, no ARIA traps
+  // --- K2 menu: server-time fetched, 1 edit item, attrs, no ARIA traps
   await openMenu(page);
   const menu = await page.evaluate(([m, e]) => {
     const root = document.querySelector(m);
@@ -131,8 +200,8 @@ try {
       ariaTraps: root.querySelectorAll("[aria-disabled],[aria-pressed]").length,
     };
   }, [MENU, EDIT]);
-  check("K2 menu has exactly 2 menuitems", menu.count === 2, JSON.stringify(menu));
-  check("K2 labels = menuEdit/menuDelete", menu.labels[0] === M.menuEdit && menu.labels[1] === M.menuDelete, JSON.stringify(menu.labels));
+  check("K2 menu has exactly 1 edit menuitem", menu.count === 1, JSON.stringify(menu));
+  check("K2 label = menuEdit", menu.labels[0] === M.menuEdit, JSON.stringify(menu.labels));
   check("K2 fresh review → Edit enabled", menu.editDisabled === false, `disabled=${menu.editDisabled}`);
   check("K2 aria-expanded true + haspopup menu", menu.expanded === "true" && menu.haspopup === "menu", `${menu.expanded}/${menu.haspopup}`);
   check("K2 no aria-disabled/aria-pressed inside menu", menu.ariaTraps === 0, `n=${menu.ariaTraps}`);
@@ -165,7 +234,7 @@ try {
   await load(page, [review(PROBE_REF, "K Owner", 60_000, 4, "Owned review")], [booking()]);
   await page.waitForSelector(BADGE, { timeout: 15000 });
   check("K4 badge shows 4.0 before delete", (await page.$eval(BADGE, (el) => el.textContent)).trim().startsWith("4.0"));
-  await openMenu(page);
+  await page.waitForSelector(DELETE, { timeout: 15000 });
   let dialogMessage = null;
   page.once("dialog", (d) => { dialogMessage = d.message(); d.accept(); });
   await page.click(DELETE);
@@ -206,15 +275,8 @@ try {
     },
     [BOOKINGS_KEY, REVIEWS_KEY]
   );
-  await page.evaluate(async (refs) => {
-    for (const ref of refs) {
-      try {
-        await fetch(`/api/reviews/${encodeURIComponent(ref)}`, { method: "DELETE" });
-      } catch {
-        /* belt-and-braces cleanup */
-      }
-    }
-  }, KNOWN_ROWS);
+  await deleteRows(page, KNOWN_ROWS);
+  await deleteRows(foreignPage, [FOREIGN_ROW]);
   await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
   const fin = await page.evaluate(
@@ -225,9 +287,17 @@ try {
   const finApi = await apiRows(page);
   const finLeft = Array.isArray(finApi?.reviews) ? finApi.reviews.filter((r) => String(r?.reference ?? "").startsWith("VN-K-")) : null;
   check("K6 cleanup: 0 K rows on the server", finLeft !== null && finLeft.length === 0, JSON.stringify(finLeft?.map((r) => r.reference)));
-  await closeBrowser(browser);
 } catch (error) {
   errors.push(`fatal: ${error.message}`);
+} finally {
+  try {
+    if (page) await deleteRows(page, KNOWN_ROWS);
+    if (foreignPage) await deleteRows(foreignPage, [FOREIGN_ROW]);
+  } catch {
+    // Best-effort cleanup — a stale probe row cannot break the app.
+  }
+  if (foreignContext) await foreignContext.close().catch(() => {});
+  if (browser) await closeBrowser(browser);
 }
 
 errors.push(...pageErrors);

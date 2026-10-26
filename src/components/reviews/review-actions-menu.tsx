@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { EllipsisVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { deleteReviewApi } from "@/lib/reviews-api";
 import { requestReviewEdit, type TourReview } from "@/lib/reviews";
 import { fetchServerNow, isEditWindowExpired } from "@/lib/edit-window";
 
@@ -12,13 +11,12 @@ interface ReviewActionsMenuProps {
 }
 
 /**
- * Owner-only kebab menu on a review card: Edit (reopens + focuses the write
- * form; native `disabled` once the 3h window vs SERVER time is closed) and
- * Delete (confirm → `DELETE /api/reviews/[reference]` → the change event
- * refreshes badge, list and count everywhere; a failed delete changes
- * nothing — the refetched list shows the truth). Bespoke dropdown (no Base UI
- * Menu): its items strip native `disabled`, which the edit gate requires.
- * Client-side ownership affordance only — not authorization.
+ * Owner-only kebab menu on a review card: Edit reopens + focuses the write
+ * form (native `disabled` once the 3h window vs SERVER time is closed).
+ * Deletion is a separate, auth-gated trash button (`ReviewDeleteButton`).
+ * Bespoke dropdown (no Base UI Menu): its items strip native `disabled`, which
+ * the edit gate requires. Client-side ownership affordance only — not
+ * authorization.
  */
 export function ReviewActionsMenu({ review }: ReviewActionsMenuProps) {
   const t = useTranslations("destinations");
@@ -61,16 +59,6 @@ export function ReviewActionsMenu({ review }: ReviewActionsMenuProps) {
     requestReviewEdit();
   };
 
-  const onDelete = async () => {
-    if (!window.confirm(t("reviews.deleteConfirm"))) return;
-    setOpen(false);
-    try {
-      await deleteReviewApi(review.reference);
-    } catch {
-      // Non-owner / network failure: no optimistic removal — list refetch rules
-    }
-  };
-
   const itemClass =
     "flex w-full rounded-none px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground disabled:opacity-50";
 
@@ -102,15 +90,6 @@ export function ReviewActionsMenu({ review }: ReviewActionsMenuProps) {
             className={itemClass}
           >
             {t("reviews.menuEdit")}
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            data-testid="review-actions-delete"
-            onClick={onDelete}
-            className={itemClass}
-          >
-            {t("reviews.menuDelete")}
           </button>
         </div>
       )}

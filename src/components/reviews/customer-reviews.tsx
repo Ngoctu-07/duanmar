@@ -25,7 +25,8 @@ interface CustomerReviewsProps {
  * from RSC props when present, refetches `GET /api/reviews` after mount and on
  * every `vn-reviews:changed`/cross-tab storage change, and kicks off the
  * one-shot `vn-reviews:v1` → SQLite migration on mount (never blocks paint).
- * Ownership = server `owned` (visitor cookie) AND device booking.
+ * Edit ownership = server `owned` AND device booking; delete ownership is
+ * checked inside each card as `currentUser.id === review.authorId`.
  */
 export function CustomerReviews({ tourSlug, locale, initialReviews }: CustomerReviewsProps) {
   const t = useTranslations("destinations");
@@ -108,6 +109,7 @@ export function CustomerReviews({ tourSlug, locale, initialReviews }: CustomerRe
               review={review}
               locale={locale}
               owned={ownedReferences.has(review.bookingReference)}
+              onDeleted={refresh}
             />
           ))}
         </div>

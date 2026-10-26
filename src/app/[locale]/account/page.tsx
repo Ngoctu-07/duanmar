@@ -5,6 +5,7 @@ import { listVouchers } from "@/lib/vouchers/voucher-store";
 import { localizeVouchers } from "@/lib/vouchers/localize";
 import { getAvatarPresets } from "@/lib/avatars";
 import { listBookingsForUser } from "@/lib/bookings/booking-store";
+import { listReviewsForAuthor } from "@/lib/reviews-db";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { PROMOTIONS_BY_IDS_QUERY } from "@/sanity/queries/promotions";
 import type { PromotionRecord } from "@/lib/promotions";
@@ -49,6 +50,10 @@ export default async function AccountPage({
   }
 
   const vouchers = await listVouchers(user.id);
+  const [reviews, serverBookings] = await Promise.all([
+    listReviewsForAuthor(user.id).catch(() => []),
+    listBookingsForUser(user.id),
+  ]);
   const promotionIds = [...new Set(vouchers.map((voucher) => voucher.promotionId))];
   const [locale, avatarPresets, promotions] = await Promise.all([
     getLocale(),
@@ -73,7 +78,8 @@ export default async function AccountPage({
           locale
         )}
         avatarPresets={avatarPresets}
-        serverBookings={await listBookingsForUser(user.id)}
+        serverBookings={serverBookings}
+        reviews={reviews}
       />
     </>
   );

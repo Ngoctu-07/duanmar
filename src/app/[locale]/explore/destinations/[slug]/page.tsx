@@ -23,6 +23,7 @@ import {
   type LocaleString,
 } from "@/lib/bilingual-string";
 import { readVisitor } from "@/lib/visitor";
+import { currentUser } from "@/lib/auth/session";
 import {
   getRatingAggregates,
   listReviewsForSlug,
@@ -78,7 +79,12 @@ export default async function DestinationDetailPage({ params }: PageProps) {
   let initialReviews: PublicReview[] | undefined;
   let initialAggregate: RatingAggregate | null | undefined;
   try {
-    initialReviews = await listReviewsForSlug(slug, readVisitor(await cookies()));
+    const [cookieStore, viewer] = await Promise.all([cookies(), currentUser()]);
+    initialReviews = await listReviewsForSlug(
+      slug,
+      readVisitor(cookieStore),
+      viewer?.id ?? null
+    );
     initialAggregate = (await getRatingAggregates([slug])).get(slug) ?? null;
   } catch {
     initialReviews = undefined;

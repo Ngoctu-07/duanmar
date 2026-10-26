@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { currentUser } from "@/lib/auth/session";
 import { PayloadTooLargeError, readBodyTextCapped } from "@/lib/assistant/body-limit";
 import { checkRateLimit } from "@/lib/assistant/rate-limit";
 import {
@@ -10,6 +11,7 @@ import {
   type PublicReview,
   type RatingAggregate,
 } from "@/lib/reviews-db";
+import { revalidateReviewSurfaces } from "@/lib/reviews-revalidate";
 import {
   isValidTourSlug,
   ReviewValidationError,
@@ -37,15 +39,16 @@ function isDbUnavailable(error: unknown): boolean {
   return error instanceof Error && error.message === "db unavailable";
 }
 
-/** GET /api/reviews?slug= — list + AVG/COUNT aggregate, `owned` per visitor, Set-Cookie when absent. */
+/** GET /api/reviews?slug= — list + AVG/COUNT aggregate, `owned` per viewer, Set-Cookie when absent. */
 export async function GET(req: NextRequest) {
   const slug = req.nextUrl.searchParams.get("slug");
   if (!isValidTourSlug(slug)) return errorJson("Invalid slug", 400);
 
   const visitor = readVisitor(req);
+  const viewer = await currentUser();
   let reviews: PublicReview[];
   try {
-    reviews = await listReviewsForSlug(slug, visitor);
+    reviews = await listReviewsForSlug(slug, visitor, viewer?.id ?? null);
   } catch (error) {
     if (isDbUnavailable(error)) return errorJson("Storage unavailable", 503);
     console.error("[review] list failed", { slug, status: 500 });
@@ -91,11 +94,17 @@ export async function POST(req: NextRequest) {
   const nowIso = new Date().toISOString();
   const currentVisitor = readVisitor(req);
   const visitor = currentVisitor ?? newVisitorId();
+  const viewer = await currentUser();
 
   let review: PublicReview;
   let aggregate: RatingAggregate | null;
   try {
-    review = await upsertReview(validateReviewPayload(body, nowIso), visitor, nowIso);
+    review = await upsertReview(
+      validateReviewPayload(body, nowIso),
+      visitor,
+      nowIso,
+      viewer?.id ?? null
+    );
     aggregate = (await getRatingAggregates([review.tourSlug])).get(review.tourSlug) ?? null;
   } catch (error) {
     if (error instanceof ReviewValidationError) return errorJson(error.message, 400);
@@ -107,6 +116,7 @@ export async function POST(req: NextRequest) {
     return errorJson("Review failed", 500);
   }
 
+  revalidateReviewSurfaces(review.tourSlug);
   const response = NextResponse.json({ review, aggregate }, { status: 201 });
   if (!currentVisitor) response.cookies.set(VISITOR_COOKIE, visitor, visitorCookieOptions());
   return response;

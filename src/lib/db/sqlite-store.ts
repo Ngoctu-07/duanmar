@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS reviews (
   tour_slug TEXT NOT NULL,
   booking_reference TEXT NOT NULL,
   visitor TEXT NOT NULL,
+  author_id TEXT,
   author_name TEXT NOT NULL,
   author_email TEXT NOT NULL,
   rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
@@ -195,11 +196,16 @@ async function openTarget(target: DbTarget): Promise<Client | null> {
     created = createClient({ url: target.url, authToken: target.authToken });
     if (target.local) await created.execute("PRAGMA busy_timeout = 5000");
     await created.batch(DDL_STATEMENTS, "write");
-    // Legacy files predate the CMS avatar columns.
+    // Legacy files predate the CMS avatar columns and account-owned reviews.
     await ensureColumns(created, "users", [
       ["avatar_preset_id", "TEXT"],
       ["avatar_url", "TEXT"],
     ]);
+    await ensureColumns(created, "reviews", [["author_id", "TEXT"]]);
+    // Must run after ensureColumns: older tables have no author_id yet.
+    await created.execute(
+      "CREATE INDEX IF NOT EXISTS idx_reviews_author ON reviews(author_id, created_at DESC)"
+    );
     client = created;
     readyKey = target.key;
     localFailureKey = null;

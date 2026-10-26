@@ -2,6 +2,15 @@
 
 ## 2026-10-26
 
+### Added
+- **[Feature] Account-owned review deletion + live aggregate recalculation** (task "Implement User Review/Rating Deletion with Ownership Authorization & Dynamic Rating Recalculation")
+  - **Data model** `reviews` gains a nullable `author_id` column (idempotent `PRAGMA`-guarded migration + `idx_reviews_author`). `POST /api/reviews` stamps the signed-in session id; anonymous/legacy rows remain `NULL` and keep the existing visitor-cookie provenance. `PublicReview` now exposes `authorId` (no email/visitor PII), and `listReviewsForAuthor()` powers account history.
+  - **Strict delete UI** `ReviewCard` computes `currentUser.id === review.authorId` via `useAuthGate`; a direct trash button (`ReviewDeleteButton`, `data-testid="review-delete"`) appears only for the real author. The kebab menu now owns Edit only. The same card renders in the tour detail list and the new **Reviews** tab on `/account`.
+  - **Server authorization** `DELETE /api/reviews/[reference]` requires the session user to equal `author_id` for account-owned rows (`403` otherwise, even if the device visitor cookie matches). Legacy `author_id IS NULL` rows keep the visitor fallback so pre-account data stays manageable. The API returns `aggregate`, `averageRating` and `reviewCount`.
+  - **Recalculation + cache** after a successful delete the route re-runs `AVG(rating)/COUNT(*)` over the remaining rows and calls `revalidateReviewSurfaces()` (`revalidatePath(..., "page")`) for home, explore, destination detail, tours, search, account and my-trips. `vn-reviews:changed` still refreshes mounted badges/lists immediately; the account tab removes the row locally and calls `router.refresh()`.
+  - **Tests** unit `reviews-db` **13/13** adds account-owner-only delete, cross-device owner delete, author history, AVG recalculation and legacy-claim coverage. Browser `k-review-actions` now signs in, proves the foreign author card/API are denied (`403`), and deletes via the trash button; NEW `k2-account-reviews` covers the account tab, immediate removal and `5.0 / 1` recalculated aggregate.
+  - **Verified** `npx tsc --noEmit` 0 · `npm run lint` 0 · `npm test` **56/56 files** · `npm run build` OK.
+
 ### Changed
 - **[Feature] Đặt tour không cần đăng nhập — chỉ áp dụng voucher mới bắt login**
   - `book-ticket-button.tsx` bỏ `requireAuth`: khách vào thẳng checkout. Vé của khách chỉ lưu trên thiết bị (`POST /api/bookings` vẫn 401 khi không có session); email xác nhận vẫn gửi.

@@ -30,7 +30,7 @@ export interface ReviewsPayload {
   aggregate: RatingAggregate | null;
 }
 
-/** API rows omit `authorEmail`; `owned` is the visitor-cookie match. */
+/** API rows omit `authorEmail`; `owned` is account/visitor ownership. */
 function isApiReview(value: unknown): value is TourReview {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
@@ -43,7 +43,10 @@ function isApiReview(value: unknown): value is TourReview {
     isString("createdAt") &&
     isString("bookingReference") &&
     typeof record.rating === "number" &&
-    Array.isArray(record.images)
+    Array.isArray(record.images) &&
+    (record.authorId === undefined ||
+      record.authorId === null ||
+      typeof record.authorId === "string")
   );
 }
 
