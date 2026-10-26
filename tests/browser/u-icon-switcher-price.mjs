@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { resolveTourPricingFixture } from "../helpers/cms-expectations.mjs";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { selectDifficulty } from "../helpers/difficulty.mjs";
 import { revealHomeHeader } from "../helpers/header-reveal.mjs";
 
 /**
@@ -405,7 +406,7 @@ try {
       return td.getAttribute("data-day");
     }, iso);
     check("U8 travel date cell picked", Boolean(dayPicked), `target=${iso} picked=${dayPicked}`);
-    await page.click('[data-difficulty="Medium"]');
+    await selectDifficulty(page, "Medium");
     await page.click('button[type="submit"]');
     await sleep(600);
     check("U8 checkout summary rendered", Boolean(await page.$("#booking-summary-heading")));

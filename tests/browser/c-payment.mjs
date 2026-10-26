@@ -5,6 +5,7 @@ import {
   resolveTourPricingFixture,
 } from "../helpers/cms-expectations.mjs";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { selectDifficulty } from "../helpers/difficulty.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -83,7 +84,7 @@ try {
   t1.setDate(t1.getDate() + 1);
   const iso1 = `${t1.getFullYear()}-${String(t1.getMonth() + 1).padStart(2, "0")}-${String(t1.getDate()).padStart(2, "0")}`;
   await page.click(`td[data-day="${iso1}"] button`);
-  await page.click('[data-difficulty="Medium"]');
+  await selectDifficulty(page, "Medium");
   await sleep(200);
   await page.click('button[type="submit"]');
   await sleep(500);

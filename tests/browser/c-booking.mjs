@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { expectedBreakdown, fetchTourPricing, fmtVnd } from "../helpers/cms-expectations.mjs";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { selectDifficulty } from "../helpers/difficulty.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -117,13 +118,54 @@ try {
   check("B7 section 3 pricing", headings[2]?.startsWith("3. Số khách"), headings[2]);
   check("B7 section 4 difficulty", headings[3]?.startsWith("4. Chọn độ khó"), headings[3]);
   check("B7 section 5 voucher", headings[4]?.startsWith("5. Áp dụng ưu đãi"), headings[4]);
-  const difficultyGroup = await page.$('[role="radiogroup"]#booking-difficulty');
-  const difficultyOptions = await page.$$('[data-testid="booking-difficulty-option"]');
+  const difficultySelect = await page.$("#booking-difficulty");
+  const difficultyTag = difficultySelect
+    ? await difficultySelect.evaluate((el) => el.tagName)
+    : null;
+  const difficultyPlaceholder = difficultySelect
+    ? await difficultySelect.evaluate(
+        (el) =>
+          el.querySelector('[data-slot="select-value"]')?.textContent.trim() ?? ""
+      )
+    : "";
+  const difficultyStyle = difficultySelect
+    ? await difficultySelect.evaluate((el) => {
+        const cs = getComputedStyle(el);
+        return {
+          font: cs.fontFamily,
+          background: cs.backgroundColor,
+          radius: cs.borderRadius,
+        };
+      })
+    : null;
   check(
-    "B7 exactly 3 interactive difficulty cards",
-    Boolean(difficultyGroup) && difficultyOptions.length === 3,
-    `group=${Boolean(difficultyGroup)} options=${difficultyOptions.length}`
+    "B7 step 4 is a standard dropdown with placeholder",
+    difficultyTag === "BUTTON" &&
+      difficultyPlaceholder === vi.booking.difficultyPlaceholder,
+    JSON.stringify({ tag: difficultyTag, text: difficultyPlaceholder })
   );
+  check(
+    "B7 dropdown uses Barlow, dark fill, sharp corners",
+    !!difficultyStyle &&
+      difficultyStyle.font.includes("Barlow") &&
+      difficultyStyle.background === "rgb(39, 39, 42)" &&
+      difficultyStyle.radius === "0px",
+    JSON.stringify(difficultyStyle)
+  );
+  await page.click("#booking-difficulty");
+  await page.waitForSelector('[data-slot="select-content"]', { timeout: 5000 });
+  const difficultyOptions = await page.$$eval(
+    '[data-testid="booking-difficulty-option"]',
+    (els) => els.map((el) => el.textContent.trim())
+  );
+  check(
+    "B7 dropdown exposes exactly 3 ordered levels",
+    JSON.stringify(difficultyOptions) ===
+      JSON.stringify([vi.booking.easy, vi.booking.medium, vi.booking.hard]),
+    JSON.stringify(difficultyOptions)
+  );
+  await page.keyboard.press("Escape");
+  await sleep(100);
   const renderedTourName = await page.$eval("h1 + p", (el) => el.textContent.trim());
   check("B7 tour name shown", renderedTourName === tourName, renderedTourName);
 
@@ -186,13 +228,16 @@ try {
   check("B9 aria-invalid set", (await page.$$('input[aria-invalid="true"]')).length >= 3);
 
   // Pick a difficulty so the remaining assertions isolate format errors.
-  await page.click('[data-difficulty="Medium"]');
-  await sleep(120);
-  const checkedDifficulty = await page.$eval(
-    '[data-difficulty="Medium"]',
-    (el) => el.getAttribute("aria-checked")
+  await selectDifficulty(page, "Medium");
+  const selectedDifficulty = await page.$eval(
+    '#booking-difficulty [data-slot="select-value"]',
+    (el) => el.textContent.trim()
   );
-  check("B9 difficulty card is selectable", checkedDifficulty === "true", checkedDifficulty);
+  check(
+    "B9 difficulty dropdown selects Medium",
+    selectedDifficulty === vi.booking.medium,
+    selectedDifficulty
+  );
 
   // invalid formats
   const fill = async (selector, value) => {
@@ -268,9 +313,9 @@ try {
     } catch { /* storage unavailable */ }
   }, b13Slug);
   const stdHeadings = await page.$$eval("section h2", (els) => els.map((e) => e.textContent.trim()));
-  const stdDifficulty = await page.$('[role="radiogroup"]#booking-difficulty');
+  const stdDifficulty = await page.$("#booking-difficulty");
   check(
-    `B13 ${b13Slug}: 5 sections incl. difficulty step`,
+    `B13 ${b13Slug}: 5 sections incl. difficulty dropdown`,
     stdHeadings.length === 5 && Boolean(stdDifficulty),
     JSON.stringify(stdHeadings)
   );
@@ -291,18 +336,25 @@ try {
   stdTomorrow.setDate(stdTomorrow.getDate() + 1);
   const stdIso = `${stdTomorrow.getFullYear()}-${String(stdTomorrow.getMonth() + 1).padStart(2, "0")}-${String(stdTomorrow.getDate()).padStart(2, "0")}`;
   await page.click(`td[data-day="${stdIso}"] button`);
-  await page.click('[data-difficulty="Hard"]');
+  await selectDifficulty(page, "Hard");
   await sleep(200);
   await page.click('button[type="submit"]');
   await sleep(400);
   const stdSummary = await page.$("#booking-summary-heading");
   check("B13 valid submit → summary", Boolean(stdSummary));
   if (stdSummary) {
-    const summaryLabels = await page.$$eval("dl dt", (els) => els.map((e) => e.textContent.trim()));
+    const summaryRows = await page.$$eval("dl > div", (rows) =>
+      rows.map((row) => ({
+        label: row.querySelector("dt")?.textContent.trim() ?? "",
+        value: row.querySelector("dd")?.textContent.trim() ?? "",
+      }))
+    );
     check(
       `B13 ${b13Slug}: summary shows the selected difficulty`,
-      summaryLabels.includes("Độ khó"),
-      JSON.stringify(summaryLabels)
+      summaryRows.some(
+        (row) => row.label === vi.booking.difficulty && row.value === vi.booking.hard
+      ),
+      JSON.stringify(summaryRows)
     );
   }
   if (b13HasPricing) {

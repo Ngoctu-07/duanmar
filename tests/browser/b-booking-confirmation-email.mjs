@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { selectDifficulty } from "../helpers/difficulty.mjs";
 
 /**
  * Plan 260929-2229 — delayed booking-confirmation email.
@@ -166,14 +167,14 @@ const postJson = (path, body) =>
     await fill("#booking-email", "emailtest@example.com");
     await fill("#booking-phone", "0912345678");
 
-    const difficultyGroup = await page.$('[role="radiogroup"]#booking-difficulty');
-    check("B8 difficulty step present in the universal booking form", Boolean(difficultyGroup), `slug=${slug}`);
+    const difficultySelect = await page.$("#booking-difficulty");
+    check("B8 difficulty dropdown present in the universal booking form", Boolean(difficultySelect), `slug=${slug}`);
 
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const iso = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
     await page.click(`td[data-day="${iso}"] button`);
-    await page.click('[data-difficulty="Medium"]');
+    await selectDifficulty(page, "Medium");
     await sleep(200);
     await page.click('button[type="submit"]');
     await sleep(400);

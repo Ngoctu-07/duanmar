@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { selectDifficulty } from "../helpers/difficulty.mjs";
 
 /**
  * CRT static contract (event-only).
@@ -294,7 +295,7 @@ try {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const iso = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
     await page.click(`td[data-day="${iso}"] button`);
-    await page.click('[data-difficulty="Medium"]');
+    await selectDifficulty(page, "Medium");
     await sleep(200);
     await page.click('button[type="submit"]');
     const summary = await page.waitForSelector("#booking-summary-heading", { timeout: 10000 }).catch(() => null);

@@ -60,8 +60,8 @@ function PromoModal({ imageSrc, width = 1200, height = 800, enableEntryPopup }: 
         data-slot="promo-modal"
         closeSlot="promo-modal-close"
         closeLabel={t("close")}
-        className="w-[min(90vw,50.4rem)] border-0 bg-transparent p-0 shadow-none"
-        closeClassName="border-0 bg-black/60! text-white hover:bg-black/80! hover:text-white focus-visible:ring-white/60"
+        className="w-[min(92vw,32rem)] max-w-lg max-h-[85vh] overflow-hidden border-0 bg-transparent p-0 shadow-none"
+        closeClassName="z-10 border-0 bg-black/60! text-white hover:bg-black/80! hover:text-white focus-visible:ring-white/60"
       >
         <DialogTitle className="sr-only">{t("title")}</DialogTitle>
         <Image
@@ -70,7 +70,7 @@ function PromoModal({ imageSrc, width = 1200, height = 800, enableEntryPopup }: 
           width={width}
           height={height}
           priority
-          className="h-auto w-full rounded-none"
+          className="block h-auto max-h-[85vh] w-full rounded-none object-contain"
         />
       </DialogContent>
     </Dialog>

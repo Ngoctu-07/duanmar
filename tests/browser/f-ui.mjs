@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { expectedBreakdown, resolveTourPricingFixture } from "../helpers/cms-expectations.mjs";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { selectDifficulty } from "../helpers/difficulty.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -128,7 +129,7 @@ try {
   await fill("#booking-full-name", "Nguyen Van A");
   await fill("#booking-email", "lena@example.com");
   await fill("#booking-phone", "0912345678");
-  await page.click('[data-difficulty="Medium"]');
+  await selectDifficulty(page, "Medium");
   await page.click('button[type="submit"]');
   await sleep(300);
   const dateError = await page.$("#booking-travel-date-error");

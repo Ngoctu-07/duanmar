@@ -1,6 +1,7 @@
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { resolveTourPricingFixture } from "../helpers/cms-expectations.mjs";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { selectDifficulty } from "../helpers/difficulty.mjs";
 
 const { getBrowser, getPage, closeBrowser } = await import(
   pathToFileURL(
@@ -49,7 +50,7 @@ try {
   td.setDate(td.getDate() + 1);
   const isoT = `${td.getFullYear()}-${String(td.getMonth() + 1).padStart(2, "0")}-${String(td.getDate()).padStart(2, "0")}`;
   await page.click(`td[data-day="${isoT}"] button`);
-  await page.click('[data-difficulty="Medium"]');
+  await selectDifficulty(page, "Medium");
   await sleep(200);
   await page.click('button[type="submit"]'); await sleep(500);
 

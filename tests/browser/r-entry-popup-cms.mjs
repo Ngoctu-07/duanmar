@@ -175,7 +175,7 @@ try {
       `alt=${imgSrc?.alt}`
     );
 
-    // --- R12–R14 frameless + 50.4rem sizing + overlay close chip (plan 260929-1440)
+    // --- R12–R14 frameless compact banner + overlay close chip
     const geo = await page.evaluate(() => {
       const box = document.querySelector('[data-slot="promo-modal"]');
       const img = box?.querySelector("img");
@@ -194,7 +194,16 @@ try {
         bg: cs.backgroundColor,
         borderTopWidth: cs.borderTopWidth,
         width: b.width,
+        height: b.height,
+        imgWidth: ib.width,
+        imgHeight: ib.height,
+        naturalRatio: img.naturalWidth / img.naturalHeight,
+        renderedRatio: ib.width / ib.height,
         viewport: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        overflowX: cs.overflowX,
+        overflowY: cs.overflowY,
+        scrolls: box.scrollHeight > box.clientHeight + 1,
         closeVisible: cb.width > 0 && cb.height > 0,
         closeInsideImage:
           cb.top >= ib.top - 1 &&
@@ -211,12 +220,43 @@ try {
       !!geo && geo.padding.every((p) => p === "0px") && geo.bg === "rgba(0, 0, 0, 0)" && geo.borderTopWidth === "0px",
       JSON.stringify(geo && { padding: geo.padding, bg: geo.bg, border: geo.borderTopWidth })
     );
+    const expectedWidth = Math.min(geo?.viewport ? geo.viewport * 0.92 : 0, 32 * 16);
     check(
-      "R13 width = min(90vw, 50.4rem) → 806.4px @1280, never over 90vw",
+      "R13 width = min(92vw, 32rem) → compact max-lg banner, never over 92vw",
       !!geo &&
-        Math.abs(geo.width - 50.4 * 16) <= 2 &&
-        geo.width <= geo.viewport * 0.9 + 1,
-      JSON.stringify(geo && { width: geo.width, viewport: geo.viewport })
+        Math.abs(geo.width - expectedWidth) <= 2 &&
+        geo.width <= geo.viewport * 0.92 + 1,
+      JSON.stringify(geo && { width: geo.width, expected: expectedWidth, viewport: geo.viewport })
+    );
+    check(
+      "R13b height capped at 85vh, overflow hidden, no scrollbar",
+      !!geo &&
+        geo.height <= geo.viewportHeight * 0.85 + 1 &&
+        geo.overflowX === "hidden" &&
+        geo.overflowY === "hidden" &&
+        !geo.scrolls,
+      JSON.stringify(
+        geo && {
+          height: geo.height,
+          cap: geo.viewportHeight * 0.85,
+          overflow: [geo.overflowX, geo.overflowY],
+          scrolls: geo.scrolls,
+        }
+      )
+    );
+    check(
+      "R13c poster scales proportionally inside the compact frame",
+      !!geo &&
+        Math.abs(geo.renderedRatio - geo.naturalRatio) < 0.02 &&
+        geo.imgWidth <= geo.width + 1,
+      JSON.stringify(
+        geo && {
+          rendered: geo.renderedRatio,
+          natural: geo.naturalRatio,
+          img: [geo.imgWidth, geo.imgHeight],
+          frame: geo.width,
+        }
+      )
     );
     check(
       "R14 close chip overlays image top-right, dark bg (alpha≥0.5) + white icon",
