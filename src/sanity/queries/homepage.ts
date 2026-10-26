@@ -1,4 +1,5 @@
 import { defineQuery } from "next-sanity";
+import { destinationImageProjection } from "../fragments/destination-image";
 import { imageFragment } from "../fragments/image";
 
 export const HOMEPAGE_QUERY = defineQuery(`
@@ -40,8 +41,6 @@ export const FEATURED_DESTINATIONS_QUERY = defineQuery(`
     country->{ "code": code, "vi": name.vi, "en": name.en },
     description,
     descriptionEn,
-    // Single poster: the Studio field wins; legacy gallery[0] is only the
-    // pre-backfill bridge (remove after the destination-poster backfill).
-    "posterImage": coalesce(posterImage, galleryImages[0]) { ${imageFragment} }
+    ${destinationImageProjection}
   }
 `);

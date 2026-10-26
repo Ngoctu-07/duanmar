@@ -5,7 +5,7 @@ import { PriceRangeRow } from "@/components/pricing/price-range";
 import type { PriceRangeLabel } from "@/lib/pricing";
 import { Link } from "@/i18n/navigation";
 import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
-import { pickPosterImage } from "@/lib/destination-poster";
+import { pickCardImage } from "@/lib/destination-poster";
 import {
   resolveLocaleString,
   resolveLocalizedField,
@@ -22,6 +22,11 @@ export interface Destination {
   description?: LocaleString;
   /** Explicit English overview (base `description` is the VI source). */
   descriptionEn?: string | null;
+  /** Landscape crop for cards; falls back to `mainPoster` when empty. */
+  cardThumbnail?: { asset?: { url: string }; alt?: string };
+  /** Portrait detail poster (also the card fallback). */
+  mainPoster?: { asset?: { url: string }; alt?: string };
+  /** Deprecated pre-refactor field, still projected as a fallback. */
   posterImage?: { asset?: { url: string }; alt?: string };
 }
 
@@ -49,7 +54,7 @@ interface TourCardProps {
  * THE tour card — single source of truth for every tour surface.
  *
  * Homepage "featured destinations" design adopted globally: an open (boxless)
- * card with a 21:9 sharp-cornered poster, a small uppercase location meta row,
+ * card with a 16:9 sharp-cornered thumbnail, a small uppercase location meta row,
  * a large Gypsy title, a 2-line description, the price range and a solid red
  * action tag. No card background, border, shadow or radius is ever applied.
  */
@@ -59,7 +64,7 @@ export function TourCard({
   priceRange,
   aggregate,
 }: TourCardProps) {
-  const cover = pickPosterImage(destination);
+  const cover = pickCardImage(destination);
   const locale = useLocale();
   const t = useTranslations("destinations");
   // Locale-aware country label: assigned country doc → localized name;
@@ -90,7 +95,7 @@ export function TourCard({
         className="absolute inset-0 z-10 cursor-pointer"
       />
       {cover?.asset?.url && (
-        <div className="relative aspect-[21/9] w-full overflow-hidden rounded-none bg-[#1c1414]">
+        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-none bg-[#1c1414]">
           <Image
             src={cover.asset.url}
             alt={cover.alt || tourName}

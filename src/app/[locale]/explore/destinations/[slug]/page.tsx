@@ -13,7 +13,7 @@ import { PriceBlock } from "@/components/pricing/price-block";
 import { ItineraryAccordion, type ItineraryDay } from "@/components/explore/itinerary-accordion";
 import { cn } from "@/lib/utils";
 import { mapPricingTiers } from "@/lib/pricing";
-import { pickPosterImage } from "@/lib/destination-poster";
+import { pickMainPoster } from "@/lib/destination-poster";
 import {
   resolveLocaleBlocks,
   resolveLocaleList,
@@ -119,9 +119,10 @@ export default async function DestinationDetailPage({ params }: PageProps) {
   const highlights = resolveLocaleList(destination.highlights, locale);
   const included = resolveLocaleList(destination.inclusions, locale);
   const excluded = resolveLocaleList(destination.exclusions, locale);
-  // Single Studio poster asset — no gallery array, no slider. Tours without one
-  // keep the single-column reading measure.
-  const poster = pickPosterImage(destination);
+  // Portrait detail poster (mainPoster) — cards use the landscape
+  // cardThumbnail instead. Tours without artwork keep the single-column
+  // reading measure.
+  const poster = pickMainPoster(destination);
   const posterImage = poster?.asset?.url
     ? { src: poster.asset.url, alt: poster.alt || tourName }
     : null;

@@ -9,17 +9,18 @@ const {
 const { FEATURED_DESTINATIONS_QUERY } = await import(
   "../../src/sanity/queries/homepage.ts"
 );
-const { pickPosterImage } = await import("../../src/lib/destination-poster.ts");
+const { pickCardImage, pickMainPoster } = await import(
+  "../../src/lib/destination-poster.ts"
+);
 const { parse } = await import("groq-js");
 
-const schemaSource = readFileSync(
-  new URL("../../src/sanity/schemaTypes/destination.ts", import.meta.url),
-  "utf8"
-);
-const migrationSource = readFileSync(
-  new URL("../../scripts/backfill-destination-poster.mjs", import.meta.url),
-  "utf8"
-);
+const read = (path: string) =>
+  readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+const schemaSource = read("src/sanity/schemaTypes/destination.ts");
+const migrationSource = read("scripts/backfill-tour-dual-images.mjs");
+const cardSource = read("src/components/tours/tour-card.tsx");
+const posterSource = read("src/components/explore/tour-poster.tsx");
+const detailPage = read("src/app/[locale]/explore/destinations/[slug]/page.tsx");
 
 let passed = 0;
 let failed = 0;
@@ -41,26 +42,27 @@ const QUERIES = [
   FEATURED_DESTINATIONS_QUERY,
 ];
 
-check("all destination projections project one posterImage object", () => {
+check("every destination projection projects both dual-image fields", () => {
   for (const q of QUERIES) {
-    assert.ok(q.includes('"posterImage":'), "posterImage projection missing");
-    assert.ok(q.includes("coalesce(posterImage"), "poster must resolve a single object");
+    assert.ok(q.includes('"cardThumbnail": cardThumbnail'), "cardThumbnail projection missing");
+    assert.ok(q.includes('"mainPoster": mainPoster'), "mainPoster projection missing");
+    assert.ok(q.includes('"posterImage": posterImage'), "legacy poster fallback projection missing");
     assert.ok(q.includes("metadata"), "fragment metadata missing");
   }
 });
 
-check("queries drop the gallery list; gallery[0] survives only as the backfill bridge", () => {
+check("queries drop the gallery list; gallery[0] survives only as the legacy bridge", () => {
   for (const q of QUERIES) {
     assert.ok(!q.includes("galleryImages[]"), "gallery list projection must be gone");
     assert.ok(!q.includes("image {"), "legacy image projection must be gone");
     assert.ok(
-      q.includes("coalesce(posterImage, galleryImages[0])"),
-      "legacy gallery[0] bridge must stay until the backfill runs"
+      q.includes('"legacyGalleryImage": galleryImages[0]'),
+      "legacy gallery[0] bridge must stay until the dual-image backfill runs"
     );
   }
 });
 
-check("DESTINATION_BY_SLUG_QUERY: poster adds no new params", () => {
+check("DESTINATION_BY_SLUG_QUERY: dual images add no new params", () => {
   const dollars = DESTINATION_BY_SLUG_QUERY.match(/\$[a-zA-Z]+/g) ?? [];
   assert.deepEqual([...new Set(dollars)], ["$slug"]);
 });
@@ -81,34 +83,90 @@ check("all destination queries parse with groq-js (projection commas)", () => {
   }
 });
 
-check("schema: single required posterImage replaces the gallery array", () => {
-  assert.ok(schemaSource.includes('name: "posterImage"'), "posterImage field missing");
-  assert.ok(schemaSource.includes('type: "image"'), "posterImage must be an image asset");
-  assert.ok(schemaSource.includes("options: { hotspot: true }"), "hotspot missing");
+check("schema: landscape cardThumbnail + portrait mainPoster, both hotspot-enabled", () => {
   assert.ok(
-    /name: "posterImage"[\s\S]{0,400}rule\.required\(\)/.test(schemaSource),
-    "posterImage must be required"
+    /name: "cardThumbnail",\s*\n\s*title: "Homepage Card Image \(Landscape\)",\s*\n\s*type: "image"/.test(
+      schemaSource
+    ),
+    "cardThumbnail field missing/wrong title"
   );
+  assert.ok(
+    schemaSource.includes('"Horizontal crop optimized for homepage featured tour cards."'),
+    "cardThumbnail description missing"
+  );
+  assert.ok(
+    /name: "mainPoster",\s*\n\s*title: "Main Poster Image \(Portrait \/ Standard\)",\s*\n\s*type: "image"/.test(
+      schemaSource
+    ),
+    "mainPoster field missing/wrong title"
+  );
+  assert.ok(
+    schemaSource.includes('"Standard full-size poster for detail pages and modals."'),
+    "mainPoster description missing"
+  );
+  const hotspotCount = (schemaSource.match(/options: \{ hotspot: true \}/g) || []).length;
+  assert.ok(hotspotCount >= 2, `expected hotspot on both fields, found ${hotspotCount}`);
   assert.ok(!schemaSource.includes('name: "galleryImages"'), "gallery array must be removed");
   assert.ok(!schemaSource.includes("rule.min(3)"), "min-3 gallery rule must be removed");
+});
+
+check("schema: legacy posterImage hidden/read-only, preview prefers the card crop", () => {
   assert.ok(
-    schemaSource.includes('media: "posterImage"'),
-    "preview media must point at the poster"
+    /name: "posterImage"[\s\S]{0,500}hidden: true/.test(schemaSource),
+    "legacy posterImage must be hidden"
   );
+  assert.ok(
+    /name: "posterImage"[\s\S]{0,500}readOnly: true/.test(schemaSource),
+    "legacy posterImage must be read-only"
+  );
+  assert.ok(schemaSource.includes("media: cardThumbnail ?? mainPoster ?? legacyPoster"));
 });
 
-check("pickPosterImage: asset URL wins, empty/missing asset returns null", () => {
-  const poster = { asset: { url: "p.jpg" }, alt: "p" };
-  assert.equal(pickPosterImage({ name: "x", posterImage: poster }), poster);
-  assert.equal(pickPosterImage({ name: "x", posterImage: { alt: "no asset" } }), null);
-  assert.equal(pickPosterImage({ name: "x", posterImage: {} }), null);
-  assert.equal(pickPosterImage({ name: "x" }), null);
+check("pickCardImage: cardThumbnail wins, mainPoster is the fallback", () => {
+  const thumb = { asset: { url: "thumb.jpg" }, alt: "thumb" };
+  const main = { asset: { url: "main.jpg" }, alt: "main" };
+  const legacy = { asset: { url: "legacy.jpg" }, alt: "legacy" };
+  assert.equal(pickCardImage({ cardThumbnail: thumb, mainPoster: main }), thumb);
+  assert.equal(pickCardImage({ mainPoster: main, legacyGalleryImage: legacy }), main);
+  assert.equal(pickCardImage({ posterImage: legacy }), legacy);
+  assert.equal(pickCardImage({ legacyGalleryImage: legacy }), legacy);
+  assert.equal(pickCardImage({}), null);
 });
 
-check("migration script maps the first gallery asset into posterImage", () => {
-  assert.ok(migrationSource.includes("galleryImages"), "script must read the old gallery");
-  assert.ok(migrationSource.includes("posterImage"), "script must write posterImage");
-  assert.ok(migrationSource.includes("--apply"), "script must stay dry-run by default");
+check("pickCardImage skips assets without a URL", () => {
+  const main = { asset: { url: "main.jpg" } };
+  assert.equal(pickCardImage({ cardThumbnail: { alt: "no asset" }, mainPoster: main }), main);
+  assert.equal(pickCardImage({ cardThumbnail: {}, mainPoster: {} }), null);
+});
+
+check("pickMainPoster: mainPoster wins, legacy art is the fallback", () => {
+  const thumb = { asset: { url: "thumb.jpg" }, alt: "thumb" };
+  const main = { asset: { url: "main.jpg" }, alt: "main" };
+  const legacy = { asset: { url: "legacy.jpg" }, alt: "legacy" };
+  assert.equal(pickMainPoster({ mainPoster: main, cardThumbnail: thumb }), main);
+  assert.equal(pickMainPoster({ posterImage: legacy, cardThumbnail: thumb }), legacy);
+  assert.equal(pickMainPoster({ cardThumbnail: thumb }), thumb);
+  assert.equal(pickMainPoster({}), null);
+});
+
+check("card renders cardThumbnail at 16:9 with object-cover", () => {
+  assert.ok(cardSource.includes("pickCardImage(destination)"), "card must read pickCardImage");
+  assert.ok(cardSource.includes("cardThumbnail?:"), "card Destination must expose cardThumbnail");
+  assert.ok(cardSource.includes("mainPoster?:"), "card Destination must expose mainPoster");
+  assert.ok(cardSource.includes("aspect-[16/9]"), "card frame must be 16:9");
+  assert.ok(cardSource.includes("object-cover"), "card image must use object-cover");
+});
+
+check("detail poster renders mainPoster at 2:3 with object-cover", () => {
+  assert.ok(detailPage.includes("pickMainPoster(destination)"), "detail must read pickMainPoster");
+  assert.ok(posterSource.includes("aspect-[2/3]"), "poster frame must be 2:3");
+  assert.ok(posterSource.includes("object-cover"), "poster image must use object-cover");
+});
+
+check("migration script copies legacy art into both dual fields, dry-run by default", () => {
+  for (const token of ["cardThumbnail", "mainPoster", "posterImage", "galleryImages", "--apply"]) {
+    assert.ok(migrationSource.includes(token), `script missing ${token}`);
+  }
 });
 
 console.log(`${passed}/${passed + failed} assertions passed`);

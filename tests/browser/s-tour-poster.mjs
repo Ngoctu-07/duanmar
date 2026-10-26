@@ -42,7 +42,7 @@ async function fetchTour() {
   const dataset = envValue("NEXT_PUBLIC_SANITY_DATASET") || "production";
   if (!projectId) return null;
   const query =
-    '*[_type == "destination"]{ "slug": slug.current, "poster": coalesce(posterImage.asset, galleryImages[0].asset) != null, "days": count(itinerary[]) }';
+    '*[_type == "destination"]{ "slug": slug.current, "poster": coalesce(cardThumbnail.asset, mainPoster.asset, posterImage.asset, galleryImages[0].asset) != null, "days": count(itinerary[]) }';
   const url = `https://${projectId}.api.sanity.io/v2026-09-25/data/query/${dataset}?query=${encodeURIComponent(query)}`;
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
@@ -156,8 +156,8 @@ try {
 
   check("P1 poster column mounted", Boolean(desktop.poster), JSON.stringify(desktop.poster));
   check(
-    "P1 poster is a portrait 3:4 frame (h/w = 4/3)",
-    Math.abs(desktop.posterRatio - 4 / 3) < 0.02,
+    "P1 poster is a portrait 2:3 frame (h/w = 3/2)",
+    Math.abs(desktop.posterRatio - 3 / 2) < 0.02,
     `ratio=${desktop.posterRatio.toFixed(4)}`
   );
   check(
@@ -195,7 +195,7 @@ try {
     `article.right=${desktop.article?.right} poster.left=${desktop.poster?.left}`
   );
   check(
-    "P2 desktop: poster spans the full column height of a 3:4 poster",
+    "P2 desktop: poster spans the full column height of a 2:3 poster",
     desktop.poster && desktop.poster.h > 500,
     `poster=${desktop.poster?.w}x${desktop.poster?.h}`
   );

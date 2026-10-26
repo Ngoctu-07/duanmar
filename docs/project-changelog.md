@@ -1,5 +1,25 @@
 # Project Changelog
 
+## 2026-10-27
+
+### Changed
+- **[CMS/UI] Dual tour artwork: landscape card thumbnail vs portrait main poster** (task "Implement Dual Image Asset Schema in Sanity CMS & Update Card vs Poster UI Rendering")
+  - **Schema** `src/sanity/schemaTypes/destination.ts`: added `cardThumbnail` ("Homepage Card Image (Landscape)", hotspot) and `mainPoster` ("Main Poster Image (Portrait / Standard)", hotspot), each with the requested title/description. The old single `posterImage` is now deprecated/hidden/read-only (kept only so un-migrated docs keep their artwork); Studio preview media prefers `cardThumbnail → mainPoster → legacy poster`.
+  - **GROQ** NEW `src/sanity/fragments/destination-image.ts` (`destinationImageProjection`) shared by all four destination projections (list, by-slug, by-category, featured) — projects both fields plus legacy `posterImage` / `galleryImages[0]` fallbacks.
+  - **Helpers** `src/lib/destination-poster.ts`: `pickCardImage()` = `cardThumbnail → mainPoster → legacy`; `pickMainPoster()` = `mainPoster → legacy → cardThumbnail`. Assets without a URL are ignored (no broken frames).
+  - **Card UI** `tour-card.tsx`: renders `pickCardImage()` in a `aspect-[16/9]` `object-cover` frame (was 21:9) with sharp corners, so landscape crops no longer get squeezed.
+  - **Detail UI** `[slug]/page.tsx` + `tour-poster.tsx`: renders `pickMainPoster()` in an `aspect-[2/3]` `object-cover` frame (was 3:4); booking surfaces that receive the tour poster share this helper.
+  - **Migration** NEW `scripts/backfill-tour-dual-images.mjs` (`npm run migrate:tour-images`): copies legacy art into both new fields when missing, dry-run by default, `--apply` needs `SANITY_WRITE_TOKEN`. Live dry-run: **3 docs pending** (never applied automatically).
+  - **Tests** `destination-poster.test.mts` rewritten **12/12** (dual projections, schema titles/descriptions/hotspot, hidden legacy field, helper precedence, 16:9 card + 2:3 poster, migration); `homepage-horror-redesign` 16:9 card, `tour-category-queries` dual fields, `tour-detail-itinerary` 2:3 + `pickMainPoster`; browser `w-home-horror-redesign` W12 asserts the 16:9 card and `s-tour-poster` P1 asserts the 2:3 poster (both verified live). Unit suite **57/57 files**.
+- **[UX] Hero intro audio: native track at 85% volume + autoplay-policy recovery** (task "Enable Synchronized Native Video Audio & Set 85% Default Volume Scale")
+  - `hero-section.tsx`: removed `muted` from the central promo `<video>` so its own embedded audio track plays through the native HTML5 pipeline (no separate `<audio>` element, no drift); background/About ambience stay muted.
+  - `use-hero-video-autopause.ts`: exports `HERO_VIDEO_VOLUME = 0.85` and applies `video.muted = false; video.volume = 0.85` on init and on every resume. Scroll-out still pauses + mutes; scroll-in restores audio and continues from the paused timestamp. `play()` rejections are caught: `NotAllowedError` arms one-time capture-phase `pointerdown`/`keydown`/`touchstart` unlock listeners that start playback after the first trusted gesture (removed on unmount), so blocked unmuted autoplay never leaks an uncaught DOM exception. DOM nodes are held in callback refs (state is only a re-bind counter).
+  - **Tests** `hero-video-autopause.test.mts` **10/10** (0.85 constant, unmuted element, gesture unlock, NotAllowedError catch, cleanup); browser `w-home-horror-redesign` W6b/W6b2 (unmuted, 0.85, plays or unlocks on first gesture) and `v-home-hero-header-search` V4b/V12 updated. Verified with a blocked-resume simulation: rejected play leaves the clip paused/unmuted at 0.85 with zero pageerrors, then the first pointer gesture starts audio. Unit suite **57/57 files**.
+- **[UX] Hero promo clip auto-pauses/mutes when scrolled out** (task "Implement Scroll-Triggered Auto-Pause & Auto-Mute for Hero Intro Video")
+  - NEW `src/components/homepage/use-hero-video-autopause.ts` — `IntersectionObserver` on the `hero-video-frame` container at threshold **0.5**; below half visibility it calls `video.pause()` and forces `video.muted = true`, at ≥50% it calls `video.play()` (rejections swallowed) from the exact paused timestamp. `loop`/`autoPlay`/`playsInline` untouched; no `window` scroll listener. Callback refs re-bind if the clip swaps, and cleanup calls `observer.disconnect()` on unmount. Exposes `isHeroVideoVisible()` for testing.
+  - `hero-section.tsx` wires `frameRef` / `videoRef` into the existing frame + `<video>` markup.
+  - Tests: NEW `tests/unit/hero-video-autopause.test.mts` 7/7 (threshold boundaries, pause/mute/resume, no scroll listener, disconnect cleanup, hero wiring). Verified `npx tsc --noEmit` 0 · `eslint` 0 · `npm test` **57/57 files**.
+
 ## 2026-10-26
 
 ### Added

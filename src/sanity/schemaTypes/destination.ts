@@ -167,13 +167,29 @@ export default defineType({
       of: [itineraryDayMember],
     }),
     defineField({
-      name: "posterImage",
-      title: "Poster Image",
+      name: "cardThumbnail",
+      title: "Homepage Card Image (Landscape)",
       type: "image",
       description:
-        "Single featured image. Rendered as the portrait poster on the tour detail page and as the cover on every listing card. No gallery, no carousel.",
+        "Horizontal crop optimized for homepage featured tour cards.",
       options: { hotspot: true },
-      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "mainPoster",
+      title: "Main Poster Image (Portrait / Standard)",
+      type: "image",
+      description: "Standard full-size poster for detail pages and modals.",
+      options: { hotspot: true },
+    }),
+    defineField({
+      name: "posterImage",
+      title: "Legacy Poster Image (deprecated)",
+      type: "image",
+      description:
+        "Deprecated single-image field. Use Homepage Card Image + Main Poster instead; existing artwork is copied by `npm run migrate:tour-images` and still renders as a fallback until then.",
+      options: { hotspot: true },
+      hidden: true,
+      readOnly: true,
     }),
     defineField({
       name: "location",
@@ -208,6 +224,17 @@ export default defineType({
     }),
   ],
   preview: {
-    select: { title: "name", subtitle: "category", media: "posterImage" },
+    select: {
+      title: "name",
+      subtitle: "category",
+      cardThumbnail: "cardThumbnail",
+      mainPoster: "mainPoster",
+      legacyPoster: "posterImage",
+    },
+    prepare: ({ title, subtitle, cardThumbnail, mainPoster, legacyPoster }) => ({
+      title,
+      subtitle,
+      media: cardThumbnail ?? mainPoster ?? legacyPoster,
+    }),
   },
 });

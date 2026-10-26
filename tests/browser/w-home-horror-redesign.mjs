@@ -10,7 +10,7 @@ import { dismissPromo } from "../helpers/promo.mjs";
  * grain overlay, a borderless promo film capped at 50vw that breaks out 60%
  * inside / 40% below,
  * no static wordmark, strict hero → search → featured order, a halved
- * search→featured gap, Gypsy Curse display headings, and open 21/9 pill cards
+ * search→featured gap, Gypsy Curse display headings, and open 16/9 card thumbnails
  * with condensed uppercase titles and blood-red CTAs.
  */
 
@@ -33,6 +33,7 @@ const check = (name, ok, detail = "") => {
   if (!ok) errors.push(name);
 };
 const near = (a, b, tol = 3) => typeof a === "number" && Math.abs(a - b) <= tol;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 let browser = null;
 try {
@@ -106,7 +107,14 @@ try {
       gap: inputRect && featuredHeaderRect ? featuredHeaderRect.top - inputRect.bottom : null,
       hasVideo: Boolean(video),
       videoAttrs: video
-        ? { autoplay: video.autoplay, muted: video.muted, loop: video.loop, playsInline: video.playsInline }
+        ? {
+            autoplay: video.autoplay,
+            muted: video.muted,
+            loop: video.loop,
+            playsInline: video.playsInline,
+            volume: video.volume,
+            paused: video.paused,
+          }
         : null,
       ambient: Boolean(ambient),
       fogAnimation: fog ? getComputedStyle(fog).animationName : null,
@@ -199,12 +207,30 @@ try {
   );
   if (layout.hasVideo) {
     check(
-      "W6b promo film autoplays muted, looping, inline",
+      "W6b promo film is unmuted, looping, inline and capped at 85% volume",
       layout.videoAttrs?.autoplay &&
-        layout.videoAttrs?.muted &&
+        layout.videoAttrs?.muted === false &&
         layout.videoAttrs?.loop &&
-        layout.videoAttrs?.playsInline,
+        layout.videoAttrs?.playsInline &&
+        near(layout.videoAttrs?.volume, 0.85, 0.001),
       JSON.stringify(layout.videoAttrs)
+    );
+
+    // Unmuted autoplay can be policy-blocked (headless Chrome defaults to it):
+    // the hook must arm a gesture unlock instead of throwing NotAllowedError.
+    if (layout.videoAttrs?.paused) {
+      await page.mouse.click(24, 860);
+      await sleep(900);
+    }
+    const audio = await page.$eval('[data-testid="hero-video"]', (v) => ({
+      paused: v.paused,
+      muted: v.muted,
+      volume: v.volume,
+    }));
+    check(
+      "W6b2 promo audio plays at 85% (autoplay allowed or first-gesture unlock)",
+      !audio.paused && audio.muted === false && near(audio.volume, 0.85, 0.001),
+      JSON.stringify(audio)
     );
   }
   if (layout.bgMediaType === "video") {
@@ -288,7 +314,7 @@ try {
 
   check("W10 featured cards render", Boolean(card) && card.cardCount > 0, JSON.stringify(card?.cardCount));
   check("W11 card box is transparent with no border/shadow", card && card.bg === "rgba(0, 0, 0, 0)" && card.border === "0px" && card.shadow === "none", JSON.stringify(card && { bg: card.bg, border: card.border, shadow: card.shadow }));
-  check("W12 thumbnail is a wide 21/9 frame with strict 90-degree corners", card && card.ratio >= 2.2 && card.ratio <= 2.45 && card.radius === 0, JSON.stringify({ ratio: card?.ratio?.toFixed(3), radius: card?.radius }));
+  check("W12 thumbnail is a 16/9 landscape frame with strict 90-degree corners", card && card.ratio >= 1.7 && card.ratio <= 1.85 && card.radius === 0, JSON.stringify({ ratio: card?.ratio?.toFixed(3), radius: card?.radius }));
   check("W13 tour titles use localized Gypsy in white at the original size", card && /gypsy.?curse/i.test(card.titleFont) && card.titleTransform === "uppercase" && card.titleSize >= 24 && card.titleSize <= 40 && card.titleColor === "rgb(255, 255, 255)", JSON.stringify({ font: card?.titleFont, transform: card?.titleTransform, size: card?.titleSize, color: card?.titleColor }));
   check("W14 featured heading uses localized Gypsy in white", card && /gypsy.?curse/i.test(card.headingFont) && layout.headingColor === "rgb(255, 255, 255)", JSON.stringify({ font: card?.headingFont, color: layout.headingColor }));
   check("W15 CTA is blood red (#b3151b)", card && card.ctaBg === "rgb(179, 21, 27)", card?.ctaBg);

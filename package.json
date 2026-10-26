@@ -11,6 +11,7 @@
     "test:browser": "node tests/run-browser.mjs",
     "migrate:tour-filter": "node scripts/backfill-tour-filter-fields.mjs",
     "migrate:destination-poster": "node scripts/backfill-destination-poster.mjs",
+    "migrate:tour-images": "node scripts/backfill-tour-dual-images.mjs",
     "migrate:countries": "node scripts/seed-countries.mjs",
     "migrate:purge-team-gallery": "node scripts/purge-team-gallery.mjs",
     "migrate:seed-articles": "node scripts/seed-articles.mjs",

@@ -110,10 +110,10 @@ check("hero breaks out the promo film (50vw, 60% inside / 40% below)", () => {
     "absolute inset-x-0 bottom-0 z-20 flex justify-center",
     "translate-y-[40%]",
     "autoPlay",
-    "muted",
     "loop",
     "playsInline",
   ]);
+  assert.ok(!hero.includes("muted"), "promo film must keep its native audio track unmuted");
   assert.ok(
     !hero.includes("absolute inset-0 z-10 flex items-center justify-center"),
     "promo film is still centered instead of anchored to the hero bottom",
@@ -394,7 +394,7 @@ check("tour card is open (no box) and keeps the shared card contract", () => {
 });
 
 check("tour card thumbnail is wide with strict 90-degree corners", () => {
-  has(card, ["aspect-[21/9]", "rounded-none", "object-cover"]);
+  has(card, ["aspect-[16/9]", "rounded-none", "object-cover"]);
   assert.ok(
     !card.includes("rounded-[2rem]") && !card.includes("sm:rounded-[3rem]"),
     "tour card thumbnails must not keep pill/heavy radius",
@@ -467,6 +467,8 @@ check("card data props are unchanged (no schema/query drift)", () => {
     "country",
     "description",
     "descriptionEn",
+    "cardThumbnail",
+    "mainPoster",
     "posterImage",
   ]) {
     assert.ok(FEATURED_DESTINATIONS_QUERY.includes(field), `query lost ${field}`);

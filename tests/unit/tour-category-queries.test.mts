@@ -92,7 +92,9 @@ check("projection queries keep the poster fragment + core fields, never difficul
     DESTINATIONS_BY_CATEGORY_QUERY,
     FEATURED_DESTINATIONS_QUERY,
   ]) {
-    assert.ok(q.includes('"posterImage":'), "posterImage fragment missing");
+    assert.ok(q.includes('"cardThumbnail":'), "cardThumbnail fragment missing");
+    assert.ok(q.includes('"mainPoster":'), "mainPoster fragment missing");
+    assert.ok(q.includes('"posterImage":'), "legacy poster fallback fragment missing");
     assert.ok(!q.includes("galleryImages[]"), "gallery list must be gone");
     assert.ok(!q.includes("difficultyLevel"), "difficultyLevel removed from schema");
     assert.ok(!q.includes("difficulty"), "CMS difficulty field fully removed");

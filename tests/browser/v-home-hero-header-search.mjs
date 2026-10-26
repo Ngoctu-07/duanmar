@@ -100,7 +100,7 @@ try {
   check("V2b hero starts at the top of the page (under the transparent header)", hero && Math.abs(hero.top) <= 2, `top=${hero?.top}`);
   check("V3 no static display wordmark; only a visually hidden CMS H1 remains", hero && hero.displayPresent === false && hero.textHasWordmark === false && hero.hasH1 && hero.h1SrOnly && hero.h1Text.length > 0 && hero.hasSlogan === false, JSON.stringify({ display: hero?.displayPresent, wordmark: hero?.textHasWordmark, h1: hero?.h1Text, srOnly: hero?.h1SrOnly, slogan: hero?.hasSlogan }));
   check("V4 hero has a scroll-down affordance", hero?.hasArrow === true);
-  if (hero?.hasVideo) check("V4b hero video is autoplaying, muted, looping, inline", await page.$eval('[data-testid="hero-video"]', (v) => v.autoplay && v.muted && v.loop && v.playsInline), "video attrs");
+  if (hero?.hasVideo) check("V4b hero video is unmuted, looping, inline at 85% volume", await page.$eval('[data-testid="hero-video"]', (v) => v.autoplay && !v.muted && v.loop && v.playsInline && Math.abs(v.volume - 0.85) < 0.001), "video attrs");
 
   // ---------- V5 hero state: frameless transparent overlay, centered links only ----------
   const top = await headerState(page);
@@ -204,6 +204,7 @@ try {
         border: wrapper.borderTopWidth,
         radius: parseFloat(wrapper.borderTopLeftRadius),
         muted: video.muted,
+        volume: video.volume,
         loop: video.loop,
         playsInline: video.playsInline,
         autoplay: video.autoplay,
@@ -215,7 +216,7 @@ try {
     const expectedW = Math.min(width * 0.5, 768);
     check(`V12 @${width}px promo film ≈ 50vw (capped at 768px)`, m && near(m.frameWidth, expectedW), JSON.stringify({ w: m?.frameWidth, expected: expectedW }));
     check(`V12 @${width}px promo film breakout (60% inside / 40% below)`, m && near(m.frameCenterX, m.viewportW / 2) && near(m.overlap, 0.6, 0.02) && near(m.outside, 0.4, 0.02), JSON.stringify({ cx: m?.frameCenterX, overlap: m?.overlap, outside: m?.outside, frame: [m?.frameTop, m?.frameBottom], heroBottom: m?.heroBottom }));
-    check(`V12 @${width}px promo film borderless + autoplay/muted/loop/inline`, m && m.border === "0px" && m.autoplay && m.muted && m.loop && m.playsInline, JSON.stringify({ border: m?.border, autoplay: m?.autoplay, muted: m?.muted, loop: m?.loop, inline: m?.playsInline }));
+    check(`V12 @${width}px promo film borderless + autoplay/unmuted/loop/inline at 85%`, m && m.border === "0px" && m.autoplay && !m.muted && m.loop && m.playsInline && Math.abs(m.volume - 0.85) < 0.001, JSON.stringify({ border: m?.border, autoplay: m?.autoplay, muted: m?.muted, volume: m?.volume, loop: m?.loop, inline: m?.playsInline }));
     check(`V12 @${width}px no static wordmark in the hero`, m && !m.wordmark && !m.textHasWordmark, JSON.stringify({ display: m?.wordmark, text: m?.textHasWordmark }));
     check(`V12 @${width}px no horizontal page overflow`, m && m.docOverflow <= 0, JSON.stringify({ overflow: m?.docOverflow }));
   }

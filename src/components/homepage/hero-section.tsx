@@ -7,6 +7,7 @@ import {
   HeroAmbientBackdrop,
   type HeroBackgroundMedia,
 } from "@/components/homepage/hero-ambient-backdrop";
+import { useHeroVideoAutopause } from "@/components/homepage/use-hero-video-autopause";
 
 interface HeroProps {
   hero?: {
@@ -57,6 +58,7 @@ export function HeroSection({
 }: HeroProps) {
   const t = useTranslations("home");
   const [failed, setFailed] = useState(false);
+  const { frameRef, videoRef } = useHeroVideoAutopause();
 
   const imageSrc = hero?.heroImage?.asset?.url ?? null;
   const showVideo = Boolean(videoSrc) && !failed;
@@ -88,16 +90,17 @@ export function HeroSection({
       {showVideo ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center px-4">
           <div
+            ref={frameRef}
             data-testid="hero-video-frame"
             className="w-[50vw] max-w-3xl translate-y-[40%]"
           >
             <div className="aspect-video overflow-hidden rounded-none bg-black/40 shadow-[0_30px_120px_-20px_rgba(0,0,0,0.95)]">
               <video
+                ref={videoRef}
                 data-testid="hero-video"
                 src={videoSrc ?? undefined}
                 poster={posterSrc ?? imageSrc ?? undefined}
                 autoPlay
-                muted
                 loop
                 playsInline
                 preload="auto"

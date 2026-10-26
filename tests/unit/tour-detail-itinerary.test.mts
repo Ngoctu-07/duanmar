@@ -222,7 +222,7 @@ check("page: description owns the column top so the poster aligns to it", () => 
 });
 
 check("page: single poster from the CMS, no gallery/carousel code", () => {
-  assert.ok(page.includes("pickPosterImage"), "page must read the single poster helper");
+  assert.ok(page.includes("pickMainPoster"), "page must read the main poster helper");
   assert.ok(!page.includes("galleryImages"), "gallery references must be gone");
   assert.ok(!page.includes("pickGalleryImages"), "gallery helper must be gone");
   assert.ok(!page.includes("carousel"), "carousel references must be gone");
@@ -254,9 +254,9 @@ check("page: itinerary + price live in the text column, poster owns the right co
   );
 });
 
-check("layout: poster is a 3:4 portrait, cover-cropped, capped and sticky", () => {
+check("layout: poster is a 2:3 portrait, cover-cropped, capped and sticky", () => {
   const poster = read("src/components/explore/tour-poster.tsx");
-  assert.ok(poster.includes("aspect-[3/4]"), "poster must keep the 3:4 portrait frame");
+  assert.ok(poster.includes("aspect-[2/3]"), "poster must use the 2:3 portrait frame");
   assert.ok(poster.includes("object-cover"), "poster image must crop to fill");
   assert.ok(poster.includes("w-full"), "poster must fill its column width");
   assert.ok(poster.includes("max-w-md"), "poster must be capped at max-w-md");

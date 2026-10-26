@@ -10,15 +10,43 @@ export interface DestinationImage {
 export interface PosterSource {
   /** Unread by the helper — typed loosely for localized `name`. */
   name?: LocaleString;
-  /** Single CMS poster asset (schema field `posterImage`). */
+  /** Landscape homepage-card crop (schema field `cardThumbnail`). */
+  cardThumbnail?: DestinationImage;
+  /** Portrait detail-page poster (schema field `mainPoster`). */
+  mainPoster?: DestinationImage;
+  /** Deprecated single-image field, kept as a pre-backfill fallback. */
   posterImage?: DestinationImage;
+  /** Pre-poster gallery frame, last-resort legacy fallback. */
+  legacyGalleryImage?: DestinationImage;
+}
+
+const withAsset = (image?: DestinationImage | null): DestinationImage | null =>
+  image?.asset?.url ? image : null;
+
+/**
+ * Homepage/listing cards render the landscape thumbnail, falling back to the
+ * portrait poster (then legacy art) so a half-migrated document never paints a
+ * broken frame. Objects whose asset has no URL are treated as empty.
+ */
+export function pickCardImage(dest: PosterSource): DestinationImage | null {
+  return (
+    withAsset(dest.cardThumbnail) ??
+    withAsset(dest.mainPoster) ??
+    withAsset(dest.posterImage) ??
+    withAsset(dest.legacyGalleryImage)
+  );
 }
 
 /**
- * The one image every destination surface renders: the Studio `posterImage`.
- * Returns `null` when the doc has no asset URL so the caller can fall back to a
- * text-only layout instead of painting a broken frame.
+ * Detail pages and booking surfaces render the portrait poster, falling back to
+ * legacy art (then the landscape thumbnail) for documents that predate the
+ * dual-image schema.
  */
-export function pickPosterImage(dest: PosterSource): DestinationImage | null {
-  return dest.posterImage?.asset?.url ? dest.posterImage : null;
+export function pickMainPoster(dest: PosterSource): DestinationImage | null {
+  return (
+    withAsset(dest.mainPoster) ??
+    withAsset(dest.posterImage) ??
+    withAsset(dest.cardThumbnail) ??
+    withAsset(dest.legacyGalleryImage)
+  );
 }
