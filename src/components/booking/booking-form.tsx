@@ -12,13 +12,13 @@ import {
   resolveVoucherDiscount,
   type VoucherDiscount,
 } from "@/lib/vouchers/voucher-discount";
+import { normalizeBookingDifficulty } from "@/lib/booking-difficulty";
 import { BookingContactSection } from "./booking-contact-section";
 import { BookingDateSection } from "./booking-date-section";
 import { BookingDifficultySection } from "./booking-difficulty-section";
 import { BookingPricingSection } from "./booking-pricing-section";
 import { BookingSummary } from "./booking-summary";
 import { BookingVoucherSection } from "./booking-voucher-section";
-import type { CryptoConfig } from "@/lib/crypto-payment";
 import {
   isValidGuests,
   travelDateErrorAfterGuestsChange,
@@ -43,12 +43,8 @@ interface BookingFormProps {
   tourName: string;
   tiers: PriceTier[];
   locale: string;
-  /** CMS special-tour flag — gates Section 4 (Challenge Level) end to end. */
-  isSpecialTour?: boolean;
   /** CMS capacity (`null` = none configured); device bookings merge in after mount. */
   capacity?: TourCapacity | null;
-  /** Validated Web3 (MetaMask) config — `null` keeps the crypto rail but marks it unconfigured. */
-  cryptoConfig?: CryptoConfig | null;
   /** Signed-in user's claimed vouchers (wallet snapshot). */
   vouchers?: Voucher[];
   /** Whether a session exists — drives the voucher empty state. */
@@ -60,9 +56,7 @@ export function BookingForm({
   tourName,
   tiers,
   locale,
-  isSpecialTour,
   capacity,
-  cryptoConfig = null,
   vouchers = [],
   signedIn = false,
 }: BookingFormProps) {
@@ -131,7 +125,15 @@ export function BookingForm({
           )
         : undefined;
 
-    setValues((previous) => ({ ...previous, [field]: value }));
+    setValues((previous) => {
+      if (field === "difficulty") {
+        return {
+          ...previous,
+          difficulty: normalizeBookingDifficulty(value) ?? "",
+        };
+      }
+      return { ...previous, [field]: value };
+    });
     setErrors((previous) => {
       const next: BookingErrors = { ...previous, [field]: undefined };
       if (field === "guests") next.travelDate = dateError;
@@ -141,11 +143,7 @@ export function BookingForm({
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const found = validateBooking(
-      values,
-      activeCapacity,
-      isSpecialTour === true
-    );
+    const found = validateBooking(values, activeCapacity);
     setErrors(found);
     if (Object.keys(found).length === 0) setConfirmed(true);
   };
@@ -164,14 +162,12 @@ export function BookingForm({
         total={payable}
         locale={locale}
         currency={currency}
-        isSpecialTour={isSpecialTour === true}
-        cryptoConfig={cryptoConfig}
       />
     );
   }
 
   return (
-    <form onSubmit={submit} noValidate data-crt-static="300" className="space-y-5">
+    <form onSubmit={submit} noValidate className="space-y-5">
       <BookingContactSection values={values} errors={errors} onChange={change} />
       <BookingDateSection
         values={values}
@@ -194,13 +190,12 @@ export function BookingForm({
         locale={locale}
         currency={currency}
       />
-      {isSpecialTour === true && (
-        <BookingDifficultySection
-          values={values}
-          errors={errors}
-          onChange={change}
-        />
-      )}
+
+      <BookingDifficultySection
+        values={values}
+        errors={errors}
+        onChange={change}
+      />
 
       <BookingVoucherSection
         vouchers={vouchers}

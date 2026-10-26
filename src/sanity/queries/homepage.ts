@@ -38,7 +38,6 @@ export const FEATURED_DESTINATIONS_QUERY = defineQuery(`
     region,
     category,
     country->{ "code": code, "vi": name.vi, "en": name.en },
-    isSpecialTour,
     description,
     descriptionEn,
     // Single poster: the Studio field wins; legacy gallery[0] is only the

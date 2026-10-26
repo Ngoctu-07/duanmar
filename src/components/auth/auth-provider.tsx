@@ -10,6 +10,7 @@ import {
 } from "react";
 import { SessionProvider, signOut, useSession } from "next-auth/react";
 import { AuthModal } from "@/components/auth/auth-modal";
+import { fireCrtStatic } from "@/lib/crt-static";
 
 /**
  * Client-side auth gate. Wraps the locale tree in a SessionProvider and owns
@@ -69,6 +70,8 @@ function AuthGateProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleAuthenticated = useCallback(() => {
+    // Milestone 1: successful authentication (sign-in, sign-up or reset).
+    fireCrtStatic();
     setOpen(false);
     const action = pending.current;
     pending.current = null;

@@ -1,7 +1,7 @@
 import type { BookingConfirmationPayload } from "@/lib/email/email-types";
 import { EMAIL_PATTERN, PHONE_PATTERN } from "@/lib/contact-validation";
 import type { PaymentMethod } from "@/lib/payment";
-import { isTransactionHash } from "@/lib/crypto-payment";
+import { normalizeBookingDifficulty } from "@/lib/booking-difficulty";
 
 /**
  * Server-side validation for POST /api/booking-confirmation (plan 260929-2229).
@@ -63,6 +63,17 @@ export function validateBookingConfirmation(
   ) {
     errors.guests = "invalid";
   }
+  const difficulty =
+    record.difficulty === undefined || record.difficulty === null
+      ? undefined
+      : normalizeBookingDifficulty(record.difficulty);
+  if (
+    record.difficulty !== undefined &&
+    record.difficulty !== null &&
+    difficulty === null
+  ) {
+    errors.difficulty = "invalid";
+  }
   if (
     typeof record.total !== "number" ||
     !Number.isFinite(record.total) ||
@@ -75,14 +86,9 @@ export function validateBookingConfirmation(
   }
   if (
     record.paymentMethod !== "momo" &&
-    record.paymentMethod !== "bank" &&
-    record.paymentMethod !== "crypto_metamask"
+    record.paymentMethod !== "bank"
   ) {
     errors.paymentMethod = "invalid";
-  }
-  // Web3 rail only — optional, but must be a well-formed hash when present.
-  if (record.txHash !== undefined && record.txHash !== null) {
-    if (!isTransactionHash(record.txHash)) errors.txHash = "invalid";
   }
   if (record.locale !== "en" && record.locale !== "vi") {
     errors.locale = "invalid";
@@ -107,12 +113,10 @@ export function validateBookingConfirmation(
     phone: (record.phone as string).trim(),
     travelDate: (record.travelDate as string).trim(),
     guests: record.guests as number,
+    ...(difficulty && { difficulty }),
     total: record.total as number,
     currency: record.currency as "VND" | "USD",
     paymentMethod: record.paymentMethod as PaymentMethod,
-    ...(typeof record.txHash === "string" && record.txHash.trim().length > 0
-      ? { txHash: record.txHash.trim() }
-      : {}),
     notes: typeof record.notes === "string" ? record.notes.trim() : "",
     locale: record.locale as "en" | "vi",
   };

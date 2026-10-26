@@ -83,14 +83,6 @@ export default defineType({
       },
     }),
     defineField({
-      name: "isSpecialTour",
-      title: "Special Tour",
-      type: "boolean",
-      description:
-        "Turn on to flag this tour as a special tour. Also shows the Challenge Level (Cấp độ thử thách) step in the booking form.",
-      initialValue: false,
-    }),
-    defineField({
       name: "category",
       title: "Category",
       type: "string",

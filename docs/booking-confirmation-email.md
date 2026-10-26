@@ -44,6 +44,7 @@ and booking confirmations use the same provider; failures surface a typed
 
 - **Subject (exact):** `[DuanMar] Tour Booking Confirmation / Thông Tin Đặt Tour - [Booking_ID]`
 - **Fields:** Full Name, Email, Phone, Travel Date (DD/MM/YYYY), Guests,
+  Difficulty (bilingual `Easy / Dễ`, `Medium / Trung bình`, `Hard / Khó`),
   Total Amount (Intl currency format), Payment Method (bilingual label for
   `momo`/`bank`), Notes (or `None / Không có`).
 - **Footer (exact, both languages):**
@@ -72,8 +73,8 @@ and booking confirmations use the same provider; failures surface a typed
 
 - `tests/unit/booking-confirmation-email.test.mts` — subject/footer/date/XSS/validation/delay/queue.
 - `tests/browser/b-booking-confirmation-email.mjs` — API contract
-  (405/415/400/202, `sendAt ≈ +120000`) + booking-flow POST spy
-  (exactly 1 dispatch, payload contract, difficulty fallback for special tours).
+  (405/415/400/202, `sendAt ≈ configured BOOKING_EMAIL_DELAY_MS`) + booking-flow
+  POST spy (exactly 1 dispatch, payload contract, priced universal booking form).
 
 ## Troubleshooting
 

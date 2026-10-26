@@ -28,11 +28,15 @@ function formatAmount(amount: number, currency: "VND" | "USD"): string {
   }).format(amount);
 }
 
+const DIFFICULTY_LABELS: Record<string, string> = {
+  Easy: "Easy / Dễ",
+  Medium: "Medium / Trung bình",
+  Hard: "Hard / Khó",
+};
+
 const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   momo: "MoMo E-wallet / Ví MoMo",
   bank: "Bank Transfer / Chuyển khoản ngân hàng",
-  crypto_metamask:
-    "Crypto Wallet (MetaMask) / Ví Crypto (MetaMask)",
 };
 
 /**
@@ -71,6 +75,15 @@ function buildDataRows(payload: BookingConfirmationPayload): DataRow[] {
       value: formatTravelDate(payload.travelDate),
     },
     { labelEn: "Guests", labelVi: "Số lượng khách", value: `${payload.guests}` },
+    ...(payload.difficulty
+      ? [
+          {
+            labelEn: "Difficulty",
+            labelVi: "Độ khó",
+            value: DIFFICULTY_LABELS[payload.difficulty] ?? payload.difficulty,
+          },
+        ]
+      : []),
     {
       labelEn: "Total Amount",
       labelVi: "Tổng thanh toán",
@@ -81,16 +94,6 @@ function buildDataRows(payload: BookingConfirmationPayload): DataRow[] {
       labelVi: "Phương thức thanh toán",
       value: PAYMENT_METHOD_LABELS[payload.paymentMethod],
     },
-    // Web3 rail only — on-chain settlement proof for order verification.
-    ...(payload.txHash
-      ? [
-          {
-            labelEn: "Transaction Hash",
-            labelVi: "Mã giao dịch (txHash)",
-            value: payload.txHash,
-          },
-        ]
-      : []),
     {
       labelEn: "Notes",
       labelVi: "Yêu cầu đặc biệt",

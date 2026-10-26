@@ -20,7 +20,6 @@ export interface GroundingDestination {
   region: string;
   category: string;
   country: string | null;
-  isSpecialTour: boolean;
   description: string;
 }
 

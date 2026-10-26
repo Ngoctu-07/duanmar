@@ -9,7 +9,6 @@ export const DESTINATIONS_QUERY = defineQuery(`
     region,
     category,
     country->{ "code": code, "vi": name.vi, "en": name.en },
-    isSpecialTour,
     description,
     descriptionEn,
     lat,
@@ -29,7 +28,6 @@ export const DESTINATION_BY_SLUG_QUERY = defineQuery(`
     region,
     category,
     country->{ "code": code, "vi": name.vi, "en": name.en },
-    isSpecialTour,
     description,
     descriptionEn,
     itinerary[] {
@@ -59,7 +57,6 @@ export const DESTINATIONS_BY_CATEGORY_QUERY = defineQuery(`
     region,
     category,
     country->{ "code": code, "vi": name.vi, "en": name.en },
-    isSpecialTour,
     description,
     descriptionEn,
     lat,

@@ -6,7 +6,7 @@ import { dismissPromo } from "../helpers/promo.mjs";
  * Plan 260929-2229 — delayed booking-confirmation email.
  * Part 1: API contract (405/415/400/202 + 2-min sendAt) — always runs.
  * Part 2: booking flow dispatch spy — data-driven (needs a live priced,
- * non-special destination; skips honestly when none exists).
+ * priced destination; skips honestly when none exists).
  */
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
@@ -93,35 +93,37 @@ const postJson = (path, body) =>
   const okBody = await okRes.json().catch(() => null);
   const sendAt = okBody?.sendAt ? Date.parse(okBody.sendAt) : NaN;
   const delta = sendAt - before;
+  // The delay is env-driven (dev often shortens it); assert the configured
+  // contract instead of the production default.
+  const expectedDelay = Number(envValue("BOOKING_EMAIL_DELAY_MS") ?? 120_000);
+  const tolerance = Math.max(5_000, Math.round(expectedDelay * 0.1));
   check("B6 valid payload → 202 {queued,jobId,sendAt}",
     okRes.status === 202 && okBody?.queued === true && typeof okBody?.jobId === "string",
     JSON.stringify({ status: okRes.status, body: okBody }));
-  check("B7 sendAt ≈ now + 120000 ms (2-minute delay)",
-    Number.isFinite(delta) && delta >= 100_000 && delta <= 130_000,
-    `delta=${delta}ms`);
+  check(`B7 sendAt ≈ now + ${expectedDelay} ms (configured delay)`,
+    Number.isFinite(delta) &&
+      delta >= expectedDelay - tolerance &&
+      delta <= expectedDelay + tolerance,
+    `delta=${delta}ms expected=${expectedDelay}ms`);
 }
 
 // ---------- Part 2: booking-flow dispatch spy ----------
 {
-  const destinations = await sanityQuery('*[_type == "destination"]{ "slug": slug.current, isSpecialTour }');
+  const destinations = await sanityQuery('*[_type == "destination"]{ "slug": slug.current }');
   const pricingSlugs = await sanityQuery('*[_type == "tourPricing"].tourSlug') ?? [];
   const priced = new Set(pricingSlugs);
-  // Prefer a priced standard tour; fall back to a priced special tour
-  // (fills the difficulty select too) — data-driven like c-booking B13.
-  const pick = (special) =>
+  // Any priced destination works: every checkout now includes the universal
+  // difficulty step and the confirmation POST needs a priced tour.
+  const slug =
     (destinations ?? [])
-      .filter((d) => (d.isSpecialTour === true) === special && priced.has(d.slug))
       .map((d) => d.slug)
+      .filter((s) => priced.has(s))
       .sort()[0] ?? null;
-  const subject = pick(false);
-  const subjectSpecial = subject ? false : pick(true);
-  const slug = subject ?? subjectSpecial;
 
   if (!slug) {
     check("B8 priced destination exists (flow spy skipped honestly)",
       false, `pricing=${JSON.stringify(pricingSlugs)} destinations=${JSON.stringify(destinations)}`);
   } else {
-    const needsDifficulty = subjectSpecial === slug;
     const { getBrowser, getPage, closeBrowser } = await import(
       pathToFileURL(
         fileURLToPath(new URL("../../.claude/skills/chrome-devtools/scripts/lib/browser.js", import.meta.url))
@@ -164,26 +166,14 @@ const postJson = (path, body) =>
     await fill("#booking-email", "emailtest@example.com");
     await fill("#booking-phone", "0912345678");
 
-    if (needsDifficulty) {
-      await page.click("#booking-difficulty");
-      await sleep(300);
-      const option = await page.evaluateHandle(() =>
-        [...document.querySelectorAll('[role="option"], li')].find((el) =>
-          el.textContent.includes("Trung bình")
-        )
-      );
-      const optionEl = option.asElement();
-      check("B8 difficulty select opens (special tour fallback)", Boolean(optionEl));
-      if (optionEl) await optionEl.click();
-      await sleep(200);
-    } else {
-      check("B8 standard priced tour chosen (no difficulty field)", true, `slug=${slug}`);
-    }
+    const difficultyGroup = await page.$('[role="radiogroup"]#booking-difficulty');
+    check("B8 difficulty step present in the universal booking form", Boolean(difficultyGroup), `slug=${slug}`);
 
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const iso = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
     await page.click(`td[data-day="${iso}"] button`);
+    await page.click('[data-difficulty="Medium"]');
     await sleep(200);
     await page.click('button[type="submit"]');
     await sleep(400);
@@ -195,10 +185,11 @@ const postJson = (path, body) =>
 
     check("B10 exactly 1 confirmation POST dispatched", posts.length === 1, `posts=${posts.length}`);
     const sent = posts[0] ?? {};
-    check("B11 payload contract (reference/slug/email/payment/total/locale)",
+    check("B11 payload contract (reference/slug/email/difficulty/payment/total/locale)",
       /^VN-[0-9A-Z]+$/.test(sent.reference ?? "") &&
         sent.slug === slug &&
         sent.email === "emailtest@example.com" &&
+        sent.difficulty === "Medium" &&
         sent.paymentMethod === "momo" &&
         typeof sent.total === "number" && sent.total > 0 &&
         sent.locale === "vi" &&

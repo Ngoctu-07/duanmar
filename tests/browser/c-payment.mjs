@@ -79,20 +79,11 @@ try {
   await setInput("#booking-full-name", "Nguyen Van A");
   await setInput("#booking-email", "lena@example.com");
   await setInput("#booking-phone", "0912345678");
-  // Difficulty select only renders on special tours — skip on standard tours.
-  if (await page.$("#booking-difficulty")) {
-    await page.click("#booking-difficulty");
-    await sleep(300);
-    const option = await page.evaluateHandle(() =>
-      [...document.querySelectorAll('[role="option"], li')].find((el) => el.textContent.includes("Dễ"))
-    );
-    if (option.asElement()) await option.asElement().click();
-    await sleep(200);
-  }
   const t1 = new Date();
   t1.setDate(t1.getDate() + 1);
   const iso1 = `${t1.getFullYear()}-${String(t1.getMonth() + 1).padStart(2, "0")}-${String(t1.getDate()).padStart(2, "0")}`;
   await page.click(`td[data-day="${iso1}"] button`);
+  await page.click('[data-difficulty="Medium"]');
   await sleep(200);
   await page.click('button[type="submit"]');
   await sleep(500);
@@ -109,8 +100,14 @@ try {
   });
   check("D5 summary shows numeric total", Boolean(totalRow) && norm(totalRow).includes(bd2.totalText), norm(totalRow ?? ""));
 
-  const radios = await page.$$('input[name="payment-method"]');
-  check("D7 three payment methods", radios.length === 3, `count=${radios.length}`);
+  const methods = await page.$$eval('input[name="payment-method"]', (els) =>
+    els.map((el) => el.value)
+  );
+  check(
+    "D7 exactly two payment methods, bank first then momo",
+    methods.length === 2 && methods[0] === "bank" && methods[1] === "momo",
+    JSON.stringify(methods)
+  );
   check("D7 QR hidden before selection", !(await page.$('img[alt="Mã QR thanh toán"]')));
 
   // --- MoMo

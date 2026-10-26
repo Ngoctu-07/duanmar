@@ -5,7 +5,6 @@ import { PriceRangeRow } from "@/components/pricing/price-range";
 import type { PriceRangeLabel } from "@/lib/pricing";
 import { Link } from "@/i18n/navigation";
 import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
-import { TourAttributeBadges } from "@/components/explore/tour-attribute-badges";
 import { pickPosterImage } from "@/lib/destination-poster";
 import {
   resolveLocaleString,
@@ -23,7 +22,6 @@ export interface Destination {
   description?: LocaleString;
   /** Explicit English overview (base `description` is the VI source). */
   descriptionEn?: string | null;
-  isSpecialTour?: boolean;
   posterImage?: { asset?: { url: string }; alt?: string };
 }
 
@@ -112,7 +110,6 @@ export function TourCard({
           <span data-testid="tour-card-country" className="capitalize">
             {countryLabel}
           </span>
-          <TourAttributeBadges isSpecialTour={destination.isSpecialTour} compact />
         </div>
         <div className="flex items-start justify-between gap-3">
           <h3 className="min-w-0 font-display text-3xl font-normal uppercase leading-[1.02] tracking-tight text-heading sm:text-[2rem]">

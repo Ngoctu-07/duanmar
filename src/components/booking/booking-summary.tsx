@@ -3,8 +3,9 @@ import { CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { saveBooking } from "@/lib/booking-history";
+import { normalizeBookingDifficulty } from "@/lib/booking-difficulty";
+import { fireCrtStatic } from "@/lib/crt-static";
 import type { PaymentMethod } from "@/lib/payment";
-import type { CryptoConfig } from "@/lib/crypto-payment";
 import type { PriceCurrency, PriceTier } from "@/lib/pricing";
 import type { VoucherDiscount } from "@/lib/vouchers/voucher-discount";
 import { BookingPaymentSection } from "./booking-payment-section";
@@ -26,10 +27,6 @@ interface BookingSummaryProps {
   total: number | null;
   locale: string;
   currency: PriceCurrency;
-  /** Whether the tour requires a Challenge Level pick (persisted only then). */
-  isSpecialTour?: boolean;
-  /** Validated Web3 (MetaMask) config — `null` hides the crypto rail. */
-  cryptoConfig?: CryptoConfig | null;
 }
 
 /**
@@ -49,8 +46,6 @@ export function BookingSummary({
   total,
   locale,
   currency,
-  isSpecialTour,
-  cryptoConfig = null,
 }: BookingSummaryProps) {
   const t = useTranslations("booking");
   const [reference] = useState(() =>
@@ -64,6 +59,7 @@ export function BookingSummary({
     tourName,
     values,
     guestCount,
+    difficulty: values.difficulty,
     subtotal,
     discount: discountAmount,
     voucherCode: discountAmount !== null ? voucherCode : null,
@@ -72,8 +68,9 @@ export function BookingSummary({
     currency,
   });
 
-  const handlePaid = (paymentMethod: PaymentMethod, txHash?: string) => {
+  const handlePaid = (paymentMethod: PaymentMethod) => {
     const paidAt = new Date().toISOString();
+    const difficulty = normalizeBookingDifficulty(values.difficulty);
     const booking = {
       reference,
       slug,
@@ -84,8 +81,7 @@ export function BookingSummary({
       phone: values.phone.trim(),
       notes: values.notes.trim(),
       guests: guestCount,
-      // Standard tours carry no difficulty key at all in the stored record.
-      ...(isSpecialTour === true && { difficulty: values.difficulty }),
+      ...(difficulty && { difficulty }),
       pricePerGuest: tier?.pricePerGuest ?? null,
       total,
       // Voucher breakdown (absent when no voucher reduced the price).
@@ -98,8 +94,6 @@ export function BookingSummary({
       locale,
       paidAt,
       paymentMethod,
-      // Web3 rail only: on-chain settlement proof for order verification.
-      ...(txHash && { txHash }),
     };
     // Local cache keeps the immediate confirmation view working offline…
     saveBooking(booking);
@@ -128,12 +122,15 @@ export function BookingSummary({
           total,
           currency,
           paymentMethod,
-          ...(txHash && { txHash }),
           notes: values.notes.trim(),
+          ...(difficulty && { difficulty }),
           locale,
         }),
       }).catch(() => undefined);
     }
+
+    // Milestone 2: successful checkout — the ticket is now persisted.
+    fireCrtStatic();
   };
 
   return (
@@ -179,7 +176,6 @@ export function BookingSummary({
         locale={locale}
         currency={currency}
         reference={reference}
-        cryptoConfig={cryptoConfig}
         onPaid={handlePaid}
       />
 

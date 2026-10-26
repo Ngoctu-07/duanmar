@@ -18,7 +18,6 @@ export function BookTicketButton({ slug }: { slug: string }) {
   return (
     <Link
       href={href}
-      data-crt-static="300"
       className="inline-flex items-center rounded-none bg-primary px-3 py-1 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 print:hidden"
     >
       {t("bookNow")}

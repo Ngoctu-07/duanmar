@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/auth/password-input";
 import { PasswordRecovery } from "@/components/auth/password-recovery";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password-policy";
 import { cn } from "cn";
@@ -173,7 +174,7 @@ export function AuthModal({ open, onClose, onAuthenticated }: AuthModalProps) {
             ))}
           </div>
 
-          <form onSubmit={submit} noValidate data-crt-static="300" className="mt-6 space-y-4">
+          <form onSubmit={submit} noValidate className="mt-6 space-y-4">
             {mode === "register" && (
               <div className="space-y-2">
                 <Label htmlFor="auth-name" className="text-[11px] uppercase tracking-[0.18em] text-white/70">
@@ -209,10 +210,9 @@ export function AuthModal({ open, onClose, onAuthenticated }: AuthModalProps) {
               <Label htmlFor="auth-password" className="text-[11px] uppercase tracking-[0.18em] text-white/70">
                 {t("password")}
               </Label>
-              <Input
+              <PasswordInput
                 id="auth-password"
                 name="password"
-                type="password"
                 autoComplete={mode === "register" ? "new-password" : "current-password"}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}

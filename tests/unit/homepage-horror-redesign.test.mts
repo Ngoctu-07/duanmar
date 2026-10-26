@@ -429,13 +429,10 @@ check("tour card content sits beneath the image, left aligned + Gypsy tour title
   assert.ok(!card.includes("sm:text-[4rem]"), "tour card title still uses the 2x display size");
 });
 
-check("tour card special tag is scaled down to the meta-row size", () => {
-  assert.ok(
-    card.includes("<TourAttributeBadges isSpecialTour={destination.isSpecialTour} compact />"),
-    "card must request the compact special-tour chip",
-  );
-  const badges = read("components/explore/tour-attribute-badges.tsx");
-  has(badges, ["px-2 py-1 text-xs", "compact"]);
+check("tour card renders no CMS-bound difficulty chip", () => {
+  assert.ok(!card.includes("TourAttributeBadges"), "card still imports the removed badge");
+  assert.ok(!card.includes("difficulty"), "card still reads a CMS difficulty field");
+  assert.ok(!existsSync(new URL("../../src/components/explore/tour-attribute-badges.tsx", import.meta.url)));
 });
 
 check("tour card grid rhythm is exported and reused by every surface", () => {
@@ -468,7 +465,6 @@ check("card data props are unchanged (no schema/query drift)", () => {
     "region",
     "category",
     "country",
-    "isSpecialTour",
     "description",
     "descriptionEn",
     "posterImage",

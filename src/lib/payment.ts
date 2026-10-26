@@ -1,29 +1,18 @@
-import { CRYPTO_METHOD } from "@/lib/crypto-payment";
-
-/** Fiat rails — settled via MoMo e-wallet / bank transfer (mock payload). */
-export type FiatPaymentMethod = "momo" | "bank";
-
 /**
- * All selectable payment rails. `crypto_metamask` is an independent Web3
- * settlement layer (ERC-20 stablecoin transfer) and does NOT use the fiat
- * QR payload — see `crypto-payment.ts`.
+ * Fiat rails only — settled via MoMo e-wallet / bank transfer (mock payload).
+ * Crypto / MetaMask was removed from the product: the checkout exposes
+ * exactly these two options in this order.
  */
-export type PaymentMethod = FiatPaymentMethod | typeof CRYPTO_METHOD;
+export type PaymentMethod = "bank" | "momo";
 
-export const FIAT_PAYMENT_METHODS: FiatPaymentMethod[] = ["momo", "bank"];
-export const PAYMENT_METHODS: PaymentMethod[] = [...FIAT_PAYMENT_METHODS, CRYPTO_METHOD];
-
-/** Narrow a method to the fiat subset (everything except the crypto rail). */
-export function isFiatPaymentMethod(method: PaymentMethod): method is FiatPaymentMethod {
-  return method === "momo" || method === "bank";
-}
+export const PAYMENT_METHODS: PaymentMethod[] = ["bank", "momo"];
 
 /**
  * Demo payload only — no payment gateway is connected, so the QR encodes a
  * readable mock string (amount + order reference) instead of a real transfer.
  */
 export function buildPaymentPayload(
-  method: FiatPaymentMethod,
+  method: PaymentMethod,
   amount: number,
   reference: string
 ): string {

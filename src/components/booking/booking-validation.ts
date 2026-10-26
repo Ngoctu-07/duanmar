@@ -1,5 +1,6 @@
 import { isTravelDateAllowed } from "@/lib/date-window";
 import { isDateBookable, type TourCapacity } from "@/lib/tour-capacity";
+import type { BookingDifficulty } from "@/lib/booking-difficulty";
 
 export interface BookingValues {
   fullName: string;
@@ -8,7 +9,8 @@ export interface BookingValues {
   notes: string;
   travelDate: string;
   guests: string;
-  difficulty: string;
+  /** Required booking-time choice; `""` until the traveller picks a card. */
+  difficulty: BookingDifficulty | "";
 }
 
 export type BookingField = keyof BookingValues;
@@ -47,13 +49,10 @@ export function isValidGuests(count: number): boolean {
  * keys instead of messages so the caller stays locale-agnostic; an empty object
  * means the form is valid. `capacity` (optional) adds the spots-left check for
  * the chosen date — omitted capacity never blocks (no data = no guessing).
- * `isSpecialTour` gates the Challenge Level rule: only special tours require a
- * difficulty pick (`=== true`, so omitted/undefined behaves as a standard tour).
  */
 export function validateBooking(
   values: BookingValues,
-  capacity?: TourCapacity | null,
-  isSpecialTour?: boolean
+  capacity?: TourCapacity | null
 ): BookingErrors {
   const errors: BookingErrors = {};
 
@@ -84,8 +83,7 @@ export function validateBooking(
   )
     errors.travelDate = "dateFull";
 
-  if (isSpecialTour === true && !values.difficulty)
-    errors.difficulty = "difficultyRequired";
+  if (!values.difficulty) errors.difficulty = "difficultyRequired";
 
   return errors;
 }

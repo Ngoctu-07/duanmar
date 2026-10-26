@@ -38,7 +38,6 @@ const sample = {
       region: "north",
       category: "domestic",
       country: "Vietnam",
-      isSpecialTour: false,
       description: "Capital city with lakes and old quarter",
     },
   ],

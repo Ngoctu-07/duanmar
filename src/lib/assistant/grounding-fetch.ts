@@ -16,7 +16,6 @@ interface RawDestination {
   region?: string | null;
   category?: string | null;
   country?: { vi?: string | null; en?: string | null } | null;
-  isSpecialTour?: boolean | null;
   description?: LocaleString | null;
   descriptionEn?: string | null;
 }
@@ -61,7 +60,6 @@ export async function buildGroundingContext(locale: AssistantLocale): Promise<st
       region: d.region ?? "",
       category: d.category ?? "",
       country: d.country?.[locale] ?? null,
-      isSpecialTour: d.isSpecialTour === true,
       description:
         resolveLocalizedField(d.description ?? null, d.descriptionEn, locale) ?? "",
     })),

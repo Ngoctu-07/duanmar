@@ -1,5 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { expectedBreakdown, resolveTourPricingFixture } from "../helpers/cms-expectations.mjs";
 import { dismissPromo } from "../helpers/promo.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
@@ -39,6 +40,12 @@ try {
   const page = await getPage(browser);
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
 
+  // The CMS reseeds often; resolve a live priced destination instead of
+  // assuming a historical slug/name/total.
+  const fixture = await resolveTourPricingFixture();
+  if (!fixture) throw new Error("no published tourPricing fixture found");
+  const expected = expectedBreakdown(fixture.doc, 2);
+
   const fill = async (selector, value) => {
     await page.$eval(selector, (el, v) => {
       Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(el, v);
@@ -67,8 +74,9 @@ try {
   await page.screenshot({ path: `${OUT}/f11-mytrips-empty.png`, fullPage: true });
 
   // --- F5: rolling 7-day calendar window
-  await page.goto("http://localhost:3000/vi/booking/checkout?tour=hcm", { waitUntil: "networkidle2", timeout: 60000 });
+  await page.goto(`http://localhost:3000/vi/booking/checkout?tour=${fixture.slug}`, { waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
+  const tourName = await page.$eval("h1 + p", (el) => el.textContent.trim());
   const cal = await page.$("#booking-travel-date");
   check("calendar renders", Boolean(cal));
 
@@ -101,9 +109,12 @@ try {
   const afterDisabledClick = await page.$("td[data-selected]");
   check("F5 disabled date unclickable", !afterDisabledClick);
 
-  // month navigation: next month reachable, day +8 visible but disabled
-  await page.click(".rdp-button_next");
-  await sleep(400);
+  // month navigation: next month reachable, day +8 visible but disabled.
+  // Programmatic click avoids Puppeteer hit-testing against calendar chrome.
+  for (let i = 0; i < 3 && !(await page.$(`td[data-day="${outWindow}"]`)); i += 1) {
+    await page.$eval(".rdp-button_next", (el) => el.click());
+    await sleep(400);
+  }
   const far = await dayInfo(outWindow);
   const edge = await dayInfo(inWindow);
   check("F5 beyond-window date visible in next month", far.exists, JSON.stringify(far));
@@ -117,14 +128,7 @@ try {
   await fill("#booking-full-name", "Nguyen Van A");
   await fill("#booking-email", "lena@example.com");
   await fill("#booking-phone", "0912345678");
-  // Difficulty select only renders on special tours — skip on standard tours.
-  if (await page.$("#booking-difficulty")) {
-    await page.click("#booking-difficulty");
-    await sleep(300);
-    const opt = await page.evaluateHandle(() => [...document.querySelectorAll('[role="option"], li')].find((el) => el.textContent.includes("Dễ")));
-    if (opt.asElement()) await opt.asElement().click();
-    await sleep(200);
-  }
+  await page.click('[data-difficulty="Medium"]');
   await page.click('button[type="submit"]');
   await sleep(300);
   const dateError = await page.$("#booking-travel-date-error");
@@ -155,7 +159,13 @@ try {
     return dd ? dd.className : "";
   });
   check("F7 travel date prominent (link bold)", dateRowStyle.includes("font-semibold") && dateRowStyle.includes("text-link"), dateRowStyle);
-  check("F7 other rows intact (reference/tour/total)", rows.some((r) => r.value?.startsWith("VN-")) && rows.some((r) => r.value === "HCM") && rows.some((r) => r.label === "Tổng cộng"));
+  check(
+    "F7 other rows intact (reference/tour/difficulty/total)",
+    rows.some((r) => r.value?.startsWith("VN-")) &&
+      rows.some((r) => r.value === tourName) &&
+      rows.some((r) => r.label === "Độ khó" && r.value === "Trung bình") &&
+      rows.some((r) => r.label === "Tổng cộng")
+  );
   const reference = rows.find((r) => r.label === "Mã yêu cầu")?.value;
   check("F7 reference captured", Boolean(reference), String(reference));
 
@@ -173,7 +183,18 @@ try {
   let store = await readStore();
   check("F8 exactly 1 record after success", store.length === 1, `len=${store.length}`);
   const rec = store[0] || {};
-  check("F8 record complete", rec.reference === reference && rec.travelDate === tomorrow && rec.guests === 2 && rec.total === 300000 && rec.tourName === "HCM" && rec.currency === "VND" && Boolean(rec.paidAt), JSON.stringify(rec));
+  check(
+    "F8 record complete",
+    rec.reference === reference &&
+      rec.travelDate === tomorrow &&
+      rec.guests === 2 &&
+      rec.total === expected.total &&
+      rec.tourName === tourName &&
+      rec.difficulty === "Medium" &&
+      rec.currency === "VND" &&
+      Boolean(rec.paidAt),
+    JSON.stringify(rec)
+  );
 
   const paidLink = await page.$('a[href="/vi/account"]');
   check("F8 'view my trips' link after success (account)", Boolean(paidLink));
@@ -187,7 +208,7 @@ try {
   await page.goto("http://localhost:3000/vi/my-trips", { waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
   const cardText = await page.$eval("main ul li a, ul li a", (el) => el.textContent.trim()).catch(() => "");
-  check("F9 list card shows tour + date", cardText.includes("HCM"), cardText);
+  check("F9 list card shows tour + date", cardText.includes(tourName), cardText);
   check("F9 list date human readable", /2[0-9]\/0[0-9]\/2026/.test(cardText) || cardText.includes("2026"), cardText);
   await (await page.$("ul")).screenshot({ path: `${OUT}/f9-mytrips-list.png` }).catch(async () => {
     await page.screenshot({ path: `${OUT}/f9-mytrips-list.png`, fullPage: true });

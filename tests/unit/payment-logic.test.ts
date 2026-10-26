@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { resolveTierForGuests, type PriceTier } from "../../src/lib/pricing.ts";
-import { buildPaymentPayload, isFiatPaymentMethod, PAYMENT_METHODS } from "../../src/lib/payment.ts";
+import { buildPaymentPayload, PAYMENT_METHODS } from "../../src/lib/payment.ts";
 
 let passed = 0;
 let failed = 0;
@@ -65,9 +65,9 @@ check("D1 total = guests × matched tier rate (spec example)", () => {
   assert.equal(tier1 ? 1 * tier1.pricePerGuest : null, 200000);
 });
 
-check("D1 payload: fiat methods, amount + reference, distinct payloads", () => {
-  assert.equal(PAYMENT_METHODS.length, 3);
-  assert.deepEqual(PAYMENT_METHODS, ["momo", "bank", "crypto_metamask"]);
+check("D1 payload: exactly two fiat rails, bank first then momo", () => {
+  assert.equal(PAYMENT_METHODS.length, 2);
+  assert.deepEqual(PAYMENT_METHODS, ["bank", "momo"]);
   const momo = buildPaymentPayload("momo", 350000, "VN-ABC123");
   const bank = buildPaymentPayload("bank", 350000, "VN-ABC123");
   assert.match(momo, /amount=350000/);
@@ -78,10 +78,8 @@ check("D1 payload: fiat methods, amount + reference, distinct payloads", () => {
   assert.notEqual(momo, bank);
 });
 
-check("D1 isFiatPaymentMethod narrows the crypto rail out", () => {
-  assert.equal(isFiatPaymentMethod("momo"), true);
-  assert.equal(isFiatPaymentMethod("bank"), true);
-  assert.equal(isFiatPaymentMethod("crypto_metamask"), false);
+check("D1 crypto rail is gone — no third payment method", () => {
+  assert.ok(!(PAYMENT_METHODS as readonly string[]).includes("crypto_metamask"));
 });
 
 check("D1 payload: reference sanitised (no injection chars)", () => {

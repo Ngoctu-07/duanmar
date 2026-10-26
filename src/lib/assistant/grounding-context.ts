@@ -34,7 +34,6 @@ export function serializeGrounding(data: GroundingData): string {
       `region: ${d.region}`,
       `category: ${d.category}`,
       d.country ? `country: ${d.country}` : null,
-      d.isSpecialTour ? "special tour: yes" : null,
     ]
       .filter(Boolean)
       .join(", ");

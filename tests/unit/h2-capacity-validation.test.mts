@@ -30,7 +30,7 @@ const base: BookingValues = {
   notes: "",
   travelDate: travelDateWindow(new Date()).min,
   guests: "1",
-  difficulty: "easy",
+  difficulty: "Easy",
 };
 
 /** Capacity built the way the app builds it: global max − device bookings. */

@@ -51,7 +51,6 @@ export async function POST(req: NextRequest) {
     email: maskEmail(payload.email),
     phone: maskPhone(payload.phone),
     paymentMethod: payload.paymentMethod,
-    txHash: payload.txHash,
     jobId,
     sendAt: new Date(sendAt).toISOString(),
   });

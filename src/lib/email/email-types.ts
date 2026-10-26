@@ -1,4 +1,5 @@
 import type { PaymentMethod } from "@/lib/payment";
+import type { BookingDifficulty } from "@/lib/booking-difficulty";
 
 /**
  * Server-validated payload for the delayed booking-confirmation email
@@ -15,11 +16,11 @@ export interface BookingConfirmationPayload {
   /** ISO date string `YYYY-MM-DD` — rendered DD/MM/YYYY in the email. */
   travelDate: string;
   guests: number;
+  /** Chosen at checkout; optional so pre-existing payloads stay valid. */
+  difficulty?: BookingDifficulty;
   total: number;
   currency: "VND" | "USD";
   paymentMethod: PaymentMethod;
-  /** Web3 rail only — on-chain transaction hash for order verification. */
-  txHash?: string;
   notes: string;
   locale: "en" | "vi";
 }

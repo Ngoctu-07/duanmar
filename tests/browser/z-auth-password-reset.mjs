@@ -191,7 +191,7 @@ const openAuthModal = async (page) => {
 const submitCredentials = async (page, email, password) => {
   await fill(page, "#auth-email", email);
   await page.type("#auth-password", password);
-  await page.click('form[data-crt-static] button[type="submit"]');
+  await page.click('form button[type="submit"]');
 };
 
 let browser;
@@ -207,7 +207,26 @@ try {
   await dismissPromo(page);
 
   await openAuthModal(page);
-  await submitCredentials(page, legacyEmail, legacyPassword);
+  await fill(page, "#auth-email", legacyEmail);
+  await page.type("#auth-password", legacyPassword);
+  const passwordTypeBefore = await page.$eval("#auth-password", (el) => el.type);
+  await page.click('[data-testid="password-visibility-toggle"]');
+  const passwordRevealed = await page.$eval("#auth-password", (el) => el.type);
+  const togglePressed = await page.$eval(
+    '[data-testid="password-visibility-toggle"]',
+    (el) => el.getAttribute("aria-pressed")
+  );
+  await page.click('[data-testid="password-visibility-toggle"]');
+  const passwordTypeAfter = await page.$eval("#auth-password", (el) => el.type);
+  check(
+    "sign-in password starts masked, reveals with the eye toggle and hides again",
+    passwordTypeBefore === "password" &&
+      passwordRevealed === "text" &&
+      togglePressed === "true" &&
+      passwordTypeAfter === "password",
+    JSON.stringify({ passwordTypeBefore, passwordRevealed, togglePressed, passwordTypeAfter })
+  );
+  await page.click('form button[type="submit"]');
   const loginModalClosed = await page
     .waitForFunction(() => !document.querySelector("#auth-email"), { timeout: 20000 })
     .then(() => true)

@@ -389,14 +389,6 @@ try {
     await setInput("#booking-full-name", "Nguyen Van A");
     await setInput("#booking-email", "lena@example.com");
     await setInput("#booking-phone", "0912345678");
-    // Difficulty select only renders on special tours — skip on standard tours.
-    if (await page.$("#booking-difficulty")) {
-      await page.click("#booking-difficulty");
-      await sleep(300);
-      const opt = await page.evaluateHandle(() => [...document.querySelectorAll('[role="option"], li')].find((el) => el.textContent.includes("Dễ")));
-      if (opt.asElement()) await opt.asElement().click();
-      await sleep(200);
-    }
     // BookingForm unmounts the whole form (incl. pricing section) once
     // `confirmed` flips — the live pricing total only exists BEFORE submit.
     const u8total = await readStyle(page, 'section[aria-labelledby="booking-pricing-heading"] [data-testid="price-payable"]', ["fontSize", "fontWeight"]);
@@ -413,6 +405,7 @@ try {
       return td.getAttribute("data-day");
     }, iso);
     check("U8 travel date cell picked", Boolean(dayPicked), `target=${iso} picked=${dayPicked}`);
+    await page.click('[data-difficulty="Medium"]');
     await page.click('button[type="submit"]');
     await sleep(600);
     check("U8 checkout summary rendered", Boolean(await page.$("#booking-summary-heading")));

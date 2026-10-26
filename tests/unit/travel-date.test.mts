@@ -78,7 +78,7 @@ const base: BookingValues = {
   notes: "",
   travelDate: "",
   guests: "2",
-  difficulty: "easy",
+  difficulty: "Easy",
 };
 
 check("F1 validation: travelDate required", () => {

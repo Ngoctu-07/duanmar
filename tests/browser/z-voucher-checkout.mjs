@@ -91,7 +91,7 @@ try {
   await page.waitForSelector("#auth-email", { timeout: 10000 });
   await page.type("#auth-email", email);
   await page.type("#auth-password", password);
-  await page.click('form[data-crt-static] button[type="submit"]');
+  await page.click('form button[type="submit"]');
   await page.waitForFunction(() => !document.querySelector("#auth-email"), { timeout: 20000 });
 
   // --- claim two vouchers, both snapshotted in Vietnamese

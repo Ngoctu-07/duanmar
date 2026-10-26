@@ -1,6 +1,7 @@
 import type { useTranslations } from "next-intl";
 import { formatTravelDate } from "@/lib/date-window";
 import { formatPrice, type PriceCurrency } from "@/lib/pricing";
+import { bookingDifficultyKey } from "@/lib/booking-difficulty";
 import type { BookingValues } from "./booking-validation";
 
 export interface TicketRow {
@@ -16,6 +17,8 @@ interface TicketRowsInput {
   tourName: string;
   values: BookingValues;
   guestCount: number;
+  /** Chosen at checkout; legacy records may still carry lowercase values. */
+  difficulty?: string | null;
   /** Pre-voucher total (`null` when the tour has no authored price). */
   subtotal?: number | null;
   /** Voucher amount removed from the subtotal. */
@@ -38,6 +41,7 @@ export function buildTicketRows({
   tourName,
   values,
   guestCount,
+  difficulty = null,
   subtotal = null,
   discount = null,
   voucherCode = null,
@@ -47,6 +51,9 @@ export function buildTicketRows({
 }: TicketRowsInput): TicketRow[] {
   const showBreakdown =
     subtotal !== null && (discount ?? 0) > 0 && total !== null;
+  // New tickets read the value from `BookingValues`; My Trips passes the
+  // stored record explicitly so pre-existing rows still render.
+  const difficultyKey = bookingDifficultyKey(difficulty ?? values.difficulty);
 
   return [
     { label: t("reference"), value: reference },
@@ -60,10 +67,8 @@ export function buildTicketRows({
     { label: t("email"), value: values.email.trim() },
     { label: t("phone"), value: values.phone.trim() },
     { label: t("guests"), value: String(guestCount) },
-    // No row when the tour never asked for a difficulty (standard tours +
-    // legacy records saved with an empty value).
-    ...(values.difficulty
-      ? [{ label: t("difficulty"), value: t(values.difficulty) }]
+    ...(difficultyKey
+      ? [{ label: t("difficulty"), value: t(difficultyKey) }]
       : []),
     ...(values.notes.trim()
       ? [{ label: t("notes"), value: values.notes.trim() }]

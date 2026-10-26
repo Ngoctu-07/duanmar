@@ -33,7 +33,7 @@ async function fetchDestinationCats() {
   const dataset = envValue("NEXT_PUBLIC_SANITY_DATASET") || "production";
   if (!projectId) throw new Error("NEXT_PUBLIC_SANITY_PROJECT_ID missing");
   const query =
-    '*[_type == "destination"]{ "slug": slug.current, name, category, isSpecialTour, isFeatured }';
+    '*[_type == "destination"]{ "slug": slug.current, name, category, isFeatured }';
   const url =
     `https://${projectId}.api.sanity.io/v2026-09-25/data/query/${dataset}?query=${encodeURIComponent(query)}`;
   const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
@@ -97,14 +97,6 @@ const goto = async (page, path) => {
   await dismissPromo(page);
   return resp?.status() ?? 0;
 };
-
-/** Badge labels a flagged doc must show on its card (special-tour flag only). */
-function labelsOfTarget(target) {
-  const out = [];
-  if (target.isSpecialTour === true) out.push(msg.vi.destinations.special);
-  if (out.length === 0) throw new Error(`no badge labels for flagged doc ${target.slug}`);
-  return out;
-}
 
 let browser = null;
 try {
@@ -315,33 +307,20 @@ try {
     }
   }
 
-  // --- P14 conditional badges (dataset-driven, never fabricated)
-  const badgeLabels = [msg.vi.destinations.special];
-  const flagged = cats.filter((d) => d.isSpecialTour === true);
-  if (flagged.length > 0) {
-    const target = flagged[0];
-    const targetPage = isInternational(target) ? "/vi/tours/international" : "/vi/tours/domestic";
-    await goto(page, targetPage);
-    const found = await page.evaluate(
-      ({ slug, labels }) => {
-        const link = document.querySelector(`a[href="/vi/explore/destinations/${slug}"]`);
-        const card = link?.closest('[data-slot="card"]');
-        return { hasCard: Boolean(card), text: card?.innerText ?? "", labels };
-      },
-      { slug: target.slug, labels: badgeLabels }
-    );
-    const expected = labelsOfTarget(target);
-    // The card meta row is uppercase by design, so `innerText` is transformed.
-    const haystack = found.text.toLowerCase();
+  // --- P14 CMS difficulty is gone: no tour card carries a static chip.
+  for (const [path, expectedSlugs] of [
+    ["/vi/tours/domestic", expectedDomestic],
+    ["/vi/tours/international", expectedInternational],
+  ]) {
+    if (expectedSlugs.length === 0) continue;
+    await goto(page, path);
+    const cardCount = await page.$$eval('[data-slot="card"]', (cards) => cards.length);
+    const badges = await page.$$('[data-testid="tour-difficulty-badge"]');
     check(
-      "P14 flagged doc card shows its badge labels",
-      found.hasCard && expected.every((l) => haystack.includes(l.toLowerCase())),
-      JSON.stringify({ slug: target.slug, expected, text: found.text.slice(0, 200) })
+      `P14 ${path}: no CMS difficulty chip on tour cards`,
+      cardCount > 0 && badges.length === 0,
+      JSON.stringify({ cards: cardCount, badges: badges.length })
     );
-  } else {
-    const allCardText = [...domCards.cards, ...intCards.cards].join("\n").toLowerCase();
-    const hits = badgeLabels.filter((l) => allCardText.includes(l.toLowerCase()));
-    check("P14 no flagged docs → no badge labels on any card", hits.length === 0, JSON.stringify(hits));
   }
 
   // --- P5/P6 EN pages via in-page fetch (header nav contract, no locale cookie needed)
@@ -368,34 +347,33 @@ try {
   );
   check("P13 listing → 200 with cards", listCards > 0, `cards=${listCards}`);
 
-  await goto(page, "/vi/explore/destinations/hcm");
+  const detailDoc = cats[0];
+  if (!detailDoc) throw new Error("P13 needs at least one live destination");
+  const detailUrl = `/vi/explore/destinations/${detailDoc.slug}`;
+  await goto(page, detailUrl);
   const detail = await page.evaluate(async (url) => {
     const h1 = (document.querySelector("h1")?.textContent ?? "").trim();
     const chip = (document.querySelector('[data-testid="tour-meta-tags"]')?.innerText ?? "").trim();
+    const difficultyBadge = Boolean(document.querySelector('[data-testid="tour-difficulty-badge"]'));
     const response = await fetch(url);
     const doc = new DOMParser().parseFromString(await response.text(), "text/html");
-    return { h1, chip, status: response.status, reviews: Boolean(doc.querySelector("#customer-reviews")) };
-  }, "/vi/explore/destinations/hcm");
+    return { h1, chip, difficultyBadge, status: response.status, reviews: Boolean(doc.querySelector("#customer-reviews")) };
+  }, detailUrl);
   check("P13 detail → 200 + non-empty h1", detail.status === 200 && detail.h1.length > 0, JSON.stringify(detail));
   check("P13 SSR #customer-reviews intact", detail.reviews, JSON.stringify(detail));
 
-  const liveName = cats.find((c) => c.slug === "hcm")?.name;
+  const liveName = detailDoc.name;
   check(
     "P17 detail h1 matches live CMS name",
     liveName ? detail.h1 === liveName : detail.h1.length > 0,
     `h1=${detail.h1} cms=${liveName ?? "(query failed)"}`
   );
 
-  // --- P18 detail chip row: badges exactly match this doc's CMS data
-  const hcmDoc = cats.find((c) => c.slug === "hcm");
-  const hcmFlagged = hcmDoc && hcmDoc.isSpecialTour === true;
-  const hcmExpected = hcmFlagged ? labelsOfTarget(hcmDoc) : [];
-  const chipHits = badgeLabels.filter((l) => detail.chip.includes(l));
+  // --- P18 detail chip row: CMS difficulty fully removed (booking-only choice)
   check(
-    "P18 detail chip row badges match live CMS data",
-    hcmExpected.every((l) => detail.chip.includes(l)) &&
-      chipHits.length === hcmExpected.length,
-    JSON.stringify({ expected: hcmExpected, hits: chipHits, chip: detail.chip })
+    "P18 detail chip row has no static CMS difficulty",
+    !detail.difficultyBadge && !detail.chip.includes("Độ khó"),
+    JSON.stringify({ badge: detail.difficultyBadge, chip: detail.chip })
   );
 
   // --- P16 zero uncaught page errors across the session

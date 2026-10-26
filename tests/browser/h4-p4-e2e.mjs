@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { fetchTourPricing, remainingOn } from "../helpers/cms-expectations.mjs";
+import { remainingOn, resolveTourPricingFixture } from "../helpers/cms-expectations.mjs";
 import { dismissPromo } from "../helpers/promo.mjs";
 
 const OUT = fileURLToPath(new URL("../.output", import.meta.url));
@@ -30,7 +30,6 @@ const shifted = (days) => {
   return isoOf(d);
 };
 
-const CHECKOUT_URL = "http://localhost:3000/vi/booking/checkout?tour=hcm";
 const today = shifted(0);
 const tomorrow = shifted(1);
 const day7 = shifted(7);
@@ -45,6 +44,11 @@ try {
   const page = await getPage(browser);
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
 
+  const fixture = await resolveTourPricingFixture();
+  if (!fixture) throw new Error("no published tourPricing fixture found");
+  const slug = fixture.slug;
+  const CHECKOUT_URL = `http://localhost:3000/vi/booking/checkout?tour=${slug}`;
+
   const response = await page.goto(CHECKOUT_URL, { waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
   check("H4 checkout 200", response?.status() === 200, `status=${response?.status()}`);
@@ -57,19 +61,19 @@ try {
   // tour-capacity.ts does — e.g. the real bookings c-booking/c-payment made
   // earlier in this browser session). Manual per-date CMS occupancy no longer
   // exists (plan 260927-1804).
-  const cmsDoc = await fetchTourPricing("hcm");
+  const cmsDoc = fixture.doc;
   const capacity =
     typeof cmsDoc?.maxCapacity === "number" && Number.isSafeInteger(cmsDoc.maxCapacity) && cmsDoc.maxCapacity > 0
       ? cmsDoc.maxCapacity
       : null;
   const readBookedByDate = () =>
-    page.evaluate(() => {
+    page.evaluate((tourSlug) => {
       const out = {};
       try {
         const parsed = JSON.parse(localStorage.getItem("vn-my-trips:v1") ?? "[]");
         if (!Array.isArray(parsed)) return out;
         for (const b of parsed) {
-          if (!b || typeof b !== "object" || b.slug !== "hcm" || !b.travelDate) continue;
+          if (!b || typeof b !== "object" || b.slug !== tourSlug || !b.travelDate) continue;
           const guests = Number.isFinite(b.guests) && b.guests >= 1 ? Math.floor(b.guests) : 0;
           if (guests) out[b.travelDate] = (out[b.travelDate] ?? 0) + guests;
         }
@@ -77,7 +81,7 @@ try {
         /* corrupted storage → no device bookings */
       }
       return out;
-    });
+    }, slug);
   let bookedByDate = await readBookedByDate();
   const remaining = (iso) => remainingOn(cmsDoc, iso, bookedByDate);
   const badgeCount = async () => (await page.$$('[data-testid="capacity-badge"]')).length;
@@ -112,7 +116,8 @@ try {
     for (let i = 0; i < 4 && !(await gridHas(iso)); i += 1) {
       const cur = await gridMonth();
       if (!cur) break;
-      await page.click(cur > iso.slice(0, 7) ? ".rdp-button_previous" : ".rdp-button_next");
+      const nav = cur > iso.slice(0, 7) ? ".rdp-button_previous" : ".rdp-button_next";
+      await page.$eval(nav, (el) => el.click());
       await sleep(400);
     }
   };
@@ -187,7 +192,7 @@ try {
   if (capacity !== null && pickDay) {
     const before = remaining(pickDay);
     await page.evaluate(
-      ({ iso }) => {
+      ({ iso, tourSlug }) => {
         const key = "vn-my-trips:v1";
         let list = [];
         try {
@@ -198,15 +203,15 @@ try {
         }
         const probe = {
           reference: "VN-H4-RECALC",
-          slug: "hcm",
-          tourName: "Saigon",
+          slug: tourSlug,
+          tourName: "Recalc Probe",
           travelDate: iso,
           fullName: "Recalc Probe",
           email: "recalc@example.com",
           phone: "0900000000",
           notes: "",
           guests: 1,
-          difficulty: "easy",
+          difficulty: "Medium",
           pricePerGuest: null,
           total: null,
           currency: "VND",
@@ -218,7 +223,7 @@ try {
           JSON.stringify([probe, ...list.filter((b) => b?.reference !== "VN-H4-RECALC")])
         );
       },
-      { iso: pickDay }
+      { iso: pickDay, tourSlug: slug }
     );
     await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
     await dismissPromo(page);

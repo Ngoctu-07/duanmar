@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { getBooking, type TripBooking } from "@/lib/booking-history";
+import { normalizeBookingDifficulty } from "@/lib/booking-difficulty";
 import { buildTicketRows } from "@/components/booking/ticket-rows";
 import type { BookingValues } from "@/components/booking/booking-validation";
 import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
@@ -58,7 +59,7 @@ export function MyTripsDetail({
     notes: booking.notes,
     travelDate: booking.travelDate,
     guests: String(booking.guests),
-    difficulty: booking.difficulty ?? "",
+    difficulty: normalizeBookingDifficulty(booking.difficulty) ?? "",
   };
 
   const rows = buildTicketRows({
@@ -67,6 +68,7 @@ export function MyTripsDetail({
     tourName: booking.tourName,
     values,
     guestCount: booking.guests,
+    difficulty: booking.difficulty ?? null,
     subtotal: booking.subtotal ?? null,
     discount: booking.discount ?? null,
     voucherCode: booking.voucherCode ?? null,

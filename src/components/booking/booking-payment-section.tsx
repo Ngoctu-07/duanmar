@@ -3,42 +3,31 @@ import QRCode from "qrcode";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { PaymentSuccessToast } from "@/components/booking/payment-success-toast";
-import { CryptoPaymentPanel } from "@/components/booking/crypto-payment-panel";
 import { formatPrice, type PriceCurrency } from "@/lib/pricing";
 import {
   PAYMENT_METHODS,
   buildPaymentPayload,
-  isFiatPaymentMethod,
-  type FiatPaymentMethod,
   type PaymentMethod,
 } from "@/lib/payment";
-import type { CryptoConfig } from "@/lib/crypto-payment";
 
 interface BookingPaymentSectionProps {
   total: number | null;
   locale: string;
   currency: PriceCurrency;
   reference: string;
-  /** Validated Web3 (MetaMask) config — `null` hides the crypto rail. */
-  cryptoConfig?: CryptoConfig | null;
-  /**
-   * Fired once per successful payment with the method used and, for the Web3
-   * rail, the on-chain transaction hash — parent persists the ticket and
-   * dispatches the confirmation email.
-   */
-  onPaid?: (method: PaymentMethod, txHash?: string) => void;
+  /** Fired once per successful payment with the method used. */
+  onPaid?: (method: PaymentMethod) => void;
 }
 
 type PaymentStatus = "pending" | "success";
 
-/** Mock webhook latency (fiat rails only): pending resolves to success after this delay. */
+/** Mock webhook latency: pending resolves to success after this delay. */
 const VERIFY_DELAY_MS = 3000;
 const TOAST_DISMISS_MS = 5000;
 
 const METHOD_LABEL_KEY: Record<PaymentMethod, string> = {
-  momo: "methodMomo",
   bank: "methodBank",
-  crypto_metamask: "methodCrypto",
+  momo: "methodMomo",
 };
 
 export function BookingPaymentSection({
@@ -46,7 +35,6 @@ export function BookingPaymentSection({
   locale,
   currency,
   reference,
-  cryptoConfig = null,
   onPaid,
 }: BookingPaymentSectionProps) {
   const t = useTranslations("booking");
@@ -63,11 +51,9 @@ export function BookingPaymentSection({
     onPaidRef.current = onPaid;
   }, [onPaid]);
 
-  const isFiat = method !== null && isFiatPaymentMethod(method);
-
   const payload =
-    isFiat && total !== null
-      ? buildPaymentPayload(method as FiatPaymentMethod, total, reference)
+    method !== null && total !== null
+      ? buildPaymentPayload(method, total, reference)
       : null;
 
   useEffect(() => {
@@ -85,10 +71,9 @@ export function BookingPaymentSection({
     };
   }, [payload]);
 
-  // Fiat rails only: a mock webhook flips pending → success after a delay.
-  // The Web3 rail reports success itself via the real tx hash.
+  // A mock webhook flips pending → success after a delay.
   useEffect(() => {
-    if (!payload || !isFiat || method === null) return;
+    if (!payload || method === null) return;
     const paidMethod = method;
     const timer = setTimeout(() => {
       setStatus("success");
@@ -103,7 +88,7 @@ export function BookingPaymentSection({
       clearTimeout(timer);
       clearTimeout(toastTimerRef.current);
     };
-  }, [payload, isFiat, method, verifyToken]);
+  }, [payload, method, verifyToken]);
 
   // No authored price → nothing to charge and nothing to persist; say so
   // instead of showing a confirmation that quietly saves no ticket (P4: no
@@ -127,17 +112,6 @@ export function BookingPaymentSection({
     setVerifyToken((token) => token + 1);
   };
 
-  const handleCryptoPaid = (txHash: string) => {
-    setStatus("success");
-    onPaidRef.current?.("crypto_metamask", txHash);
-    setShowToast(true);
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = window.setTimeout(
-      () => setShowToast(false),
-      TOAST_DISMISS_MS
-    );
-  };
-
   return (
     <section
       aria-labelledby="booking-payment-heading"
@@ -153,12 +127,11 @@ export function BookingPaymentSection({
       <div
         role="radiogroup"
         aria-labelledby="booking-payment-heading"
-        className="mt-4 grid gap-3 sm:grid-cols-3"
+        className="mt-4 grid gap-3 sm:grid-cols-2"
       >
         {PAYMENT_METHODS.map((value) => (
           <label
             key={value}
-            data-crt-static="300"
             className={`flex cursor-pointer items-center gap-2 rounded-none border p-3 text-sm font-medium transition-colors ${
               method === value
                 ? "border-primary bg-primary/10"
@@ -178,16 +151,7 @@ export function BookingPaymentSection({
         ))}
       </div>
 
-      {method === "crypto_metamask" && (
-        <CryptoPaymentPanel
-          config={cryptoConfig}
-          total={total}
-          currency={currency}
-          onTxHash={handleCryptoPaid}
-        />
-      )}
-
-      {isFiat && (
+      {payload && (
         <div className="mt-4 rounded-none bg-muted/40 p-4">
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
             <div className="rounded-none bg-background p-2">

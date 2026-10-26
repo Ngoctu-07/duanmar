@@ -23,22 +23,56 @@ const audio = read("../../src/components/layout/use-static-burst-audio.ts");
 const css = read("../../src/app/globals.css");
 const rootLayout = read("../../src/app/layout.tsx");
 const widget = read("../../src/components/assistant/assistant-widget.tsx");
+const authProvider = read("../../src/components/auth/auth-provider.tsx");
+const bookingSummary = read("../../src/components/booking/booking-summary.tsx");
 const bookCta = read("../../src/components/booking/book-ticket-button.tsx");
 const bookingForm = read("../../src/components/booking/booking-form.tsx");
 const authModal = read("../../src/components/auth/auth-modal.tsx");
 const solidAsset = read("../../public/images/ghost-icon.svg");
 const outlineAsset = read("../../public/images/ghost-icon-outline.svg");
 
-check("durations match the spec: 500ms splash + 300ms CTA", () => {
-  assert.match(contract, /export const CRT_SPLASH_MS = 500;/);
+check("durations: one 300ms burst for both success milestones", () => {
   assert.match(contract, /export const CRT_ACTION_MS = 300;/);
+  assert.doesNotMatch(contract, /CRT_SPLASH_MS/);
+  assert.doesNotMatch(overlay, /CRT_SPLASH/);
 });
 
 check("overlay is mounted globally and is event-driven", () => {
   assert.match(rootLayout, /<CrtStaticOverlay \/>/);
   assert.match(contract, /export const CRT_STATIC_EVENT/);
+  assert.match(contract, /export function fireCrtStatic/);
+  assert.match(contract, /dispatchEvent\(\s*new CustomEvent\(CRT_STATIC_EVENT/);
   assert.match(overlay, /addEventListener\(CRT_STATIC_EVENT, onBurst\)/);
-  assert.match(overlay, /data-crt-static/);
+  assert.match(overlay, /removeEventListener\(CRT_STATIC_EVENT, onBurst\)/);
+});
+
+check("only auth success + booking success fire the effect", () => {
+  // Auth: fired from the success handler that stores the session.
+  assert.match(authProvider, /fireCrtStatic\(\)/);
+  // Booking: fired from the paid handler after persistence.
+  assert.match(bookingSummary, /fireCrtStatic\(\)/);
+  // No other component may call it.
+  for (const [name, source] of Object.entries({
+    bookCta,
+    bookingForm,
+    authModal,
+  })) {
+    assert.doesNotMatch(source, /fireCrtStatic|CRT_STATIC_EVENT/, `${name} must stay silent`);
+  }
+});
+
+check("typing, focus, submit and clicks never trigger a burst", () => {
+  assert.doesNotMatch(overlay, /addEventListener\("(?:key|input|change|focus|submit|click|pointer|touch)/);
+  assert.doesNotMatch(overlay, /sessionStorage/);
+  assert.doesNotMatch(contract, /sessionStorage|keydown|onKeyDown|onChange/);
+});
+
+check("no data-crt-static attributes survive anywhere in src", () => {
+  assert.doesNotMatch(overlay, /data-crt-static/);
+  assert.doesNotMatch(bookCta, /data-crt-static/);
+  assert.doesNotMatch(bookingForm, /data-crt-static/);
+  assert.doesNotMatch(authModal, /data-crt-static/);
+  assert.match(overlay, /data-testid="crt-static"/);
 });
 
 check("navigation no longer triggers the effect", () => {
@@ -46,18 +80,6 @@ check("navigation no longer triggers the effect", () => {
   assert.doesNotMatch(css, /route-glitch/);
   assert.doesNotMatch(overlay, /route-glitching/);
   assert.doesNotMatch(rootLayout, /RouteGlitchTransition/);
-});
-
-check("landing splash plays once per session", () => {
-  assert.match(overlay, /sessionStorage\.getItem\(CRT_SPLASH_KEY\)/);
-  assert.match(overlay, /sessionStorage\.setItem\(CRT_SPLASH_KEY, "1"\)/);
-  assert.match(overlay, /run\(CRT_SPLASH_MS\)/);
-});
-
-check("critical CTAs carry the 300ms trigger", () => {
-  assert.match(bookCta, /data-crt-static="300"/);
-  assert.match(bookingForm, /data-crt-static="300"/);
-  assert.match(authModal, /data-crt-static="300"/);
 });
 
 check("audio burst follows the visual duration", () => {
@@ -70,8 +92,8 @@ check("audio burst follows the visual duration", () => {
 
 check("reduced motion skips visuals and audio", () => {
   assert.match(overlay, /if \(prefersReducedMotion\(\)\) return;/);
-  assert.match(contract, /prefers-reduced-motion: reduce/);
   assert.match(css, /@media \(prefers-reduced-motion: no-preference\)/);
+  assert.match(audio, /if \(prefersReducedMotion\(\)\) return;/);
 });
 
 check("CRT filter: scanlines + RGB split + static noise, no page displacement", () => {

@@ -7,8 +7,8 @@ const SOUND_GAIN = 0.04;
 
 /**
  * Synthesises a short, low-volume TV-static burst for the CRT overlay.
- * Duration follows the visual burst (300ms for CTAs, 500ms for the landing
- * splash). The AudioContext is warmed on the first pointer gesture (autoplay
+ * Duration follows the visual burst (300ms for both success milestones).
+ * The AudioContext is warmed on the first pointer gesture (autoplay
  * policies otherwise suspend it) and the noise buffer is generated on demand
  * in a few thousand samples — no network asset, no decode/playback latency.
  */

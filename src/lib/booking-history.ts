@@ -1,6 +1,9 @@
 import type { PriceCurrency } from "@/lib/pricing";
 import type { PaymentMethod } from "@/lib/payment";
-import { isTransactionHash } from "@/lib/crypto-payment";
+import type {
+  BookingDifficulty,
+  LegacyBookingDifficulty,
+} from "@/lib/booking-difficulty";
 
 /**
  * One paid booking as stored in localStorage (no auth/backend in this app).
@@ -18,8 +21,8 @@ export interface TripBooking {
   phone: string;
   notes: string;
   guests: number;
-  /** Absent for standard tours; present only when the tour is `isSpecialTour`. */
-  difficulty?: string;
+  /** Booking-time choice; legacy rows may still hold lowercase values. */
+  difficulty?: BookingDifficulty | LegacyBookingDifficulty;
   pricePerGuest: number | null;
   total: number | null;
   /** Pre-voucher total (present on orders that applied a voucher). */
@@ -33,11 +36,6 @@ export interface TripBooking {
   paidAt: string;
   /** Optional (absent on pre-260929 records) — method used at payment. */
   paymentMethod?: PaymentMethod;
-  /**
-   * Optional — present only for the Web3 rail (`crypto_metamask`): the on-chain
-   * transaction hash captured after broadcast, used for order verification.
-   */
-  txHash?: string;
   /**
    * Optional mission telemetry captured at completion. When absent, the
    * account view derives a stable placeholder from the reference hash
@@ -76,10 +74,7 @@ export function isTripBooking(value: unknown): value is TripBooking {
     // Optional (absent on pre-260929 records) — enum-checked when present.
     (record.paymentMethod === undefined ||
       record.paymentMethod === "momo" ||
-      record.paymentMethod === "bank" ||
-      record.paymentMethod === "crypto_metamask") &&
-    // Optional — only the Web3 rail carries it; must be a valid hash when present.
-    (record.txHash === undefined || isTransactionHash(record.txHash)) &&
+      record.paymentMethod === "bank") &&
     isString("locale") &&
     isString("paidAt") &&
     (record.currency === "VND" || record.currency === "USD") &&

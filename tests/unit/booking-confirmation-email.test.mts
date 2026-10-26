@@ -40,6 +40,7 @@ const payload: BookingConfirmationPayload = {
   phone: "+84901234567",
   travelDate: "2026-10-05",
   guests: 4,
+  difficulty: "Medium",
   total: 1_500_000,
   currency: "VND",
   paymentMethod: "momo",
@@ -73,6 +74,7 @@ check("C3 all payload fields hydrated in HTML", () => {
     "05/10/2026",
     "Ha Giang Loop 4D3N",
     "VN-TEST123",
+    "Medium / Trung bình",
     "Vegetarian meals please",
     "MoMo E-wallet / Ví MoMo",
   ]) {
@@ -81,31 +83,16 @@ check("C3 all payload fields hydrated in HTML", () => {
   assert.match(html, /1[.,]500[.,]000/); // locale-format VND total
 });
 
-check("C4 guests + all payment methods bilingual", () => {
+check("C4 both fiat payment methods render bilingual labels", () => {
   const momo = renderConfirmationEmail(payload).html;
   assert.ok(momo.includes("Số lượng khách"));
   assert.ok(momo.includes("Guests"));
+  assert.ok(momo.includes("MoMo E-wallet / Ví MoMo"));
   const bank = renderConfirmationEmail({ ...payload, paymentMethod: "bank" }).html;
   assert.ok(bank.includes("Bank Transfer / Chuyển khoản ngân hàng"));
-  const crypto = renderConfirmationEmail({
-    ...payload,
-    paymentMethod: "crypto_metamask",
-  }).html;
-  assert.ok(crypto.includes("Crypto Wallet (MetaMask) / Ví Crypto (MetaMask)"));
-});
-
-check("C4b Web3 rail renders the transaction-hash row", () => {
-  const txHash = "0x" + "b".repeat(64);
-  const { html } = renderConfirmationEmail({
-    ...payload,
-    paymentMethod: "crypto_metamask",
-    txHash,
-  });
-  assert.ok(html.includes("Transaction Hash"));
-  assert.ok(html.includes("Mã giao dịch"));
-  assert.ok(html.includes(txHash));
-  // Fiat rail must NOT show a hash row.
-  assert.ok(!renderConfirmationEmail(payload).html.includes("Transaction Hash"));
+  // Crypto rail is gone — no MetaMask copy can leak into the email.
+  assert.ok(!momo.includes("MetaMask"));
+  assert.ok(!bank.includes("MetaMask"));
 });
 
 check("C5 mandatory footer disclaimer + closing + sign-off (both languages)", () => {
@@ -142,6 +129,7 @@ check("V1 valid payload → ok + normalized", () => {
   if (result.ok) {
     assert.equal(result.payload.reference, "VN-TEST123");
     assert.equal(result.payload.paymentMethod, "momo");
+    assert.equal(result.payload.difficulty, "Medium");
     assert.equal(result.payload.notes, "Vegetarian meals please");
   }
 });
@@ -153,11 +141,11 @@ check("V2 invalid fields rejected", () => {
     ["zero guests", { ...base, guests: 0 }],
     ["bad reference", { ...base, reference: "ORDER-1" }],
     ["bad paymentMethod", { ...base, paymentMethod: "cash" }],
-    ["legacy crypto typo", { ...base, paymentMethod: "crypto" }],
-    ["bad txHash", { ...base, paymentMethod: "crypto_metamask", txHash: "0x123" }],
+    ["legacy crypto method", { ...base, paymentMethod: "crypto_metamask" }],
     ["bad locale", { ...base, locale: "fr" }],
     ["negative total", { ...base, total: -1 }],
     ["bad travelDate", { ...base, travelDate: "05/10/2026" }],
+    ["bad difficulty", { ...base, difficulty: "extreme" }],
     ["notes too long", { ...base, notes: "x".repeat(501) }],
     ["non-object", "nope" as unknown as Record<string, unknown>],
   ];
@@ -167,32 +155,29 @@ check("V2 invalid fields rejected", () => {
   }
 });
 
-check("V3 optional notes omitted → valid, empty string", () => {
-  const withoutNotes: Record<string, unknown> = { ...payload };
-  delete withoutNotes.notes;
-  const result = validateBookingConfirmation(withoutNotes);
+check("V3 optional notes + difficulty omitted → valid", () => {
+  const withoutOptional: Record<string, unknown> = { ...payload };
+  delete withoutOptional.notes;
+  delete withoutOptional.difficulty;
+  const result = validateBookingConfirmation(withoutOptional);
   assert.equal(result.ok, true);
-  if (result.ok) assert.equal(result.payload.notes, "");
+  if (result.ok) {
+    assert.equal(result.payload.notes, "");
+    assert.equal(result.payload.difficulty, undefined);
+  }
 });
 
-check("V4 crypto rail: valid hash kept, omitted txHash allowed", () => {
-  const txHash = "0x" + "c".repeat(64);
-  const withHash = validateBookingConfirmation({
-    ...payload,
-    paymentMethod: "crypto_metamask",
-    txHash,
-  });
-  assert.equal(withHash.ok, true);
-  if (withHash.ok) {
-    assert.equal(withHash.payload.paymentMethod, "crypto_metamask");
-    assert.equal(withHash.payload.txHash, txHash);
+check("V3 legacy lowercase difficulty is normalized", () => {
+  const result = validateBookingConfirmation({ ...payload, difficulty: "hard" });
+  assert.equal(result.ok, true);
+  if (result.ok) assert.equal(result.payload.difficulty, "Hard");
+});
+
+check("V4 unknown payment rails rejected (crypto removed)", () => {
+  for (const method of ["crypto_metamask", "crypto", "cash"]) {
+    const result = validateBookingConfirmation({ ...payload, paymentMethod: method });
+    assert.equal(result.ok, false, `${method} should be rejected`);
   }
-  const withoutHash = validateBookingConfirmation({
-    ...payload,
-    paymentMethod: "crypto_metamask",
-  });
-  assert.equal(withoutHash.ok, true);
-  if (withoutHash.ok) assert.equal(withoutHash.payload.txHash, undefined);
 });
 
 // ---- delay queue ----

@@ -1,4 +1,5 @@
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { resolveTourPricingFixture } from "../helpers/cms-expectations.mjs";
 import { dismissPromo } from "../helpers/promo.mjs";
 
 const { getBrowser, getPage, closeBrowser } = await import(
@@ -28,7 +29,9 @@ const contrast = (fg, bg) => {
 try {
   const browser = await getBrowser({ headless: true, viewport: { width: 1280, height: 1400 } });
   const page = await getPage(browser);
-  await page.goto("http://localhost:3000/vi/booking/checkout?tour=hcm", { waitUntil: "networkidle2", timeout: 60000 });
+  const fixture = await resolveTourPricingFixture();
+  if (!fixture) throw new Error("no published tourPricing fixture found");
+  await page.goto(`http://localhost:3000/vi/booking/checkout?tour=${fixture.slug}`, { waitUntil: "networkidle2", timeout: 60000 });
   await dismissPromo(page);
 
   const setInput = async (selector, value) => {
@@ -42,16 +45,11 @@ try {
   await setInput("#booking-full-name", "Nguyen Van A");
   await setInput("#booking-email", "lena@example.com");
   await setInput("#booking-phone", "0912345678");
-  // Difficulty select only renders on special tours — skip on standard tours.
-  if (await page.$("#booking-difficulty")) {
-    await page.click("#booking-difficulty"); await sleep(300);
-    const opt = await page.evaluateHandle(() => [...document.querySelectorAll('[role="option"], li')].find((el) => el.textContent.includes("Dễ")));
-    if (opt.asElement()) await opt.asElement().click();
-  }
   const td = new Date();
   td.setDate(td.getDate() + 1);
   const isoT = `${td.getFullYear()}-${String(td.getMonth() + 1).padStart(2, "0")}-${String(td.getDate()).padStart(2, "0")}`;
   await page.click(`td[data-day="${isoT}"] button`);
+  await page.click('[data-difficulty="Medium"]');
   await sleep(200);
   await page.click('button[type="submit"]'); await sleep(500);
 

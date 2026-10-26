@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { BookTicketButton } from "@/components/booking/book-ticket-button";
 import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
-import { TourAttributeBadges } from "@/components/explore/tour-attribute-badges";
+
 import { TourDetailExtras } from "@/components/explore/tour-detail-extras";
 import { TourPoster } from "@/components/explore/tour-poster";
 import { CustomerReviews } from "@/components/reviews/customer-reviews";
@@ -149,7 +149,6 @@ export default async function DestinationDetailPage({ params }: PageProps) {
                 ? t("vietnam")
                 : t(destination.region as "north" | "central" | "south"))}
           </span>
-          <TourAttributeBadges isSpecialTour={destination.isSpecialTour} />
           <BookTicketButton slug={destination.slug.current} />
         </div>
       </header>

@@ -75,14 +75,14 @@ const base: BookingValues = {
   notes: "",
   travelDate: travelDateWindow(new Date()).min,
   guests: "2",
-  difficulty: "medium",
+  difficulty: "Medium",
 };
 
 check("B2: valid values → no errors", () => {
   assert.deepEqual(validateBooking(base), {});
 });
 
-check("B2: empty form (standard tour) → required errors, no difficulty rule", () => {
+check("B2: empty form → required errors only", () => {
   const errors = validateBooking({
     fullName: "",
     email: "",
@@ -92,29 +92,6 @@ check("B2: empty form (standard tour) → required errors, no difficulty rule", 
     guests: "",
     difficulty: "",
   });
-  assert.deepEqual(errors, {
-    fullName: "requiredName",
-    email: "emailRequired",
-    phone: "phoneRequired",
-    travelDate: "dateRequired",
-    guests: "guestsRequired",
-  });
-});
-
-check("B2: empty form (special tour) → also requires difficulty", () => {
-  const errors = validateBooking(
-    {
-      fullName: "",
-      email: "",
-      phone: "",
-      notes: "",
-      travelDate: "",
-      guests: "",
-      difficulty: "",
-    },
-    undefined,
-    true
-  );
   assert.deepEqual(errors, {
     fullName: "requiredName",
     email: "emailRequired",
@@ -150,52 +127,68 @@ check("B2: guests must be integer 1..99", () => {
   assert.equal(validateBooking({ ...base, guests: "99" }).guests, undefined);
 });
 
-check("B2: difficulty required only on special tours", () => {
-  const without = { ...base, difficulty: "" };
-  assert.equal(
-    validateBooking(without, undefined, true).difficulty,
-    "difficultyRequired",
-    "special tour → required"
-  );
-  assert.equal(
-    validateBooking(without, undefined, false).difficulty,
-    undefined,
-    "standard tour → never required"
-  );
-  assert.equal(
-    validateBooking(without).difficulty,
-    undefined,
-    "flag omitted → treated as standard"
-  );
-});
-
 check("B2: notes never validated (optional)", () => {
   assert.equal(validateBooking({ ...base, notes: "" }).notes, undefined);
 });
 
-check("B3: difficulty ticket row only when a pick exists", () => {
+check("B3: selected difficulty renders on the ticket", () => {
   const t = (key: string) => key;
-  const rowsFor = (difficulty: string) =>
-    buildTicketRows({
-      t: t as never,
-      reference: "VN-TEST",
-      tourName: "Saigon",
-      values: { ...base, difficulty },
-      guestCount: 2,
-      total: 300000,
-      locale: "vi",
-      currency: "VND",
-    });
-  const labels = rowsFor("").map((row) => row.label);
-  assert.ok(
-    !labels.includes("difficulty"),
-    `no difficulty row for standard tours: ${JSON.stringify(labels)}`
-  );
-  const row = rowsFor("medium").find((entry) => entry.label === "difficulty");
-  assert.ok(row && row.value === "medium", JSON.stringify(row));
+  const rows = buildTicketRows({
+    t: t as never,
+    reference: "VN-TEST",
+    tourName: "Saigon",
+    values: base,
+    guestCount: 2,
+    total: 300000,
+    locale: "vi",
+    currency: "VND",
+  });
+  const difficultyRow = rows.find((entry) => entry.label === "difficulty");
+  assert.ok(difficultyRow && difficultyRow.value === "medium", JSON.stringify(difficultyRow));
+
+  // Legacy lowercase records still display after the normalization step.
+  const legacyRow = buildTicketRows({
+    t: t as never,
+    reference: "VN-LEGACY",
+    tourName: "Saigon",
+    values: { ...base, difficulty: "" },
+    guestCount: 2,
+    difficulty: "hard",
+    total: 300000,
+    locale: "vi",
+    currency: "VND",
+  }).find((entry) => entry.label === "difficulty");
+  assert.ok(legacyRow && legacyRow.value === "hard", JSON.stringify(legacyRow));
+
+  // Pre-interactive records without a value simply omit the row.
+  const missing = buildTicketRows({
+    t: t as never,
+    reference: "VN-OLD",
+    tourName: "Saigon",
+    values: { ...base, difficulty: "" },
+    guestCount: 2,
+    total: 300000,
+    locale: "vi",
+    currency: "VND",
+  }).map((entry) => entry.label);
+  assert.ok(!missing.includes("difficulty"));
+
+  // Junk from older builds never leaks into the ticket.
+  const junkLabels = buildTicketRows({
+    t: t as never,
+    reference: "VN-JUNK",
+    tourName: "Saigon",
+    values: { ...base, difficulty: "" },
+    guestCount: 2,
+    difficulty: "extreme",
+    total: 300000,
+    locale: "vi",
+    currency: "VND",
+  }).map((entry) => entry.label);
+  assert.ok(!junkLabels.includes("difficulty"));
 });
 
-check("B3: listBookings keeps records without difficulty (standard tours)", () => {
+check("B3: listBookings keeps legacy records with/without difficulty", () => {
   const store = new Map<string, string>();
   const previous = (globalThis as { window?: unknown }).window;
   (globalThis as { window?: unknown }).window = {
@@ -222,12 +215,15 @@ check("B3: listBookings keeps records without difficulty (standard tours)", () =
       locale: "vi",
       paidAt: "2026-09-28T00:00:00.000Z",
     };
-    // Standard tour: no difficulty key at all → kept (AC3 data-loss guard).
+    // Legacy record with no difficulty key at all → kept (data-loss guard).
     store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([record]));
     assert.equal(listBookings().length, 1, "record without difficulty kept");
-    // Legacy record with an empty difficulty string → still kept.
-    store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([{ ...record, difficulty: "" }]));
-    assert.equal(listBookings().length, 1, "legacy empty difficulty kept");
+    // Legacy record with a lowercase value → still kept and displayable.
+    store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([{ ...record, difficulty: "hard" }]));
+    assert.equal(listBookings().length, 1, "legacy lowercase difficulty kept");
+    // New capitalized value → kept.
+    store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([{ ...record, difficulty: "Medium" }]));
+    assert.equal(listBookings().length, 1, "capitalized difficulty kept");
     // Corrupted type → filtered like any other bad field.
     store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([{ ...record, difficulty: 123 }]));
     assert.equal(listBookings().length, 0, "non-string difficulty filtered");
@@ -237,7 +233,7 @@ check("B3: listBookings keeps records without difficulty (standard tours)", () =
   }
 });
 
-check("B4: Web3 rail — crypto_metamask + txHash validated, junk filtered", () => {
+check("B4: legacy crypto bookings are dropped, fiat rails kept", () => {
   const store = new Map<string, string>();
   const previous = (globalThis as { window?: unknown }).window;
   (globalThis as { window?: unknown }).window = {
@@ -263,19 +259,20 @@ check("B4: Web3 rail — crypto_metamask + txHash validated, junk filtered", () 
       currency: "VND",
       locale: "vi",
       paidAt: "2026-09-28T00:00:00.000Z",
-      paymentMethod: "crypto_metamask",
-      txHash: "0x" + "d".repeat(64),
     };
-    store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([record]));
-    assert.equal(listBookings().length, 1, "crypto record with hash kept");
-    // Hash is optional (pending confirmation) → still kept.
-    const noHash: Record<string, unknown> = { ...record };
-    delete noHash.txHash;
-    store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([noHash]));
-    assert.equal(listBookings().length, 1, "crypto record without hash kept");
-    // Malformed hash → filtered like any other bad field.
-    store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([{ ...record, txHash: "0x123" }]));
-    assert.equal(listBookings().length, 0, "bad txHash filtered");
+    // Crypto was removed from the product — such legacy rows no longer load.
+    store.set(
+      BOOKINGS_STORAGE_KEY,
+      JSON.stringify([
+        { ...record, paymentMethod: "crypto_metamask", txHash: "0x" + "d".repeat(64) },
+      ])
+    );
+    assert.equal(listBookings().length, 0, "legacy crypto record filtered");
+    // Both live fiat rails are kept.
+    for (const method of ["bank", "momo"] as const) {
+      store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([{ ...record, paymentMethod: method }]));
+      assert.equal(listBookings().length, 1, `${method} record kept`);
+    }
     // Unknown method enum → filtered.
     store.set(BOOKINGS_STORAGE_KEY, JSON.stringify([{ ...record, paymentMethod: "cash" }]));
     assert.equal(listBookings().length, 0, "unknown payment method filtered");
