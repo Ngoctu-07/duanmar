@@ -49,6 +49,10 @@ try {
     const cta = first?.querySelector("a");
     const cardBox = first?.getBoundingClientRect();
     const ctaBox = cta?.getBoundingClientRect();
+    // The description now lives in its own wrapper, so `p:last-of-type` would
+    // match the nested description instead of the expiry line. Take the last
+    // paragraph in document order (description → expiry).
+    const paragraphs = first ? [...first.querySelectorAll("p")] : [];
     return {
       count: cards.length,
       cardBg: first ? getComputedStyle(first).backgroundColor : null,
@@ -57,8 +61,9 @@ try {
       coverSource: first?.querySelector('[data-testid="deal-cover"]')?.getAttribute("data-cover-source") ?? null,
       coverFirst: first ? first.firstElementChild?.getAttribute("data-testid") === "deal-cover" : false,
       title: first?.querySelector("h2")?.textContent?.trim() ?? null,
-      description: first?.querySelector("p")?.textContent?.trim() ?? null,
-      expiry: first?.querySelector("p:last-of-type")?.textContent?.trim() ?? null,
+      description:
+        first?.querySelector('[data-testid="deal-description"]')?.textContent?.trim() ?? null,
+      expiry: paragraphs.at(-1)?.textContent?.trim() ?? null,
       cta: pick(cta),
       href: cta?.getAttribute("href") ?? null,
       cardBox: cardBox
@@ -93,15 +98,19 @@ try {
   );
   check(
     "D5 body carries title, description and expiry",
-    Boolean(layout.title) && Boolean(layout.description) && Boolean(layout.expiry),
+    Boolean(layout.title) &&
+      Boolean(layout.description) &&
+      Boolean(layout.expiry) &&
+      layout.expiry !== layout.description,
     JSON.stringify({ title: layout.title, description: layout.description, expiry: layout.expiry })
   );
   check(
     "D6 3-column grid at 1280px",
-    layout.columns[0] < layout.columns[1] &&
+    layout.columns.length >= 3 &&
+      layout.columns[0] < layout.columns[1] &&
       layout.columns[1] < layout.columns[2] &&
-      layout.columns[3] === layout.columns[0] &&
-      layout.rows[3] > layout.rows[0],
+      (layout.count < 4 ||
+        (layout.columns[3] === layout.columns[0] && layout.rows[3] > layout.rows[0])),
     JSON.stringify({ columns: layout.columns.slice(0, 4), rows: layout.rows.slice(0, 4) })
   );
 

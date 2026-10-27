@@ -222,6 +222,10 @@ const claimButtonSource = readFileSync(
   new URL("../../src/components/deals/claim-deal-button.tsx", import.meta.url),
   "utf8"
 );
+const dealDescriptionSource = readFileSync(
+  new URL("../../src/components/deals/deal-description.tsx", import.meta.url),
+  "utf8"
+);
 const dealsPage = readFileSync(
   new URL("../../src/app/[locale]/deals/page.tsx", import.meta.url),
   "utf8"
@@ -237,7 +241,7 @@ check("card structure: cover → body (title/description/expiry) → bottom CTA"
     "card.coverUrl",
     "card.coverAlt",
     "<h2",
-    "line-clamp-3",
+    "<DealDescription",
     "card.dateLabel",
     "mt-auto",
     "w-full",
@@ -248,6 +252,20 @@ check("card structure: cover → body (title/description/expiry) → bottom CTA"
   assert.ok(cardSource.includes("const href = card.tourSlug"), "CTA target logic missing");
   assert.ok(cardSource.includes("? `/explore/destinations/${card.tourSlug}`"), "tour target missing");
   assert.ok(cardSource.includes(': "/contact"'), "contact fallback missing");
+});
+
+check("deal description: 3-line preview with an accessible expand toggle", () => {
+  has(dealDescriptionSource, [
+    "line-clamp-3",
+    "useState",
+    "aria-expanded={expanded}",
+    "aria-controls={panelId}",
+    "transition-[max-height]",
+    "readMoreLabel",
+    "showLessLabel",
+    'data-testid="deal-description-toggle"',
+  ]);
+  has(dealsPage, ['t("readMore")', 't("showLess")']);
 });
 
 check("card CTA reuses the KHÁM PHÁ NGAY typography exactly", () => {
@@ -282,7 +300,17 @@ check("deals.items removed from BOTH message files (hardcoded cards gone)", () =
 
 check("countdown/empty/CTA keys added to both locales; chrome keys kept", () => {
   for (const dict of [en.deals, vi.deals]) {
-    for (const key of ["endsInDays", "lastDay", "empty", "claimNow", "title", "subtitle", "disclaimer"]) {
+    for (const key of [
+      "endsInDays",
+      "lastDay",
+      "empty",
+      "claimNow",
+      "title",
+      "subtitle",
+      "disclaimer",
+      "readMore",
+      "showLess",
+    ]) {
       assert.ok(typeof dict[key] === "string" && dict[key].length > 0, `deals.${key} missing`);
     }
   }

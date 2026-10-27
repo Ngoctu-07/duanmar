@@ -955,7 +955,9 @@
     "claimed": "Đã nhận",
     "outOfSlots": "Hết slot",
     "claimExhausted": "Ưu đãi này đã hết slot.",
-    "claimError": "Không thể lưu voucher. Vui lòng thử lại."
+    "claimError": "Không thể lưu voucher. Vui lòng thử lại.",
+    "readMore": "Xem thêm",
+    "showLess": "Thu gọn"
   },
   "auth": {
     "gateTitle": "Đăng nhập để tiếp tục",

@@ -955,7 +955,9 @@
     "claimed": "Claimed",
     "outOfSlots": "Out of Slots",
     "claimExhausted": "This deal is out of slots.",
-    "claimError": "Could not save this voucher. Please try again."
+    "claimError": "Could not save this voucher. Please try again.",
+    "readMore": "Read more",
+    "showLess": "Show less"
   },
   "auth": {
     "gateTitle": "Sign in to continue",

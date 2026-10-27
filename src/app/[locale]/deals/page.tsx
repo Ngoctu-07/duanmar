@@ -74,6 +74,8 @@ export default async function DealsPage({ params, searchParams }: PageProps) {
               claimNowLabel={t("claimNow")}
               claimedLabel={t("claimed")}
               outOfSlotsLabel={t("outOfSlots")}
+              readMoreLabel={t("readMore")}
+              showLessLabel={t("showLess")}
               claimed={claimedIds.has(card.id)}
             />
           ))}

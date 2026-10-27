@@ -3,6 +3,7 @@ import { Ticket } from "lucide-react";
 import type { PromotionCard } from "@/lib/promotions";
 import { cn } from "@/lib/utils";
 import { ClaimDealButton } from "./claim-deal-button";
+import { DealDescription } from "./deal-description";
 
 interface PromotionCardProps {
   card: PromotionCard;
@@ -11,6 +12,9 @@ interface PromotionCardProps {
   claimedLabel: string;
   /** Distinct status shown when the deal has no slots left. */
   outOfSlotsLabel: string;
+  /** Inline expand/collapse labels for the description preview. */
+  readMoreLabel: string;
+  showLessLabel: string;
   /** The signed-in visitor already has this promotion in their wallet. */
   claimed: boolean;
 }
@@ -29,6 +33,8 @@ export function PromotionCard({
   claimNowLabel,
   claimedLabel,
   outOfSlotsLabel,
+  readMoreLabel,
+  showLessLabel,
   claimed,
 }: PromotionCardProps) {
   const hasDiscount = Boolean(card.price && card.originalPrice && card.price !== card.originalPrice);
@@ -89,7 +95,11 @@ export function PromotionCard({
           {card.title}
         </h2>
         {card.description && (
-          <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-body">{card.description}</p>
+          <DealDescription
+            description={card.description}
+            readMoreLabel={readMoreLabel}
+            showLessLabel={showLessLabel}
+          />
         )}
         {mainPrice && (
           <div className="mt-4 flex items-baseline gap-2">
