@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Ticket } from "lucide-react";
 import type { PromotionCard } from "@/lib/promotions";
+import { cn } from "@/lib/utils";
 import { ClaimDealButton } from "./claim-deal-button";
 
 interface PromotionCardProps {
@@ -8,6 +9,8 @@ interface PromotionCardProps {
   countdownLabel: string;
   claimNowLabel: string;
   claimedLabel: string;
+  /** Distinct status shown when the deal has no slots left. */
+  outOfSlotsLabel: string;
   /** The signed-in visitor already has this promotion in their wallet. */
   claimed: boolean;
 }
@@ -25,16 +28,26 @@ export function PromotionCard({
   countdownLabel,
   claimNowLabel,
   claimedLabel,
+  outOfSlotsLabel,
   claimed,
 }: PromotionCardProps) {
   const hasDiscount = Boolean(card.price && card.originalPrice && card.price !== card.originalPrice);
   const mainPrice = card.price ?? card.originalPrice;
+  const exhausted = card.isExhausted;
   const href = card.tourSlug
     ? `/explore/destinations/${card.tourSlug}`
     : "/contact";
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-none border border-white/10 bg-card">
+    <article
+      data-testid="deal-card"
+      data-exhausted={exhausted ? "true" : undefined}
+      className={cn(
+        "group flex flex-col overflow-hidden rounded-none border border-white/10 bg-card",
+        // Sold-out deals stay visible but are visually and interactively dead.
+        exhausted && "pointer-events-none opacity-50 grayscale"
+      )}
+    >
       <div
         data-testid="deal-cover"
         data-cover-source={card.coverUrl ? "cms" : "fallback"}
@@ -60,6 +73,14 @@ export function PromotionCard({
         {card.badgeTag && (
           <span className="absolute left-4 top-4 bg-primary px-3 py-1 font-condensed text-xs font-medium uppercase tracking-[0.18em] text-primary-foreground">
             {card.badgeTag}
+          </span>
+        )}
+        {exhausted && (
+          <span
+            data-testid="deal-exhausted-badge"
+            className="absolute right-4 top-4 bg-muted px-3 py-1 font-condensed text-xs font-medium uppercase tracking-[0.18em] text-foreground"
+          >
+            {outOfSlotsLabel}
           </span>
         )}
       </div>
@@ -88,7 +109,9 @@ export function PromotionCard({
             href={href}
             label={claimNowLabel}
             claimedLabel={claimedLabel}
+            outOfSlotsLabel={outOfSlotsLabel}
             claimed={claimed}
+            exhausted={exhausted}
           />
         </div>
       </div>

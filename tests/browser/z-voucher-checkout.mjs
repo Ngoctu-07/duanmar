@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { DatabaseSync } from "node:sqlite";
 import { dismissPromo } from "../helpers/promo.mjs";
+import { deleteUserByEmail, deleteVouchersForEmail } from "../helpers/test-db.mjs";
 
 /**
  * Checkout voucher section: collapsible cards + strict locale copy + empty state.
@@ -9,8 +9,9 @@ import { dismissPromo } from "../helpers/promo.mjs";
  * A. Wallet renders one collapsible card per voucher and NO "No voucher" row.
  * B. Collapsed = code + discount + title only; the panel (description, expiry,
  *    apply action) only exists after a click.
- * C. Apply → payable drops by the CMS percentage; applying the other voucher
- *    replaces the first (no stacking); "Remove voucher" restores full price.
+ * C. Apply → payable drops by the CMS percentage; selecting the other voucher
+ *    via its radio replaces the first (single voucher, no stacking); "Remove
+ *    voucher" restores full price.
  * D. Localization: the two wallet rows are claimed with VIETNAMESE snapshots and
  *    point at real CMS promotions, so the EN page must show the EN titles and the
  *    EN badge (15% off) — never the snapshot language. The VI page shows VI.
@@ -38,9 +39,11 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const email = `crt-voucher-${Date.now()}@example.test`;
 const password = "crt-test-password-123";
 
-/** Real CMS promotions (used by /deals) — the wallet snapshot below is VI. */
-const PROMO_YOUTH = "887a63d7-58a3-409d-bc8a-5e77e92bdb69";
-const PROMO_GANG = "718d6213-0b9d-44c8-9a05-b3279fadedcf";
+/** Real CMS promotions (used by /deals) — the wallet snapshots below are VI. */
+const PROMO_YOUTH = "887a63d7-58a3-409d-bc8a-5e77e92bdb69"; // min 5 guests, 5% off
+const PROMO_GANG = "e0021e5c-7028-4de2-970d-6513b1c3a778"; // min 10 guests, 10% off
+/** Both vouchers are eligible at this party size (live minGuests 5 / 10). */
+const ELIGIBLE_GUESTS = 10;
 
 let browser;
 try {
@@ -57,6 +60,8 @@ try {
     };
     window.__card = (code) =>
       document.querySelector(`[data-testid="voucher-card"][data-voucher-code="${code}"]`);
+    window.__radio = (code) =>
+      window.__card(code)?.querySelector('input[name="booking-voucher"]');
     window.__expand = (code) => window.__card(code)?.querySelector("button")?.click();
     window.__panelAction = (code) => {
       const panel = window.__card(code)?.querySelector('[id^="voucher-panel-"]');
@@ -126,6 +131,26 @@ try {
   });
   await dismissPromo(page);
 
+  // Live promos require a minimum party size; raise guests so both unlock.
+  await page.waitForSelector("#booking-guests", { timeout: 20000 });
+  await page.evaluate((guests) => {
+    const input = document.querySelector("#booking-guests");
+    if (!input) return;
+    const setter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      "value"
+    ).set;
+    setter.call(input, String(guests));
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }, ELIGIBLE_GUESTS);
+  await page.waitForFunction(
+    () =>
+      [...document.querySelectorAll('[data-testid="voucher-card"]')].every(
+        (card) => card.dataset.eligible === "true"
+      ),
+    { timeout: 10000 }
+  );
+
   const initial = await page.evaluate(() => {
     const voucher = document.querySelector('[data-testid="voucher-section"]');
     const pricing = document.querySelector("#booking-pricing-heading")?.closest("section");
@@ -163,29 +188,31 @@ try {
 
   check("V1 wallet renders one collapsible card per voucher", initial.cards === 2, `cards=${initial.cards}`);
   check(
-    "V1 no radio group and no explicit \"No voucher\" option",
-    initial.radios === 0 && initial.noVoucherText === false,
+    "V1 each voucher has a single-selection radio (no \"No voucher\" option)",
+    initial.radios === 2 && initial.noVoucherText === false,
     `radios=${initial.radios} noVoucher=${initial.noVoucherText}`
   );
   check("V2 checkout shows a subtotal", initial.subtotal !== null, `subtotal=${initial.subtotal}`);
   check("V3 nothing is expanded by default", initial.panelHiddenByDefault === true);
   check(
     "V3 collapsed header carries code + discount value + title",
-    initial.titles.every((text) => /CRTTEST(10|20)/.test(text) && /15% off/i.test(text)),
+    initial.titles.every(
+      (text) => /CRTTEST(10|20)/.test(text) && /(5|10)% off/i.test(text)
+    ),
     JSON.stringify(initial.titles)
   );
 
   // --- EN localization: CMS copy replaces the Vietnamese snapshots
   check(
     "V4 EN checkout shows the English CMS titles (no Vietnamese snapshot)",
-    initial.titles.some((text) => /THE YOUTH GENERATION CODE/i.test(text)) &&
-      initial.titles.some((text) => /THE EXPLORER GANG/i.test(text)) &&
+    initial.titles.some((text) => /GATHER A SQUAD OF 5/i.test(text)) &&
+      initial.titles.some((text) => /GROUPS OF 10\+/i.test(text)) &&
       !initial.titles.some((text) => /ẢNH CHỤP|BĂNG ĐẢNG|THẾ HỆ/.test(text)),
     JSON.stringify(initial.titles)
   );
   check(
-    "V4 EN discount badge comes from the EN CMS copy (15% off), not the snapshot (10%/20%)",
-    initial.titles.every((text) => /15% off/i.test(text)),
+    "V4 EN discount badge comes from the EN CMS copy (5%/10%), not the snapshot (10%/20%)",
+    initial.titles.every((text) => /(5|10)% off/i.test(text)),
     JSON.stringify(initial.titles)
   );
 
@@ -212,7 +239,7 @@ try {
   );
   check("V5 header reports aria-expanded=true", expanded.expandedAttr === "true", String(expanded.expandedAttr));
 
-  // --- apply: 15% from the CMS badge
+  // --- apply: 5% from the CMS badge
   await page.evaluate(() => window.__panelAction("CRTTEST10")?.click());
   await sleep(300);
   const applied = await page.evaluate(() => ({
@@ -225,8 +252,8 @@ try {
     ).length,
   }));
   check(
-    "V6 applying a voucher updates the payable by the CMS percentage (15%)",
-    applied.subtotal !== null && Math.abs(applied.payable - applied.subtotal * 0.85) < 0.01,
+    "V6 applying a voucher updates the payable by the CMS percentage (5%)",
+    applied.subtotal !== null && Math.abs(applied.payable - applied.subtotal * 0.95) < 0.01,
     JSON.stringify(applied)
   );
   check(
@@ -237,24 +264,30 @@ try {
   check("V7 applied summary names the promo code", /CRTTEST10/.test(applied.summary), applied.summary);
   check("V7 applied card is marked as applied", applied.appliedBadges === 1, `badges=${applied.appliedBadges}`);
 
-  // --- switch vouchers: replaces, never stacks
-  await page.evaluate(() => window.__expand("CRTTEST20"));
-  await sleep(200);
-  await page.evaluate(() => window.__panelAction("CRTTEST20")?.click());
+  // --- radio model: picking another eligible voucher replaces, never stacks
+  await page.evaluate(() => window.__radio("CRTTEST20")?.click());
   await sleep(300);
   const switched = await page.evaluate(() => ({
     subtotal: window.__readPrice("price-subtotal"),
     payable: window.__readPrice("price-payable"),
     summary: document.querySelector('[data-testid="voucher-applied"]')?.innerText ?? "",
+    checked: [...document.querySelectorAll('input[name="booking-voucher"]:checked')].map(
+      (radio) => radio.value
+    ),
+    firstChecked: window.__radio("CRTTEST10")?.checked,
+    secondChecked: window.__radio("CRTTEST20")?.checked,
     appliedBadges: [...document.querySelectorAll('[data-testid="voucher-card"]')].filter((card) =>
       /applied/i.test(card.querySelector("button")?.innerText ?? "")
     ).length,
   }));
   check(
-    "V8 second voucher replaces the first (single voucher, no stacking)",
-    switched.appliedBadges === 1 &&
+    "V8 radio selection is single-choice: the new voucher replaces the first",
+    switched.checked.length === 1 &&
+      switched.firstChecked === false &&
+      switched.secondChecked === true &&
+      switched.appliedBadges === 1 &&
       /CRTTEST20/.test(switched.summary) &&
-      Math.abs(switched.payable - switched.subtotal * 0.85) < 0.01,
+      Math.abs(switched.payable - switched.subtotal * 0.9) < 0.01,
     JSON.stringify(switched)
   );
 
@@ -281,6 +314,18 @@ try {
     timeout: 90000,
   });
   await dismissPromo(page);
+  await page.waitForSelector("#booking-guests", { timeout: 20000 });
+  await page.evaluate((guests) => {
+    const input = document.querySelector("#booking-guests");
+    if (!input) return;
+    const setter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      "value"
+    ).set;
+    setter.call(input, String(guests));
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }, ELIGIBLE_GUESTS);
+  await sleep(300);
   const viTitles = await page.evaluate(() =>
     [...document.querySelectorAll('[data-testid="voucher-card"]')].map((card) =>
       (card.querySelector("button")?.innerText ?? "").replace(/\s+/g, " ").trim()
@@ -288,18 +333,14 @@ try {
   );
   check(
     "V10 VI checkout shows the Vietnamese CMS titles + VI discount copy",
-    viTitles.some((text) => /THẾ HỆ TRẺ/i.test(text)) &&
-      viTitles.some((text) => /BĂNG ĐẢNG THÁM HIỂM/i.test(text)) &&
-      viTitles.every((text) => /Giảm 15%/i.test(text)),
+    viTitles.some((text) => /ĐI TỪ NHÓM BẠN 5 NGƯỜI/i.test(text)) &&
+      viTitles.some((text) => /ĐI TỪ NHÓM BẠN 10 NGƯỜI/i.test(text)) &&
+      viTitles.every((text) => /Giảm (5|10)%/i.test(text)),
     JSON.stringify(viTitles)
   );
 
   // --- empty state: wipe the wallet, both languages
-  const db = new DatabaseSync("data/article-likes.db");
-  db.exec("PRAGMA busy_timeout = 5000");
-  const userRow = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
-  if (userRow?.id) db.prepare("DELETE FROM vouchers WHERE user_id = ?").run(userRow.id);
-  db.close();
+  await deleteVouchersForEmail(email);
 
   await page.goto(`${BASE}/vi/booking/checkout?tour=${TOUR}`, {
     waitUntil: "networkidle2",
@@ -332,10 +373,7 @@ try {
 } finally {
   if (browser) await closeBrowser();
   try {
-    const db = new DatabaseSync("data/article-likes.db");
-    db.exec("PRAGMA busy_timeout = 5000");
-    db.prepare("DELETE FROM users WHERE email = ?").run(email);
-    db.close();
+    await deleteUserByEmail(email);
   } catch {
     // Best effort — a leftover test user cannot break the app.
   }

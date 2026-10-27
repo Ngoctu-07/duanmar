@@ -7,11 +7,8 @@ import { mapPricingTiers } from "@/lib/pricing";
 import { mapTourCapacity } from "@/lib/tour-capacity";
 import { resolveLocaleString } from "@/lib/bilingual-string";
 import { currentUser } from "@/lib/auth/session";
-import { listVouchers } from "@/lib/vouchers/voucher-store";
-import { localizeVouchers } from "@/lib/vouchers/localize";
-import type { PromotionRecord } from "@/lib/promotions";
+import { loadVoucherWallet } from "@/lib/vouchers/load-voucher-wallet";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
-import { PROMOTIONS_BY_IDS_QUERY } from "@/sanity/queries/promotions";
 import { DESTINATION_BY_SLUG_QUERY } from "@/sanity/queries/destinations";
 import { TOUR_PRICING_BY_SLUG_QUERY } from "@/sanity/queries/tour-pricing";
 
@@ -49,28 +46,12 @@ export default async function CheckoutPage({
   const tourName = resolveLocaleString(destination.name, locale) ?? tour;
 
   // Voucher wallet is server truth: signed-out visitors see the sign-in hint,
-  // signed-in visitors get their claimed vouchers (expired/other-tour entries
-  // are filtered/disabled inside the selector).
-  //
-  // Copy is re-localized from the CMS on every render: the wallet rows are
-  // claim-time snapshots, so without this step a voucher claimed in Vietnamese
-  // kept Vietnamese text on the English checkout (the mixed-language list).
+  // signed-in visitors get their claimed vouchers. The loader hides claims whose
+  // master promotion is deleted/unpublished/inactive (expired/other-tour entries
+  // stay visible but disabled inside the selector). Copy is re-localized from
+  // the live CMS on every render; no DB cleanup on a checkout GET.
   const user = await currentUser();
-  const wallet = user ? await listVouchers(user.id) : [];
-  const promotionIds = [...new Set(wallet.map((voucher) => voucher.promotionId))];
-  const promotions =
-    promotionIds.length > 0
-      ? await fetchPublished(
-          PROMOTIONS_BY_IDS_QUERY,
-          { ids: promotionIds },
-          { tags: ["sanity:promotion:list"] }
-        )
-      : [];
-  const vouchers = localizeVouchers(
-    wallet,
-    (promotions ?? []) as PromotionRecord[],
-    locale
-  );
+  const vouchers = user ? await loadVoucherWallet(user.id, locale) : [];
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-16">

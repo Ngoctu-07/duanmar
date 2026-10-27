@@ -13,7 +13,13 @@ const PROMOTION_FIELDS = `
     originalPrice,
     currency,
     promoCode,
+    maxSlots,
+    usedCount,
+    minGuests,
+    startDate,
+    endDate,
     validUntil,
+    isActive,
     bannerImage { ${imageFragment} },
     coverImage { ${imageFragment} },
     targetTour->{ _id, "slug": slug.current }
@@ -29,9 +35,13 @@ export const PROMOTIONS_QUERY = defineQuery(`
 `);
 
 /**
- * Wallet lookup: claimed vouchers keep a snapshot, but the card text must
- * follow the active UI locale. Fetch the referenced promotions regardless of
- * `isActive`/expiry so an old claim still gets its localized copy.
+ * Wallet lookup: fetch every referenced promotion regardless of `isActive` or
+ * expiry. The wallet layer needs to tell two states apart:
+ * - `isActive == false` → hide the voucher but keep the row (reactivation
+ *   restores it);
+ * - document absent from the published perspective → deleted/unpublished, so
+ *   the row is orphaned and can be purged.
+ * Localized copy and capacity still come from the live document.
  */
 export const PROMOTIONS_BY_IDS_QUERY = defineQuery(`
   *[_type == "promotion" && _id in $ids]{${PROMOTION_FIELDS}}

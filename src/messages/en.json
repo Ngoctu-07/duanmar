@@ -68,8 +68,14 @@
     "voucherSignInCta": "Sign in",
     "voucherExpired": "Expired",
     "voucherOtherTour": "Valid for another tour only",
+    "voucherMinGuests": "Requires min. {count} guests",
+    "voucherDateRequired": "Select a travel date to use this voucher",
+    "voucherDateInvalid": "Voucher invalid for selected date",
+    "voucherNotEligible": "Requirements not met",
+    "voucherSelectLabel": "Select voucher {code}",
     "voucherPercent": "{percent}% off",
     "voucherApply": "Apply voucher",
+    "voucherOutOfSlots": "Out of slots",
     "voucherRemove": "Remove voucher",
     "voucherAppliedBadge": "Applied",
     "voucherExpand": "Show voucher details",
@@ -947,6 +953,8 @@
     "viewTour": "View tour",
     "claimNow": "Claim now",
     "claimed": "Claimed",
+    "outOfSlots": "Out of Slots",
+    "claimExhausted": "This deal is out of slots.",
     "claimError": "Could not save this voucher. Please try again."
   },
   "auth": {
@@ -1017,10 +1025,6 @@
     "avatarError": "Could not save that avatar. Please try again.",
     "profileTab": "Profile",
     "walletTab": "Voucher wallet",
-    "reviewsTab": "Reviews",
-    "reviewsTitle": "Your reviews",
-    "reviewsSubtitle": "Reviews you have posted for tours.",
-    "reviewsEmpty": "No reviews yet — book a tour and share your experience.",
     "email": "Email",
     "name": "Full name",
     "signOut": "Sign out",
@@ -1051,6 +1055,7 @@
     "claimedOn": "Claimed {date}",
     "validUntil": "Valid until {date}",
     "expired": "Expired",
+    "outOfSlots": "Out of slots",
     "useNow": "Use now"
   },
   "bookingSteps": {

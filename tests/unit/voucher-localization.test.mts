@@ -102,7 +102,7 @@ check("the same wallet never mixes languages within one locale", () => {
   );
 });
 
-check("deleted/archived promotion keeps the stored snapshot", () => {
+check("localizeVouchers alone is fail-open; the wallet loader filters missing masters", () => {
   const [row] = localizeVouchers([voucher], [], "en");
   assert.equal(row.title, "Tiêu đề lúc nhận");
   assert.equal(row.description, "Mô tả lúc nhận");

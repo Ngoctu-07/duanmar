@@ -44,12 +44,25 @@ export interface ClaimVoucherInput {
 
 export type ClaimVoucherResult =
   | { ok: true; voucher: Voucher; created: boolean }
-  | { ok: false; code: "invalid" | "db_unavailable" };
+  | { ok: false; code: "invalid" | "db_unavailable" | "exhausted" };
+
+/** Server-verified capacity, checked again inside the claim transaction. */
+export interface ClaimCapacity {
+  /** `null` = unlimited. */
+  maxSlots: number | null;
+  /** Manual (CMS) baseline already used; online claims are counted live. */
+  baselineUsed: number;
+}
 
 const ID_PATTERN = /^[A-Za-z0-9_.-]{1,120}$/;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 const CODE_PATTERN = /^[A-Z0-9][A-Z0-9-]{2,31}$/;
+
+/** Same id shape the claim path accepts — used by the API before any CMS read. */
+export function isValidPromotionId(value: unknown): value is string {
+  return typeof value === "string" && ID_PATTERN.test(value);
+}
 
 const text = (value: unknown, max: number): string | null => {
   if (typeof value !== "string") return null;
@@ -134,11 +147,76 @@ export async function listVouchers(userId: string): Promise<Voucher[]> {
   return rows.map(mapRow);
 }
 
+/**
+ * Remove wallet rows whose master promotion no longer exists.
+ *
+ * Scoped to one user so a CMS-wide cleanup can never touch another wallet.
+ * Invalid IDs are ignored (defence in depth: the filter only produces IDs read
+ * from rows, but this function is also callable from scripts). Failures are
+ * swallowed — cleanup must never break the account page.
+ */
+export async function deleteVouchersByPromotionIds(
+  userId: string,
+  promotionIds: string[]
+): Promise<number> {
+  const valid = [...new Set(promotionIds.filter(isValidPromotionId))];
+  if (valid.length === 0) return 0;
+  const db = await getDb();
+  if (!db) return 0;
+  const placeholders = valid.map(() => "?").join(",");
+  try {
+    return await runStatement(
+      db,
+      `DELETE FROM vouchers WHERE user_id = ? AND promotion_id IN (${placeholders})`,
+      [userId, ...valid]
+    );
+  } catch {
+    return 0;
+  }
+}
+
+/** One wallet row for a promotion (idempotent re-claim / capacity fast path). */
+export async function findVoucher(
+  userId: string,
+  promotionId: string
+): Promise<Voucher | null> {
+  if (!isValidPromotionId(promotionId)) return null;
+  const db = await getDb();
+  if (!db) return null;
+  const row = await queryRow<VoucherRow>(
+    db,
+    `SELECT ${COLUMNS} FROM vouchers WHERE user_id = ? AND promotion_id = ?`,
+    [userId, promotionId]
+  );
+  return row ? mapRow(row) : null;
+}
+
+/** Live claim count per promotion (feeds `computePromotionCapacity`). */
+export async function countVouchersByPromotion(
+  promotionIds: string[]
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  const valid = [...new Set(promotionIds.filter(isValidPromotionId))];
+  if (valid.length === 0) return counts;
+  const db = await getDb();
+  if (!db) return counts;
+  const placeholders = valid.map(() => "?").join(",");
+  const rows = await queryRows<{ promotion_id: string; n: number }>(
+    db,
+    `SELECT promotion_id, COUNT(*) AS n FROM vouchers ` +
+      `WHERE promotion_id IN (${placeholders}) GROUP BY promotion_id`,
+    valid
+  );
+  for (const row of rows) counts.set(row.promotion_id, Number(row.n));
+  return counts;
+}
+
 /** Idempotent claim: insert once, then always return the stored snapshot. */
 export async function claimVoucher(
   userId: string,
   input: ClaimVoucherInput,
-  nowIso = new Date().toISOString()
+  nowIso = new Date().toISOString(),
+  capacity: ClaimCapacity | null = null
 ): Promise<ClaimVoucherResult> {
   const snapshot = sanitize(input);
   if (!snapshot) return { ok: false, code: "invalid" };
@@ -152,6 +230,20 @@ export async function claimVoucher(
       );
       if (existing) {
         return { ok: true as const, voucher: mapRow(existing), created: false };
+      }
+
+      // Re-check inside the transaction so two near-simultaneous claims cannot
+      // both slip past the last remaining slot.
+      if (capacity && capacity.maxSlots !== null) {
+        const used = await queryRow<{ n: number }>(
+          db,
+          "SELECT COUNT(*) AS n FROM vouchers WHERE promotion_id = ?",
+          [snapshot.promotionId]
+        );
+        const available = Math.max(0, capacity.maxSlots - capacity.baselineUsed);
+        if (Number(used?.n ?? 0) >= available) {
+          return { ok: false as const, code: "exhausted" as const };
+        }
       }
 
       const id = randomUUID();

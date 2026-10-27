@@ -47,7 +47,7 @@ check("schema declares every required promotion field", () => {
     "title_en", "title_vi", "badgeTag_en", "badgeTag_vi",
     "description_en", "description_vi", "discountedPrice", "originalPrice",
     "currency", "bannerImage", "coverImage", "validUntil", "targetTour", "isActive",
-    "promoCode",
+    "promoCode", "maxSlots", "usedCount", "minGuests", "startDate", "endDate",
   ]) {
     assert.ok(schema.includes(`name: "${field}"`), `schema missing ${field}`);
   }
@@ -113,6 +113,7 @@ check("query filters isActive, orders by validUntil, projects all fields", () =>
     "_id", "title_en", "title_vi", "badgeTag_en", "badgeTag_vi",
     "description_en", "description_vi", "discountedPrice", "originalPrice",
     "currency", "validUntil", "bannerImage", "coverImage", "targetTour->", "promoCode",
+    "maxSlots", "usedCount", "minGuests", "startDate", "endDate", "isActive",
   ]) {
     assert.ok(PROMOTIONS_QUERY.includes(field), `projection missing ${field}`);
   }

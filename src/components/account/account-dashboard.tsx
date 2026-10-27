@@ -1,61 +1,48 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { CurrentUser } from "@/lib/auth/session";
-import type { Voucher } from "@/lib/vouchers/voucher-store";
+import type { VoucherView } from "@/lib/vouchers/localize";
 import type { AvatarPreset } from "@/lib/avatars";
 import type { TripBooking } from "@/lib/booking-history";
-import type { TourReview } from "@/lib/reviews";
 import { useAuthGate } from "@/components/auth/auth-provider";
 import { AccountAvatar } from "@/components/account/account-avatar";
-import { AccountReviews } from "@/components/account/account-reviews";
 import { VoucherWallet } from "@/components/account/voucher-wallet";
 import { AccountProfile } from "@/components/account/account-profile";
 import { cn } from "cn";
 
-type Tab = "profile" | "vouchers" | "reviews";
+type Tab = "profile" | "vouchers";
 
 interface AccountDashboardProps {
   user: CurrentUser;
-  vouchers: Voucher[];
+  vouchers: VoucherView[];
   avatarPresets: AvatarPreset[];
   serverBookings: TripBooking[];
-  reviews: TourReview[];
 }
 
 /**
- * `/account` shell: Gypsy Curse page title, identity summary, then three sharp
- * tabs — PROFILE (default, gamified missions), VOUCHER WALLET and REVIEWS.
- * Claiming a deal links here with `?tab=vouchers` so the new voucher is front
- * and centre.
+ * `/account` shell: Gypsy Curse page title, identity summary, then two sharp
+ * tabs — PROFILE (default, gamified missions) and VOUCHER WALLET. Review
+ * history is intentionally not part of the account panel anymore; owners still
+ * manage their reviews from the tour detail page.
  */
 export function AccountDashboard({
   user,
   vouchers,
   avatarPresets,
   serverBookings,
-  reviews,
 }: AccountDashboardProps) {
   const t = useTranslations("account");
-  const locale = useLocale();
   const router = useRouter();
   const { signOutUser } = useAuthGate();
   const [tab, setTab] = useState<Tab>("profile");
-  const [reviewRows, setReviewRows] = useState(reviews);
 
   useEffect(() => {
-    // Re-sync when the revalidated RSC payload arrives; local deletions stay
-    // applied across tab switches until then.
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- canonical server list
-    setReviewRows(reviews);
-  }, [reviews]);
-
-  useEffect(() => {
-    // Deep links: /account?tab=vouchers | /account?tab=reviews
+    // Deep link: /account?tab=vouchers (the only non-default tab left).
     const requested = new URLSearchParams(window.location.search).get("tab");
-    if (requested === "vouchers" || requested === "reviews") {
+    if (requested === "vouchers") {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot deep-link sync after hydration
       setTab(requested);
     }
@@ -69,7 +56,6 @@ export function AccountDashboard({
   const tabs: Array<{ value: Tab; label: string }> = [
     { value: "profile", label: t("profileTab") },
     { value: "vouchers", label: t("walletTab") },
-    { value: "reviews", label: t("reviewsTab") },
   ];
 
   return (
@@ -102,7 +88,7 @@ export function AccountDashboard({
         </div>
       </div>
 
-      <div role="tablist" aria-label={t("title")} className="mt-8 grid grid-cols-3 sm:max-w-lg">
+      <div role="tablist" aria-label={t("title")} className="mt-8 grid grid-cols-2 sm:max-w-lg">
         {tabs.map((item) => (
           <button
             key={item.value}
@@ -125,16 +111,6 @@ export function AccountDashboard({
       <div className="mt-8">
         {tab === "vouchers" ? (
           <VoucherWallet vouchers={vouchers} />
-        ) : tab === "reviews" ? (
-          <AccountReviews
-            reviews={reviewRows}
-            locale={locale}
-            onDeleted={(reference) =>
-              setReviewRows((current) =>
-                current.filter((review) => review.reference !== reference)
-              )
-            }
-          />
         ) : (
           <AccountProfile serverBookings={serverBookings} />
         )}

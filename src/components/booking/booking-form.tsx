@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { listBookings, BOOKINGS_STORAGE_KEY } from "@/lib/booking-history";
 import { mergeDeviceBookings, type TourCapacity } from "@/lib/tour-capacity";
 import { getCurrency, resolveTierForGuests, type PriceTier } from "@/lib/pricing";
-import type { Voucher } from "@/lib/vouchers/voucher-store";
+import type { VoucherView } from "@/lib/vouchers/localize";
+import { evaluateVoucherEligibility } from "@/lib/vouchers/voucher-eligibility";
 import {
-  isVoucherApplicable,
   resolveVoucherDiscount,
   type VoucherDiscount,
 } from "@/lib/vouchers/voucher-discount";
@@ -45,8 +45,8 @@ interface BookingFormProps {
   locale: string;
   /** CMS capacity (`null` = none configured); device bookings merge in after mount. */
   capacity?: TourCapacity | null;
-  /** Signed-in user's claimed vouchers (wallet snapshot). */
-  vouchers?: Voucher[];
+  /** Signed-in user's claimed vouchers + live slot capacity. */
+  vouchers?: VoucherView[];
   /** Whether a session exists — drives the voucher empty state. */
   signedIn?: boolean;
 }
@@ -66,7 +66,7 @@ export function BookingForm({
   const [errors, setErrors] = useState<BookingErrors>({});
   const [confirmed, setConfirmed] = useState(false);
   // Exactly one voucher can be applied; picking another replaces this value.
-  const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
+  const [selectedVoucher, setSelectedVoucher] = useState<VoucherView | null>(null);
   // Starts as the server value so hydration matches, then adds this device's bookings.
   const [activeCapacity, setActiveCapacity] = useState<TourCapacity | null>(
     () => capacity ?? null
@@ -102,10 +102,15 @@ export function BookingForm({
 
   // Voucher math is derived, never stored: changing guests, switching or
   // clearing the voucher recomputes the payable amount in one render.
+  const selectedEligibility = selectedVoucher
+    ? evaluateVoucherEligibility(selectedVoucher, {
+        guests: guestCount,
+        bookingDate: values.travelDate,
+        tourSlug: slug,
+      })
+    : null;
   const applicableVoucher =
-    selectedVoucher && isVoucherApplicable(selectedVoucher, slug)
-      ? selectedVoucher
-      : null;
+    selectedVoucher && selectedEligibility?.isEligible ? selectedVoucher : null;
   const discount: VoucherDiscount | null =
     applicableVoucher && total !== null
       ? resolveVoucherDiscount(applicableVoucher, total)
@@ -113,6 +118,17 @@ export function BookingForm({
   const payable = discount ? discount.total : total;
 
   const change = (field: BookingField, value: string) => {
+    // Guest/date edits can invalidate the applied voucher in real time: clear
+    // it in the same event so no ineligible discount survives the next render.
+    if (selectedVoucher && (field === "guests" || field === "travelDate")) {
+      const eligibility = evaluateVoucherEligibility(selectedVoucher, {
+        guests: field === "guests" ? Number(value) : guestCount,
+        bookingDate: field === "travelDate" ? value : values.travelDate,
+        tourSlug: slug,
+      });
+      if (!eligibility.isEligible) setSelectedVoucher(null);
+    }
+
     // Bumping guests can push the already-picked date past its capacity;
     // decide that up front so the setErrors updater stays pure.
     const dateError =
@@ -203,6 +219,8 @@ export function BookingForm({
         signedIn={signedIn}
         selected={applicableVoucher}
         onSelect={setSelectedVoucher}
+        guestCount={guestCount}
+        bookingDate={values.travelDate || null}
         subtotal={total}
         locale={locale}
         currency={currency}

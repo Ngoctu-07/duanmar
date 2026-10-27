@@ -68,8 +68,14 @@
     "voucherSignInCta": "Đăng nhập",
     "voucherExpired": "Đã hết hạn",
     "voucherOtherTour": "Chỉ dùng cho tour khác",
+    "voucherMinGuests": "Yêu cầu tối thiểu {count} khách",
+    "voucherDateRequired": "Chọn ngày đi để dùng voucher này",
+    "voucherDateInvalid": "Voucher không hợp lệ cho ngày đã chọn",
+    "voucherNotEligible": "Chưa đủ điều kiện",
+    "voucherSelectLabel": "Chọn voucher {code}",
     "voucherPercent": "Giảm {percent}%",
     "voucherApply": "Áp dụng voucher",
+    "voucherOutOfSlots": "Hết slot",
     "voucherRemove": "Bỏ áp dụng",
     "voucherAppliedBadge": "Đang áp dụng",
     "voucherExpand": "Xem chi tiết voucher",
@@ -947,6 +953,8 @@
     "viewTour": "Xem tour",
     "claimNow": "Nhận ngay",
     "claimed": "Đã nhận",
+    "outOfSlots": "Hết slot",
+    "claimExhausted": "Ưu đãi này đã hết slot.",
     "claimError": "Không thể lưu voucher. Vui lòng thử lại."
   },
   "auth": {
@@ -1017,10 +1025,6 @@
     "avatarError": "Không thể lưu ảnh đại diện. Vui lòng thử lại.",
     "profileTab": "Hồ sơ",
     "walletTab": "Ví voucher",
-    "reviewsTab": "Đánh giá",
-    "reviewsTitle": "Đánh giá của bạn",
-    "reviewsSubtitle": "Các đánh giá bạn đã gửi cho tour.",
-    "reviewsEmpty": "Chưa có đánh giá nào — hãy đặt tour và chia sẻ trải nghiệm.",
     "email": "Email",
     "name": "Họ và tên",
     "signOut": "Đăng xuất",
@@ -1051,6 +1055,7 @@
     "claimedOn": "Đã nhận {date}",
     "validUntil": "Có hiệu lực đến {date}",
     "expired": "Đã hết hạn",
+    "outOfSlots": "Hết slot",
     "useNow": "Dùng ngay"
   },
   "bookingSteps": {

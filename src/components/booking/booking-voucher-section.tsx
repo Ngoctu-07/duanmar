@@ -6,17 +6,20 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuthGate } from "@/components/auth/auth-provider";
 import type { PriceCurrency } from "@/lib/pricing";
-import type { Voucher } from "@/lib/vouchers/voucher-store";
+import type { VoucherView } from "@/lib/vouchers/localize";
 import { withBookingReturn } from "@/lib/booking-return";
 import { BookingVoucherCard } from "./booking-voucher-card";
 
 interface BookingVoucherSectionProps {
-  vouchers: Voucher[];
+  vouchers: VoucherView[];
   slug: string;
   signedIn: boolean;
-  selected: Voucher | null;
-  /** Single-voucher rule: applying replaces the previous choice; re-applying clears it. */
-  onSelect: (voucher: Voucher | null) => void;
+  selected: VoucherView | null;
+  /** Single-voucher radio model: selecting replaces the previous choice. */
+  onSelect: (voucher: VoucherView | null) => void;
+  /** Live guest count + travel date drive instant eligibility feedback. */
+  guestCount: number;
+  bookingDate: string | null;
   subtotal: number | null;
   locale: string;
   currency: PriceCurrency;
@@ -30,9 +33,10 @@ interface BookingVoucherSectionProps {
  * afterwards, so the wallet appears without losing what was typed in the form.
  *
  * One collapsible card per wallet voucher, one panel open at a time so a long
- * wallet stays scannable. There is no "No voucher" row: not choosing anything
- * is the default, and the applied card's own "Remove voucher" action clears the
- * selection.
+ * wallet stays scannable. Eligibility is evaluated against the live guest
+ * count and travel date on every render; ineligible cards are disabled with a
+ * reason. Selection is a radio group, so at most one voucher can be applied —
+ * choosing another replaces the previous one automatically.
  */
 export function BookingVoucherSection({
   vouchers,
@@ -40,6 +44,8 @@ export function BookingVoucherSection({
   signedIn,
   selected,
   onSelect,
+  guestCount,
+  bookingDate,
   subtotal,
   locale,
   currency,
@@ -110,6 +116,8 @@ export function BookingVoucherSection({
               open={openId === voucher.id}
               onToggle={() => togglePanel(voucher.id)}
               onSelect={onSelect}
+              guestCount={guestCount}
+              bookingDate={bookingDate}
               subtotal={subtotal}
               locale={locale}
               currency={currency}

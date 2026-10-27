@@ -20,6 +20,18 @@ export interface PromotionRecord {
   currency?: string | null;
   promoCode?: string | null;
   validUntil?: string | null;
+  /** Master-document state: `false` = unpublished/inactive (hidden from wallets). */
+  isActive?: boolean | null;
+  /** Capacity: maximum claims allowed. Empty/null = unlimited. */
+  maxSlots?: number | null;
+  /** Capacity: offline/administrative claims already used (online claims are counted live). */
+  usedCount?: number | null;
+  /** Eligibility: minimum party size (blank/1 = any size). */
+  minGuests?: number | null;
+  /** Eligibility: earliest travel/booking date (inclusive ISO day). */
+  startDate?: string | null;
+  /** Eligibility: latest travel/booking date (inclusive ISO day). */
+  endDate?: string | null;
   bannerImage?: PromotionImage | null;
   coverImage?: PromotionImage | null;
   targetTour?: { _id: string; slug?: string | null } | null;
@@ -40,6 +52,11 @@ export interface PromotionCard {
   tourSlug: string | null;
   coverUrl: string | null;
   coverAlt: string;
+  /** Derived capacity state (see `computePromotionCapacity`). */
+  maxSlots: number | null;
+  usedCount: number;
+  remainingSlots: number | null;
+  isExhausted: boolean;
 }
 
 const DAY_MS = 86_400_000;
@@ -118,7 +135,44 @@ export function formatPromoPrice(
   return formatPrice(value, locale, currency);
 }
 
-export function toPromotionCard(promo: PromotionRecord, locale: string): PromotionCard {
+/** Slot capacity of one promotion, derived from the CMS limit + live claims. */
+export interface PromotionCapacity {
+  /** `null` = no limit configured. */
+  maxSlots: number | null;
+  /** Baseline (CMS) + online wallet claims. */
+  usedCount: number;
+  /** `null` = unlimited; never negative. */
+  remainingSlots: number | null;
+  isExhausted: boolean;
+}
+
+const nonNegativeInt = (value: unknown): number | null =>
+  typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : null;
+
+/**
+ * `isExhausted = usedCount >= maxSlots` (equivalently `remainingSlots <= 0`).
+ * `onlineClaims` is the live count of wallet rows for this promotion; the CMS
+ * `usedCount` is a manual baseline for offline/administrative redemptions, so
+ * total used = baseline + online claims. Invalid/fractional values fail open
+ * (unlimited) rather than locking every deal out.
+ */
+export function computePromotionCapacity(
+  promo: Pick<PromotionRecord, "maxSlots" | "usedCount"> | null | undefined,
+  onlineClaims = 0
+): PromotionCapacity {
+  const maxSlots = nonNegativeInt(promo?.maxSlots);
+  const baseline = nonNegativeInt(promo?.usedCount) ?? 0;
+  const claims = nonNegativeInt(onlineClaims) ?? 0;
+  const usedCount = baseline + claims;
+  const remainingSlots = maxSlots === null ? null : Math.max(0, maxSlots - usedCount);
+  return { maxSlots, usedCount, remainingSlots, isExhausted: remainingSlots === 0 };
+}
+
+export function toPromotionCard(
+  promo: PromotionRecord,
+  locale: string,
+  onlineClaims = 0
+): PromotionCard {
   const text = pickPromotionText(promo, locale);
   const price = formatPromoPrice(promo.discountedPrice, promo.currency, locale);
   const original = formatPromoPrice(promo.originalPrice, promo.currency, locale);
@@ -149,5 +203,6 @@ export function toPromotionCard(promo: PromotionRecord, locale: string): Promoti
     tourSlug: promo.targetTour?.slug ?? null,
     coverUrl: image?.asset?.url ?? null,
     coverAlt,
+    ...computePromotionCapacity(promo, onlineClaims),
   };
 }

@@ -4,7 +4,7 @@ import { BackToBookingLink } from "@/components/booking/back-to-booking-link";
 import { PromotionCard } from "@/components/deals/promotion-card";
 import { safeBookingReturn } from "@/lib/booking-return";
 import { currentUser } from "@/lib/auth/session";
-import { listVouchers } from "@/lib/vouchers/voucher-store";
+import { countVouchersByPromotion, listVouchers } from "@/lib/vouchers/voucher-store";
 import { filterLivePromotions, toPromotionCard, type PromotionRecord } from "@/lib/promotions";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { PROMOTIONS_QUERY } from "@/sanity/queries/promotions";
@@ -35,8 +35,15 @@ export default async function DealsPage({ params, searchParams }: PageProps) {
     user ? (await listVouchers(user.id)).map((voucher) => voucher.promotionId) : []
   );
 
-  const cards = filterLivePromotions((promotions ?? []) as PromotionRecord[]).map((promo) =>
-    toPromotionCard(promo, locale)
+  const livePromotions = filterLivePromotions(
+    (promotions ?? []) as PromotionRecord[]
+  );
+  // Live claim counts feed `isExhausted` on every card (CMS baseline + online).
+  const claimCounts = await countVouchersByPromotion(
+    livePromotions.map((promo) => promo._id)
+  );
+  const cards = livePromotions.map((promo) =>
+    toPromotionCard(promo, locale, claimCounts.get(promo._id) ?? 0)
   );
 
   return (
@@ -66,6 +73,7 @@ export default async function DealsPage({ params, searchParams }: PageProps) {
               }
               claimNowLabel={t("claimNow")}
               claimedLabel={t("claimed")}
+              outOfSlotsLabel={t("outOfSlots")}
               claimed={claimedIds.has(card.id)}
             />
           ))}

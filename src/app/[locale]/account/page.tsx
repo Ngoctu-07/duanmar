@@ -1,14 +1,9 @@
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { currentUser } from "@/lib/auth/session";
-import { listVouchers } from "@/lib/vouchers/voucher-store";
-import { localizeVouchers } from "@/lib/vouchers/localize";
+import { loadVoucherWallet } from "@/lib/vouchers/load-voucher-wallet";
 import { getAvatarPresets } from "@/lib/avatars";
 import { listBookingsForUser } from "@/lib/bookings/booking-store";
-import { listReviewsForAuthor } from "@/lib/reviews-db";
-import { fetchPublished } from "@/sanity/lib/fetch-published";
-import { PROMOTIONS_BY_IDS_QUERY } from "@/sanity/queries/promotions";
-import type { PromotionRecord } from "@/lib/promotions";
 import { AccountDashboard } from "@/components/account/account-dashboard";
 import { AccountSignIn } from "@/components/account/account-sign-in";
 import { BackToBookingLink } from "@/components/booking/back-to-booking-link";
@@ -23,9 +18,10 @@ export async function generateMetadata(): Promise<Metadata> {
  * `/account` — session-gated dashboard.
  *
  * Every piece of profile state comes from the server on each request:
- * users/avatars and bookings from SQLite, voucher copy re-localized from the
- * CMS. That is what makes a session two months later render the same profile
- * on any device.
+ * users/avatars and bookings from SQLite, voucher copy + slot capacity from
+ * the CMS. That is what makes a session two months later render the same
+ * profile on any device. The review-history tab was removed; owners manage
+ * their reviews from the tour detail page instead.
  */
 export default async function AccountPage({
   searchParams,
@@ -49,37 +45,25 @@ export default async function AccountPage({
     );
   }
 
-  const vouchers = await listVouchers(user.id);
-  const [reviews, serverBookings] = await Promise.all([
-    listReviewsForAuthor(user.id).catch(() => []),
-    listBookingsForUser(user.id),
-  ]);
-  const promotionIds = [...new Set(vouchers.map((voucher) => voucher.promotionId))];
-  const [locale, avatarPresets, promotions] = await Promise.all([
+  const [locale, avatarPresets, serverBookings] = await Promise.all([
     getLocale(),
     getAvatarPresets(),
-    promotionIds.length > 0
-      ? fetchPublished(
-          PROMOTIONS_BY_IDS_QUERY,
-          { ids: promotionIds },
-          { tags: ["sanity:promotion:list"] }
-        )
-      : Promise.resolve([]),
+    listBookingsForUser(user.id),
   ]);
+  // Dashboard retrieval is the cleanup point: claims whose master promotion was
+  // deleted/unpublished are hidden AND permanently removed from the wallet.
+  // Inactive-but-existing promotions are hidden only, so re-activation restores
+  // them; a failed CMS read fails open and never purges.
+  const vouchers = await loadVoucherWallet(user.id, locale, { purgeOrphans: true });
 
   return (
     <>
       {backLink}
       <AccountDashboard
         user={user}
-        vouchers={localizeVouchers(
-          vouchers,
-          (promotions ?? []) as PromotionRecord[],
-          locale
-        )}
+        vouchers={vouchers}
         avatarPresets={avatarPresets}
         serverBookings={serverBookings}
-        reviews={reviews}
       />
     </>
   );

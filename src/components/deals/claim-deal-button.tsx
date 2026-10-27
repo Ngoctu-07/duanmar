@@ -14,8 +14,12 @@ interface ClaimDealButtonProps {
   label: string;
   /** Label rendered once the promotion is in the visitor's wallet. */
   claimedLabel: string;
+  /** Status label for a deal whose slot limit is reached. */
+  outOfSlotsLabel: string;
   /** Server truth: this visitor already claimed the promotion. */
   claimed: boolean;
+  /** No slots left — the claim action is replaced by a dead status chip. */
+  exhausted: boolean;
 }
 
 /**
@@ -23,26 +27,33 @@ interface ClaimDealButtonProps {
  * replayed automatically after login. Once the voucher is stored the button
  * flips to "Đã nhận" and refuses further clicks — the wallet itself is read
  * from SQLite on the account page, so it appears there immediately.
+ *
+ * Exhausted deals never render a clickable CTA, and a 409 from the server
+ * (last slot taken between render and click) swaps in the "out of slots" copy.
  */
 export function ClaimDealButton({
   card,
   href,
   label,
   claimedLabel,
+  outOfSlotsLabel,
   claimed,
+  exhausted,
 }: ClaimDealButtonProps) {
   const t = useTranslations("deals");
   const router = useRouter();
   const { requireAuth } = useAuthGate();
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState<"error" | "exhausted" | null>(null);
   const [justClaimed, setJustClaimed] = useState(false);
   const isClaimed = claimed || justClaimed;
+  const ctaClass =
+    "flex w-full items-center justify-center rounded-none px-6 py-3 font-condensed text-sm font-medium uppercase tracking-[0.22em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   const claim = async () => {
-    if (isClaimed || busy) return;
+    if (isClaimed || busy || exhausted) return;
     setBusy(true);
-    setFailed(false);
+    setFailure(null);
     try {
       const response = await fetch("/api/vouchers", {
         method: "POST",
@@ -60,7 +71,7 @@ export function ClaimDealButton({
         }),
       });
       if (!response.ok) {
-        setFailed(true);
+        setFailure(response.status === 409 ? "exhausted" : "error");
         setBusy(false);
         return;
       }
@@ -70,10 +81,22 @@ export function ClaimDealButton({
       // matches the wallet on the next visit, without leaving this page.
       router.refresh();
     } catch {
-      setFailed(true);
+      setFailure("error");
       setBusy(false);
     }
   };
+
+  if (exhausted) {
+    return (
+      <span
+        data-testid="claim-deal-exhausted"
+        aria-disabled="true"
+        className={cn(ctaClass, "cursor-not-allowed border border-white/20 bg-transparent text-white/50")}
+      >
+        {outOfSlotsLabel}
+      </span>
+    );
+  }
 
   return (
     <>
@@ -90,7 +113,7 @@ export function ClaimDealButton({
           });
         }}
         className={cn(
-          "flex w-full items-center justify-center rounded-none px-6 py-3 font-condensed text-sm font-medium uppercase tracking-[0.22em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          ctaClass,
           isClaimed
             ? "cursor-not-allowed border border-white/20 bg-transparent text-white/50"
             : "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -98,9 +121,9 @@ export function ClaimDealButton({
       >
         {isClaimed ? claimedLabel : label}
       </Link>
-      {failed && (
+      {failure && (
         <p role="alert" className="mt-2 text-center text-xs text-primary">
-          {t("claimError")}
+          {failure === "exhausted" ? t("claimExhausted") : t("claimError")}
         </p>
       )}
     </>

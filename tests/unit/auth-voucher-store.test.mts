@@ -15,9 +15,14 @@ const { hashPassword, verifyPassword } = await import("../../src/lib/auth/passwo
 const { authenticate, createUser, findUserByEmail, normalizeEmail } = await import(
   "../../src/lib/auth/user-store.ts"
 );
-const { claimVoucher, generateVoucherCode, listVouchers } = await import(
-  "../../src/lib/vouchers/voucher-store.ts"
-);
+const {
+  claimVoucher,
+  countVouchersByPromotion,
+  findVoucher,
+  generateVoucherCode,
+  isValidPromotionId,
+  listVouchers,
+} = await import("../../src/lib/vouchers/voucher-store.ts");
 
 let passed = 0;
 let failed = 0;
@@ -168,6 +173,92 @@ await check("claimVoucher rejects missing ids and unknown tour slugs", async () 
 await check("generateVoucherCode is deterministic and per-promotion", async () => {
   assert.equal(generateVoucherCode("promo-abc"), generateVoucherCode("promo-abc"));
   assert.notEqual(generateVoucherCode("promo-abc"), generateVoucherCode("promo-xyz"));
+});
+
+/* --- slot capacity --- */
+
+await check("countVouchersByPromotion counts live claims per promotion, ignores bad ids", async () => {
+  const counts = await countVouchersByPromotion([
+    "promo-abc",
+    "promo-code",
+    "bad id!",
+    "promo-abc",
+  ]);
+  assert.equal(counts.get("promo-abc"), 1);
+  assert.equal(counts.get("promo-code"), 1);
+  assert.equal(counts.has("bad id!"), false);
+  assert.equal((await countVouchersByPromotion([])).size, 0);
+});
+
+await check("findVoucher returns the wallet row or null", async () => {
+  assert.equal((await findVoucher(user.id, "promo-abc"))?.promotionId, "promo-abc");
+  assert.equal(await findVoucher(user.id, "promo-unknown"), null);
+  assert.equal(await findVoucher(user.id, "bad id!"), null);
+  assert.equal(isValidPromotionId("promo-abc"), true);
+  assert.equal(isValidPromotionId("bad id!"), false);
+});
+
+await check("capacity guard refuses the claim that would exceed maxSlots", async () => {
+  const second = await createUser({
+    email: "second@duanmar.test",
+    name: "Second",
+    password: "second-password",
+  });
+  assert.equal(second.ok, true);
+  if (!second.ok) return;
+
+  const limited = { ...promotion, promotionId: "promo-capacity" };
+  const first = await claimVoucher(user.id, limited, "2026-10-24T10:00:00.000Z", {
+    maxSlots: 1,
+    baselineUsed: 0,
+  });
+  assert.equal(first.ok, true);
+  if (first.ok) assert.equal(first.created, true);
+
+  const blocked = await claimVoucher(second.user.id, limited, "2026-10-24T10:00:00.000Z", {
+    maxSlots: 1,
+    baselineUsed: 0,
+  });
+  assert.equal(blocked.ok, false);
+  if (!blocked.ok) assert.equal(blocked.code, "exhausted");
+  assert.equal(await findVoucher(second.user.id, "promo-capacity"), null);
+
+  // Re-claiming an existing wallet row stays idempotent even when sold out.
+  const again = await claimVoucher(user.id, limited, "2026-10-25T10:00:00.000Z", {
+    maxSlots: 1,
+    baselineUsed: 0,
+  });
+  assert.equal(again.ok, true);
+  if (again.ok) assert.equal(again.created, false);
+});
+
+await check("CMS usedCount baseline is subtracted from the available slots", async () => {
+  const third = await createUser({
+    email: "third@duanmar.test",
+    name: "Third",
+    password: "third-password",
+  });
+  assert.equal(third.ok, true);
+  if (!third.ok) return;
+
+  const baseline = { ...promotion, promotionId: "promo-baseline" };
+  const capacity = { maxSlots: 2, baselineUsed: 1 };
+  const allowed = await claimVoucher(third.user.id, baseline, "2026-10-24T10:00:00.000Z", capacity);
+  assert.equal(allowed.ok, true);
+  if (allowed.ok) assert.equal(allowed.created, true);
+
+  const blocked = await claimVoucher(user.id, baseline, "2026-10-24T10:00:00.000Z", capacity);
+  assert.equal(blocked.ok, false);
+  if (!blocked.ok) assert.equal(blocked.code, "exhausted");
+});
+
+await check("null maxSlots means unlimited claims", async () => {
+  const unlimited = { ...promotion, promotionId: "promo-unlimited" };
+  const result = await claimVoucher(user.id, unlimited, "2026-10-24T10:00:00.000Z", {
+    maxSlots: null,
+    baselineUsed: 999,
+  });
+  assert.equal(result.ok, true);
 });
 
 // Windows keeps the SQLite handle open for the process lifetime, so the temp

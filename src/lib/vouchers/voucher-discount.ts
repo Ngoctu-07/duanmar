@@ -70,7 +70,10 @@ export function todayIso(now: Date = new Date()): string {
 }
 
 /** Day is inclusive; malformed `validUntil` is treated as non-expiring. */
-export function isVoucherExpired(voucher: Voucher, today: string = todayIso()): boolean {
+export function isVoucherExpired(
+  voucher: Pick<Voucher, "validUntil">,
+  today: string = todayIso()
+): boolean {
   if (!voucher.validUntil || !ISO_DAY.test(voucher.validUntil)) return false;
   return voucher.validUntil < today;
 }

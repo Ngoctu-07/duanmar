@@ -98,6 +98,45 @@ export default defineType({
       validation: (rule) => rule.max(32),
     }),
     defineField({
+      name: "maxSlots",
+      title: "Slot limit",
+      type: "number",
+      description:
+        "Maximum number of vouchers that can be claimed. Leave empty for unlimited. The card turns grey with an “Out of Slots” badge once the limit is reached.",
+      validation: (rule) => rule.integer().min(0),
+    }),
+    defineField({
+      name: "usedCount",
+      title: "Slots used (manual baseline)",
+      type: "number",
+      description:
+        "Offline/administrative claims already used. Online claims are counted automatically and added to this baseline.",
+      initialValue: 0,
+      validation: (rule) => rule.integer().min(0),
+    }),
+    defineField({
+      name: "minGuests",
+      title: "Minimum guests",
+      type: "number",
+      description:
+        "Minimum guests required to unlock this voucher. Leave blank or set to 1 for unlimited/any party size.",
+      validation: (rule) => rule.integer().min(1),
+    }),
+    defineField({
+      name: "startDate",
+      title: "Booking window start",
+      type: "date",
+      description:
+        "Voucher validity start date: the travel/booking date must be on or after this day. Leave blank for no lower bound.",
+    }),
+    defineField({
+      name: "endDate",
+      title: "Booking window end",
+      type: "date",
+      description:
+        "Voucher expiry date: the travel/booking date must be on or before this day (inclusive). Leave blank for no upper bound.",
+    }),
+    defineField({
       name: "coverImage",
       title: "Cover image",
       type: "image",
