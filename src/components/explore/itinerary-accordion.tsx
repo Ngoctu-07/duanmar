@@ -1,6 +1,7 @@
 import { PortableText, type PortableTextBlock } from "next-sanity";
 import { PT_COMPONENTS } from "@/components/sanity/portable-text";
 import { ItineraryDayRow } from "@/components/explore/itinerary-day-row";
+import { filterPortableTextContent } from "@/lib/portable-text-content";
 
 export interface ItineraryDay {
   dayTitle: string;
@@ -23,6 +24,12 @@ interface ItineraryAccordionProps {
  * price block). The page only mounts this when the tour has at least one day.
  * `self-start` keeps the block hugging its rows inside the flex column. Plain
  * typography only: no card, border or fill — days separate by spacing.
+ *
+ * Expandability is decided by real content, not array length: an editor who
+ * opened a day's `details` field but left it blank still has one empty block in
+ * the array, which used to render a chevron that opened blank space. Blank
+ * blocks are filtered out and the row becomes a static title when nothing is
+ * left (see `hasPortableTextContent`).
  */
 export function ItineraryAccordion({ title, days }: ItineraryAccordionProps) {
   if (days.length === 0) return null;
@@ -38,7 +45,10 @@ export function ItineraryAccordion({ title, days }: ItineraryAccordionProps) {
 
       <ul className="mt-4 space-y-1">
         {days.map((day, index) => {
-          const details = day.details ?? [];
+          // Drop blank Portable Text blocks before deciding expandability, so
+          // an empty editor field never renders a dead chevron or an empty
+          // paragraph inside the panel.
+          const details = filterPortableTextContent(day.details);
           const hasDetails = details.length > 0;
           return (
             <ItineraryDayRow

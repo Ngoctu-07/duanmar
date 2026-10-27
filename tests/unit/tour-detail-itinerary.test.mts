@@ -5,6 +5,9 @@ import { createRequire } from "node:module";
 const { DESTINATION_BY_SLUG_QUERY } = await import("../../src/sanity/queries/destinations.ts");
 const { parse } = await import("groq-js");
 const { ItineraryAccordion } = await import("../../src/components/explore/itinerary-accordion.tsx");
+const { filterPortableTextContent, hasPortableTextContent } = await import(
+  "../../src/lib/portable-text-content.ts"
+);
 
 // The .tsx graph is compiled to CJS by tsx — load React the same way so the
 // instances match (same trick as h6-render-capacity).
@@ -49,6 +52,40 @@ const sampleDays = [
     ],
   },
   { dayTitle: "Ngày 3: Tự do khám phá", meals: "Ăn trưa", details: null },
+];
+
+// Sanity keeps a block after an editor opens the field but types nothing. The
+// live "TRẠM" itineraries are exactly this shape: details.length === 1, no text.
+const emptySpanBlock = {
+  _type: "block",
+  style: "normal",
+  children: [{ _type: "span", text: "", marks: [] }],
+  markDefs: [],
+};
+const whitespaceBlock = {
+  _type: "block",
+  style: "normal",
+  children: [{ _type: "span", text: "   ", marks: [] }],
+  markDefs: [],
+};
+const textBlock = {
+  _type: "block",
+  style: "normal",
+  children: [{ _type: "span", text: "Tham quan Bãi Sau", marks: [] }],
+  markDefs: [],
+};
+const imageBlock = {
+  _type: "image",
+  asset: { _ref: "image-abc-448x672-jpg" },
+};
+const emptyDetailsDays = [
+  { dayTitle: "TRẠM 1: CỔNG THỜI GIAN", meals: null, details: [emptySpanBlock] },
+  { dayTitle: "TRẠM 2: MẬT THƯ", meals: null, details: [whitespaceBlock] },
+  {
+    dayTitle: "TRẠM 3: CÓ NỘI DUNG",
+    meals: null,
+    details: [emptySpanBlock, textBlock],
+  },
 ];
 
 const render = (days: unknown[]) =>
@@ -254,7 +291,7 @@ check("page: itinerary + price live in the text column, poster owns the right co
   );
 });
 
-check("layout: poster is a 2:3 portrait, cover-cropped, capped and sticky", () => {
+check("layout: poster is a static 2:3 portrait, top-aligned and never stretched", () => {
   const poster = read("src/components/explore/tour-poster.tsx");
   assert.ok(poster.includes("aspect-[2/3]"), "poster must use the 2:3 portrait frame");
   assert.ok(poster.includes("object-cover"), "poster image must crop to fill");
@@ -263,8 +300,27 @@ check("layout: poster is a 2:3 portrait, cover-cropped, capped and sticky", () =
   assert.ok(poster.includes("mx-auto"), "poster must be centered in its column");
   assert.ok(poster.includes("rounded-none"), "poster must keep sharp 90° corners");
   assert.ok(!poster.includes("rounded-xl"), "poster must not round its corners");
-  assert.ok(poster.includes("lg:sticky"), "poster must stick while the text column scrolls");
+  assert.ok(
+    !poster.includes("lg:sticky") && !poster.includes("lg:top-24"),
+    "poster must not follow the scroll (no sticky positioning)"
+  );
+  assert.ok(
+    poster.includes("self-start"),
+    "poster must opt out of grid stretch with self-start"
+  );
+  assert.ok(!poster.includes("h-full"), "poster frame must not fill the row height");
   assert.ok(poster.includes("order-first"), "poster must lead on mobile");
+});
+
+check("layout: grid uses items-start so the poster column cannot stretch", () => {
+  assert.ok(
+    page.includes("mt-8 grid grid-cols-1 items-start gap-8"),
+    "grid must decouple the columns with items-start"
+  );
+  assert.ok(
+    page.indexOf("<TourPoster") > page.indexOf("<article"),
+    "poster must be the sibling of the text column"
+  );
 });
 
 check("typography: Barlow Semi Condensed is the global body face, Gypsy stays display", () => {
@@ -380,6 +436,67 @@ check("render: day without details renders as a static row (no dead click target
   assert.ok(html.includes("Ngày 3: Tự do khám phá"), "static day missing");
   const buttons = html.match(/<button/g) ?? [];
   assert.equal(buttons.length, 2, `expected 2 buttons, got ${buttons.length}`);
+});
+
+check("content guard: blank/whitespace blocks count as no content", () => {
+  assert.equal(hasPortableTextContent([]), false);
+  assert.equal(hasPortableTextContent(null), false);
+  assert.equal(hasPortableTextContent([emptySpanBlock]), false);
+  assert.equal(hasPortableTextContent([whitespaceBlock]), false);
+  assert.equal(hasPortableTextContent([emptySpanBlock, whitespaceBlock]), false);
+  assert.equal(hasPortableTextContent([textBlock]), true);
+  assert.equal(hasPortableTextContent([emptySpanBlock, textBlock]), true);
+  assert.equal(hasPortableTextContent([imageBlock]), true);
+});
+
+check("content guard: filtering drops blank blocks but keeps visible ones", () => {
+  const filtered = filterPortableTextContent([
+    emptySpanBlock,
+    textBlock,
+    whitespaceBlock,
+    imageBlock,
+  ]);
+  assert.deepEqual(
+    filtered.map((block) => block._type),
+    ["block", "image"],
+    "only the text block and the inline image may survive"
+  );
+  assert.equal(filtered[0], textBlock);
+  assert.equal(filtered[1], imageBlock);
+});
+
+check("render: empty Portable Text blocks render static rows (no dead chevron)", () => {
+  const html = render(emptyDetailsDays);
+  assert.equal(
+    (html.match(/<button/g) ?? []).length,
+    1,
+    "only the station with real text may be expandable"
+  );
+  assert.equal(
+    (html.match(/chevron-right/g) ?? []).length,
+    1,
+    "only the station with real text may show a chevron"
+  );
+  assert.ok(html.includes("TRẠM 1: CỔNG THỜI GIAN"), "static station 1 missing");
+  assert.ok(html.includes("TRẠM 2: MẬT THƯ"), "static station 2 missing");
+  assert.ok(html.includes("TRẠM 3: CÓ NỘI DUNG"), "expandable station missing");
+  assert.ok(html.includes("Tham quan Bãi Sau"), "real details missing");
+  assert.equal(
+    (html.match(/<div[^>]*aria-hidden="true"/g) ?? []).length,
+    1,
+    "blank stations must not create hidden panels"
+  );
+});
+
+check("accordion: expandability comes from filtered content, not array length", () => {
+  assert.ok(
+    accordionSource.includes("filterPortableTextContent(day.details)"),
+    "accordion must filter blank blocks before deciding expandability"
+  );
+  assert.ok(
+    accordionSource.includes("const hasDetails = details.length > 0"),
+    "expandability must be based on the filtered block list"
+  );
 });
 
 check("render: no days → module renders nothing", () => {
