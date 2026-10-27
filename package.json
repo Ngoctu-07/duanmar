@@ -16,6 +16,7 @@
     "migrate:purge-team-gallery": "node scripts/purge-team-gallery.mjs",
     "migrate:seed-articles": "node scripts/seed-articles.mjs",
     "migrate:localization": "node scripts/backfill-destination-localization.mjs",
+    "purge:reviews": "node scripts/purge-reviews.mjs",
     "migrate:turso": "npx tsx scripts/migrate-sqlite-to-turso.mts",
     "icons:generate": "node scripts/generate-favicon-set.mjs",
     "logo:knockout": "node scripts/generate-knockout-logo.mjs"

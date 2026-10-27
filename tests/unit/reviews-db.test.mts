@@ -238,6 +238,28 @@ await check("R8d anonymous legacy row can be claimed by a signed-in edit", async
   await db.deleteReview("VN-CLAIM:hcm", OWNER, USER);
 });
 
+await check("R8e delete has NO time limit: an old account-owned review still deletes", async () => {
+  const USER = "77777777-7777-4777-8777-777777777777";
+  const old = input({
+    reference: "VN-OLD:old-slug",
+    tourSlug: "old-slug",
+    bookingReference: "VN-OLD",
+    createdAt: "2026-07-01T00:00:00.000Z",
+  });
+  await db.upsertReview(old, "visitor-old", NOW, USER);
+  // Editing stays behind the 3h window …
+  await expectStoreError(
+    () => db.upsertReview({ ...old, rating: 1 }, "visitor-old", NOW, USER),
+    "window_closed"
+  );
+  // … but deletion never expires for the author.
+  assert.deepEqual(await db.deleteReview("VN-OLD:old-slug", "visitor-old", USER), {
+    reference: "VN-OLD:old-slug",
+    tourSlug: "old-slug",
+  });
+  assert.equal((await db.getRatingAggregates(["old-slug"])).size, 0);
+});
+
 await check("R9 storage CHECK constraint rejects rating 0 and 6", async () => {
   const raw = await store.getDb();
   assert.ok(raw, "expected a connection");

@@ -44,7 +44,9 @@ export async function DELETE(
       reference: deleted.reference,
       tourSlug: deleted.tourSlug,
       aggregate,
-      averageRating: aggregate?.avg ?? null,
+      // No reviews left → explicit zeroed state (never null) so callers can
+      // render "0 / 0" immediately after the last deletion.
+      averageRating: aggregate?.avg ?? 0,
       reviewCount: aggregate?.count ?? 0,
     });
   } catch (error) {
