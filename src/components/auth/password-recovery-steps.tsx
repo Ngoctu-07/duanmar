@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/auth/password-input";
 
 /** Shared input styling — matches the sign-in/register form exactly. */
 export const RECOVERY_FIELD_CLASS =
@@ -135,28 +136,28 @@ export function NewPasswordStep({
         <Label htmlFor="recovery-password" className={FIELD_LABEL}>
           {t("newPassword")}
         </Label>
-        <Input
+        <PasswordInput
           id="recovery-password"
           name="new-password"
-          type="password"
           autoComplete="new-password"
           value={password}
           onChange={(event) => onPasswordChange(event.target.value)}
           className={RECOVERY_FIELD_CLASS}
+          toggleTestId="recovery-password-visibility-toggle"
         />
       </div>
       <div className="space-y-2">
         <Label htmlFor="recovery-confirm" className={FIELD_LABEL}>
           {t("confirmPassword")}
         </Label>
-        <Input
+        <PasswordInput
           id="recovery-confirm"
           name="confirm-password"
-          type="password"
           autoComplete="new-password"
           value={confirmPassword}
           onChange={(event) => onConfirmChange(event.target.value)}
           className={RECOVERY_FIELD_CLASS}
+          toggleTestId="recovery-confirm-visibility-toggle"
         />
       </div>
       <button type="submit" disabled={busy} className={SUBMIT_CLASS}>

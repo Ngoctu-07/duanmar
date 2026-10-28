@@ -6,14 +6,24 @@ import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { cn } from "cn";
 
-type PasswordInputProps = Omit<ComponentProps<"input">, "type">;
+type PasswordInputProps = Omit<ComponentProps<"input">, "type"> & {
+  /** Override the toggle's test id when several toggles share a form. */
+  toggleTestId?: string;
+};
 
 /**
  * Password field with an inline eye / eye-off toggle. The input starts as
  * `type="password"` and only this button flips it to `type="text"` — form
  * submissions and autofill keep their normal password semantics.
+ *
+ * Visibility state lives inside the component, so every instance toggles
+ * independently even when several share the same form.
  */
-export function PasswordInput({ className, ...props }: PasswordInputProps) {
+export function PasswordInput({
+  className,
+  toggleTestId = "password-visibility-toggle",
+  ...props
+}: PasswordInputProps) {
   const t = useTranslations("auth");
   const [visible, setVisible] = useState(false);
 
@@ -29,8 +39,8 @@ export function PasswordInput({ className, ...props }: PasswordInputProps) {
         onClick={() => setVisible((current) => !current)}
         aria-label={visible ? t("hidePassword") : t("showPassword")}
         aria-pressed={visible}
-        data-testid="password-visibility-toggle"
-        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-none text-white/55 transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+        data-testid={toggleTestId}
+        className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-none text-white/55 transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
       >
         {visible ? (
           <EyeOff className="h-4 w-4" aria-hidden="true" />
