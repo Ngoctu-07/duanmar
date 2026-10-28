@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Pencil, UserRound } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
+import { useAuthGate } from "@/components/auth/auth-provider";
+import { notifyReviewsChanged } from "@/lib/reviews";
 import type { CurrentUser } from "@/lib/auth/session";
 import type { AvatarPreset } from "@/lib/avatars";
 import {
@@ -30,6 +32,7 @@ interface AccountAvatarProps {
 export function AccountAvatar({ user, presets }: AccountAvatarProps) {
   const t = useTranslations("account");
   const router = useRouter();
+  const { refreshUser } = useAuthGate();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -51,6 +54,10 @@ export function AccountAvatar({ user, presets }: AccountAvatarProps) {
       }
       setOpen(false);
       setSaving(null);
+      // Historical review cards join the live user row, so notify mounted
+      // lists to refetch and refresh the session's avatar preview immediately.
+      notifyReviewsChanged();
+      await refreshUser().catch(() => undefined);
       router.refresh();
     } catch {
       setFailed(true);

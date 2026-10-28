@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth/session";
 import { updateUserAvatar } from "@/lib/auth/user-store";
 import { avatarImageUrl, getAvatarPresets } from "@/lib/avatars";
+import { revalidateReviewSurfaces } from "@/lib/reviews-revalidate";
 
 export const runtime = "nodejs";
 
@@ -36,10 +37,13 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "preset_not_found" }, { status: 400 });
   }
 
-  const updated = updateUserAvatar(user.id, { presetId: preset._id, url });
+  const updated = await updateUserAvatar(user.id, { presetId: preset._id, url });
   if (!updated) {
     return NextResponse.json({ error: "db_unavailable" }, { status: 503 });
   }
 
+  // Review cards join the user row; drop cached RSC review surfaces so the
+  // change is visible on the next paint without waiting for a deploy.
+  revalidateReviewSurfaces();
   return NextResponse.json({ user: updated });
 }

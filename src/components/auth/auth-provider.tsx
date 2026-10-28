@@ -22,6 +22,7 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
+  avatarUrl: string | null;
 }
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
@@ -33,6 +34,8 @@ interface AuthGateValue {
   requireAuth: (action: () => void) => void;
   openAuth: () => void;
   signOutUser: () => Promise<void>;
+  /** Refetch the Auth.js session after a profile/avatar change. */
+  refreshUser: () => Promise<void>;
 }
 
 const AuthGateContext = createContext<AuthGateValue | null>(null);
@@ -44,7 +47,7 @@ export function useAuthGate(): AuthGateValue {
 }
 
 function AuthGateProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const [open, setOpen] = useState(false);
   const pending = useRef<(() => void) | null>(null);
 
@@ -69,6 +72,10 @@ function AuthGateProvider({ children }: { children: React.ReactNode }) {
     await signOut({ redirect: false });
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    await update();
+  }, [update]);
+
   const handleAuthenticated = useCallback(() => {
     // Milestone 1: successful authentication (sign-in, sign-up or reset).
     fireCrtStatic();
@@ -90,6 +97,7 @@ function AuthGateProvider({ children }: { children: React.ReactNode }) {
       id,
       name: session?.user?.name ?? "",
       email: session?.user?.email ?? "",
+      avatarUrl: session?.user?.avatarUrl ?? null,
     };
   }, [session]);
 
@@ -100,8 +108,9 @@ function AuthGateProvider({ children }: { children: React.ReactNode }) {
       requireAuth,
       openAuth,
       signOutUser,
+      refreshUser,
     }),
-    [user, status, requireAuth, openAuth, signOutUser]
+    [user, status, requireAuth, openAuth, signOutUser, refreshUser]
   );
 
   return (

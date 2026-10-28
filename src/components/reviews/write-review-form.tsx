@@ -5,12 +5,13 @@ import { Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuthGate } from "@/components/auth/auth-provider";
 import { ReviewAvatar } from "@/components/reviews/review-avatar";
 import { ReviewImageInput } from "@/components/reviews/review-image-input";
 import { useEditWindowGate } from "@/components/reviews/use-edit-window-gate";
 import { useWriteReviewState } from "@/components/reviews/use-write-review-state";
 import { ReviewApiError, saveReviewApi } from "@/lib/reviews-api";
-import { REVIEW_EDIT_EVENT, type TourReview } from "@/lib/reviews";
+import { REVIEW_EDIT_EVENT, type ReviewSubmission, type TourReview } from "@/lib/reviews";
 
 interface WriteReviewFormProps {
   tourSlug: string;
@@ -34,6 +35,7 @@ export function WriteReviewForm({
   onSaved,
 }: WriteReviewFormProps) {
   const t = useTranslations("destinations");
+  const { user: authUser } = useAuthGate();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [images, setImages] = useState<string[]>([]);
@@ -97,15 +99,14 @@ export function WriteReviewForm({
       setError(t("reviews.errorRequired"));
       return;
     }
-    const review: TourReview = {
+    const review: ReviewSubmission = {
       reference: `${booking.reference}:${tourSlug}`,
       tourSlug,
-      authorName: booking.fullName,
-      authorEmail: booking.email,
       rating,
       comment: comment.trim(),
       images,
       createdAt: new Date().toISOString(),
+      bookingPaidAt: booking.paidAt,
       bookingReference: booking.reference,
     };
     setSubmitting(true);
@@ -148,8 +149,14 @@ export function WriteReviewForm({
 
       {enabled && booking && (
         <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-          <ReviewAvatar name={booking.fullName} size="sm" />
-          <span className="truncate">{booking.fullName}</span>
+          <ReviewAvatar src={authUser?.avatarUrl ?? null} size="sm" />
+          <span
+            data-testid="review-author-preview"
+            data-author-kind={authUser ? "user" : "guest"}
+            className="truncate"
+          >
+            {authUser?.name || booking.fullName}
+          </span>
         </div>
       )}
       {loaded && !booking && (

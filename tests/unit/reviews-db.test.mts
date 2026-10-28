@@ -34,8 +34,6 @@ const input = (overrides: Partial<ReviewInput> = {}): ReviewInput => ({
   reference: "VN-1:hcm",
   tourSlug: "hcm",
   bookingReference: "VN-1",
-  authorName: "An Nguyen",
-  authorEmail: "an@example.com",
   rating: 4,
   comment: "Great tour",
   images: [],

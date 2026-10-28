@@ -12,15 +12,40 @@ import { listBookings } from "@/lib/booking-history";
 export interface TourReview {
   reference: string;
   tourSlug: string;
+  /** Live account name, or a generated `Decoder NN` pseudonym for guests. */
   authorName: string;
+  /** Live account avatar; null for guests / accounts without a selected preset. */
+  authorAvatarUrl?: string | null;
+  /** True when the row has no owning account (the UI shows a silhouette). */
+  isGuest?: boolean;
+  /** 1-based chronological guest index; null/absent for account reviews. */
+  guestNumber?: number | null;
   authorEmail?: string;
   authorId?: string | null;
   rating: number;
   comment: string;
   images: string[];
   createdAt: string;
+  /** Local booking paid time — drives the chronological guest pseudonym. */
+  bookingPaidAt?: string;
   bookingReference: string;
   owned?: boolean;
+}
+
+/**
+ * Write payload sent to `/api/reviews`. Deliberately contains no author name
+ * or email: the route derives those from the session / DB (or the guest
+ * Decoder pseudonym), so a client cannot inject a display identity.
+ */
+export interface ReviewSubmission {
+  reference: string;
+  tourSlug: string;
+  bookingReference: string;
+  rating: number;
+  comment: string;
+  images: string[];
+  createdAt?: string;
+  bookingPaidAt?: string;
 }
 
 /** Local-storage entry — `listReviews()` only yields records passing `isReview`. */

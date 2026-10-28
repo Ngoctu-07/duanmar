@@ -44,11 +44,13 @@ export function ReviewCard({ review, locale, owned, onDeleted }: ReviewCardProps
     <>
       <article
         data-testid="review-card"
+        data-review-reference={review.reference}
+        data-author-kind={review.isGuest ? "guest" : "user"}
         className="rounded-none border bg-card p-4 sm:p-5"
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 items-center gap-3">
-            <ReviewAvatar name={review.authorName} />
+            <ReviewAvatar src={review.authorAvatarUrl} />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">
                 {review.authorName}

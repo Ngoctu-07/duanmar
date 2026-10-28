@@ -16,8 +16,6 @@ const IMAGE_DATA_URL_RE = /^data:image\/(jpeg|png|webp);base64,/;
 export const MAX_IMAGES = 3;
 export const MAX_IMAGE_CHARS = 300_000;
 export const MAX_COMMENT_CHARS = 2000;
-export const MAX_AUTHOR_NAME_CHARS = 80;
-export const MAX_AUTHOR_EMAIL_CHARS = 200;
 const MIN_CREATED_AT_MS = Date.UTC(2020, 0, 1);
 const MAX_CLOCK_SKEW_MS = 60_000;
 
@@ -28,17 +26,24 @@ export class ReviewValidationError extends Error {
   }
 }
 
-/** Validated payload; `createdAt` only present when the client supplied it. */
+/**
+ * Validated payload; `createdAt` only present when the client supplied it.
+ * Author display data is intentionally absent: the server derives it from the
+ * session + `users` row (or a generated guest pseudonym), never from this body.
+ */
 export interface ReviewInput {
   reference: string;
   tourSlug: string;
   bookingReference: string;
-  authorName: string;
-  authorEmail: string;
   rating: number;
   comment: string;
   images: string[];
   createdAt?: string;
+  /**
+   * Paid timestamp of the local booking. Guest display names are numbered by
+   * this order-completion time (falling back to `createdAt` for legacy rows).
+   */
+  bookingPaidAt?: string;
 }
 
 export function isValidTourSlug(value: unknown): value is string {
@@ -55,19 +60,23 @@ function stringField(record: Record<string, unknown>, key: string): string {
   return value;
 }
 
-function validateCreatedAt(value: unknown, nowIso: string): string | undefined {
+function validateTimestamp(
+  value: unknown,
+  field: "createdAt" | "bookingPaidAt",
+  nowIso: string
+): string | undefined {
   if (value === undefined || value === null) return undefined;
-  if (typeof value !== "string") throw new ReviewValidationError("invalid createdAt");
+  if (typeof value !== "string") throw new ReviewValidationError(`invalid ${field}`);
   const parsed = Date.parse(value);
   const now = Date.parse(nowIso);
   if (Number.isNaN(parsed) || Number.isNaN(now)) {
-    throw new ReviewValidationError("invalid createdAt");
+    throw new ReviewValidationError(`invalid ${field}`);
   }
   if (parsed > now + MAX_CLOCK_SKEW_MS) {
-    throw new ReviewValidationError("createdAt in future");
+    throw new ReviewValidationError(`${field} in future`);
   }
   if (parsed < MIN_CREATED_AT_MS) {
-    throw new ReviewValidationError("createdAt before 2020");
+    throw new ReviewValidationError(`${field} before 2020`);
   }
   return new Date(parsed).toISOString();
 }
@@ -87,19 +96,6 @@ export function validateReviewPayload(body: unknown, nowIso: string): ReviewInpu
   const reference = stringField(record, "reference");
   if (!REFERENCE_RE.test(reference) || reference !== `${bookingReference}:${tourSlug}`) {
     throw new ReviewValidationError("invalid reference");
-  }
-
-  const authorName = stringField(record, "authorName").trim();
-  if (authorName.length < 1 || authorName.length > MAX_AUTHOR_NAME_CHARS) {
-    throw new ReviewValidationError("invalid authorName");
-  }
-  const authorEmail = stringField(record, "authorEmail").trim();
-  if (
-    authorEmail.length > MAX_AUTHOR_EMAIL_CHARS ||
-    !authorEmail.includes("@") ||
-    /\s/.test(authorEmail)
-  ) {
-    throw new ReviewValidationError("invalid authorEmail");
   }
 
   const { rating } = record;
@@ -131,11 +127,10 @@ export function validateReviewPayload(body: unknown, nowIso: string): ReviewInpu
     reference,
     tourSlug,
     bookingReference,
-    authorName,
-    authorEmail,
     rating,
     comment,
     images: pictureUrls,
-    createdAt: validateCreatedAt(record.createdAt, nowIso),
+    createdAt: validateTimestamp(record.createdAt, "createdAt", nowIso),
+    bookingPaidAt: validateTimestamp(record.bookingPaidAt, "bookingPaidAt", nowIso),
   };
 }

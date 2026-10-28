@@ -4,6 +4,8 @@ import {
   queryRows,
   runStatement,
   withTransaction,
+  type InArgs,
+  type SqlExecutor,
 } from "@/lib/db/sqlite-store";
 import { isEditWindowExpired } from "@/lib/edit-window";
 import { isValidReference, isValidTourSlug, type ReviewInput } from "@/lib/reviews-validation";
@@ -13,10 +15,13 @@ import { isValidReference, isValidTourSlug, type ReviewInput } from "@/lib/revie
  * (`node:sqlite`). PK `reference = ${bookingReference}:${tourSlug}` = one
  * review per booking per tour. `created_at` is the immutable 3h edit-window
  * anchor (client-supplied only on first insert for migration, never rewritten
- * on edit; window judged against the server clock). New reviews also store
+ * on edit; window judged against the server clock). New reviews store
  * `author_id` when the writer has a session — that is the authoritative delete
- * owner. Legacy rows with no `author_id` keep the original `visitor` cookie
- * fallback. `author_email` is written but NEVER serialized. Degrade: reads →
+ * owner and the live profile reference. Display names/avatars are joined from
+ * `users` at read time, never snapshotted into the review row. Guest rows
+ * (`author_id IS NULL`) render a generated `Decoder NN` pseudonym ordered by
+ * booking completion. Legacy `author_name`/`author_email` columns stay only to
+ * satisfy the old NOT NULL schema and are never serialized. Degrade: reads →
  * empty/throw, writes → "db unavailable" (routes map that to 503).
  */
 
@@ -36,9 +41,16 @@ export interface PublicReview {
   reference: string;
   tourSlug: string;
   bookingReference: string;
-  /** Account id captured when the review was posted (null for legacy rows). */
+  /** Account id captured when the review was posted (null for guest rows). */
   authorId: string | null;
+  /** Live account name, or a generated `Decoder NN` pseudonym for guests. */
   authorName: string;
+  /** Live `users.avatar_url`; null for guests and accounts without an avatar. */
+  authorAvatarUrl: string | null;
+  /** True when `author_id` is null; the UI renders the default silhouette. */
+  isGuest: boolean;
+  /** 1-based chronological guest index; null for account-owned reviews. */
+  guestNumber: number | null;
   rating: number;
   comment: string;
   images: string[];
@@ -53,14 +65,42 @@ interface ReviewRow {
   visitor: string;
   author_id: string | null;
   author_name: string;
+  user_name: string | null;
+  user_avatar_url: string | null;
+  guest_number: number | null;
   rating: number;
   comment: string;
   images: string;
   created_at: string;
 }
 
-const LIST_COLUMNS =
-  "reference, tour_slug, booking_reference, visitor, author_id, author_name, rating, comment, images, created_at";
+/**
+ * Guest pseudonyms are global and stable per visitor cookie. The rank is
+ * driven by the earliest booking/order completion (`booking_paid_at`, falling
+ * back to review creation for pre-migration rows), so `Decoder 01` is the
+ * oldest guest booker, not simply the first row inserted.
+ */
+const REVIEW_SELECT = `
+WITH guest_visitors AS (
+  SELECT visitor AS guest_key,
+         MIN(COALESCE(booking_paid_at, created_at)) AS first_at
+  FROM reviews
+  WHERE author_id IS NULL
+  GROUP BY visitor
+),
+guest_ranks AS (
+  SELECT guest_key,
+         ROW_NUMBER() OVER (ORDER BY first_at ASC, guest_key ASC) AS guest_number
+  FROM guest_visitors
+)
+SELECT r.reference, r.tour_slug, r.booking_reference, r.visitor, r.author_id,
+       r.author_name, r.rating, r.comment, r.images, r.created_at,
+       u.name AS user_name, u.avatar_url AS user_avatar_url,
+       gr.guest_number AS guest_number
+FROM reviews r
+LEFT JOIN users u ON u.id = r.author_id
+LEFT JOIN guest_ranks gr ON r.author_id IS NULL AND gr.guest_key = r.visitor
+`;
 
 function parseImages(raw: string): string[] {
   try {
@@ -73,17 +113,32 @@ function parseImages(raw: string): string[] {
   }
 }
 
+function formatGuestName(guestNumber: number): string {
+  return `Decoder ${String(Math.max(0, guestNumber)).padStart(2, "0")}`;
+}
+
 function toPublic(
   row: ReviewRow,
   visitor: string | null,
   viewerId: string | null
 ): PublicReview {
+  const isGuest = row.author_id === null;
+  const guestNumber = isGuest ? Number(row.guest_number ?? 0) : null;
+  const accountName = row.user_name?.trim() ?? "";
+  const legacyName = row.author_name?.trim() ?? "";
+  const authorName = isGuest
+    ? formatGuestName(guestNumber ?? 0)
+    : accountName || legacyName || "Anonymous";
+
   return {
     reference: row.reference,
     tourSlug: row.tour_slug,
     bookingReference: row.booking_reference,
-    authorId: row.author_id ?? null,
-    authorName: row.author_name,
+    authorId: row.author_id,
+    authorName,
+    authorAvatarUrl: isGuest ? null : row.user_avatar_url ?? null,
+    isGuest,
+    guestNumber,
     rating: Number(row.rating),
     comment: row.comment,
     images: parseImages(row.images),
@@ -96,23 +151,13 @@ function toPublic(
   };
 }
 
-function writtenReview(
-  input: ReviewInput,
-  createdAt: string,
-  authorId: string | null
-): PublicReview {
-  return {
-    reference: input.reference,
-    tourSlug: input.tourSlug,
-    bookingReference: input.bookingReference,
-    authorId,
-    authorName: input.authorName,
-    rating: input.rating,
-    comment: input.comment,
-    images: input.images,
-    createdAt,
-    owned: true,
-  };
+async function selectReviewRows(
+  db: SqlExecutor,
+  where: string,
+  args: InArgs,
+  suffix: string
+): Promise<ReviewRow[]> {
+  return queryRows<ReviewRow>(db, `${REVIEW_SELECT} WHERE ${where} ${suffix}`, args);
 }
 
 /** Insert when the reference is new, else owner+window edit. Throws typed errors. */
@@ -122,7 +167,7 @@ export async function upsertReview(
   nowIso: string,
   authorId: string | null = null
 ): Promise<PublicReview> {
-  return withTransaction(async (db) => {
+  await withTransaction(async (db) => {
     const existing = await queryRow<{
       visitor: string;
       author_id: string | null;
@@ -138,24 +183,23 @@ export async function upsertReview(
       await runStatement(
         db,
         "INSERT INTO reviews (reference, tour_slug, booking_reference, visitor, author_id, " +
-          "author_name, author_email, rating, comment, images, created_at, updated_at) " +
-          "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          "author_name, author_email, rating, comment, images, created_at, updated_at, booking_paid_at) " +
+          "VALUES (?, ?, ?, ?, ?, '', '', ?, ?, ?, ?, ?, ?)",
         [
           input.reference,
           input.tourSlug,
           input.bookingReference,
           visitor,
           authorId,
-          input.authorName,
-          input.authorEmail,
           input.rating,
           input.comment,
           JSON.stringify(input.images),
           createdAt,
           nowIso,
+          input.bookingPaidAt ?? null,
         ]
       );
-      return writtenReview(input, createdAt, authorId);
+      return;
     }
 
     if (existing.visitor !== visitor) {
@@ -172,22 +216,39 @@ export async function upsertReview(
     const ownerId = existing.author_id ?? authorId;
     await runStatement(
       db,
-      "UPDATE reviews SET author_id = ?, author_name = ?, author_email = ?, rating = ?, " +
-        "comment = ?, images = ?, updated_at = ? WHERE reference = ? AND visitor = ?",
+      "UPDATE reviews SET author_id = ?, rating = ?, comment = ?, images = ?, " +
+        "booking_paid_at = COALESCE(booking_paid_at, ?), updated_at = ? " +
+        "WHERE reference = ? AND visitor = ?",
       [
         ownerId,
-        input.authorName,
-        input.authorEmail,
         input.rating,
         input.comment,
         JSON.stringify(input.images),
+        input.bookingPaidAt ?? null,
         nowIso,
         input.reference,
         visitor,
       ]
     );
-    return writtenReview(input, existing.created_at, ownerId);
   });
+
+  const review = await getReviewByReference(input.reference, visitor, authorId);
+  if (!review) throw new Error("review missing after write");
+  return review;
+}
+
+/** One review with live author profile fields, or null when unknown. */
+export async function getReviewByReference(
+  reference: string,
+  visitor: string | null,
+  viewerId: string | null = null
+): Promise<PublicReview | null> {
+  if (!isValidReference(reference)) throw new Error("invalid reference");
+  const db = await getDb();
+  if (!db) throw new Error("db unavailable");
+  const rows = await selectReviewRows(db, "r.reference = ?", [reference], "LIMIT 1");
+  const row = rows[0];
+  return row ? toPublic(row, visitor, viewerId) : null;
 }
 
 /** Newest first, ≤100 rows, each carrying `owned` for the requesting visitor. */
@@ -199,10 +260,11 @@ export async function listReviewsForSlug(
   if (!isValidTourSlug(slug)) throw new Error("invalid slug");
   const db = await getDb();
   if (!db) throw new Error("db unavailable");
-  const rows = await queryRows<ReviewRow>(
+  const rows = await selectReviewRows(
     db,
-    `SELECT ${LIST_COLUMNS} FROM reviews WHERE tour_slug = ? ORDER BY created_at DESC LIMIT 100`,
-    [slug]
+    "r.tour_slug = ?",
+    [slug],
+    "ORDER BY r.created_at DESC LIMIT 100"
   );
   return rows.map((row) => toPublic(row, visitor, viewerId));
 }
@@ -212,10 +274,11 @@ export async function listReviewsForAuthor(authorId: string): Promise<PublicRevi
   if (!authorId.trim()) throw new Error("invalid author");
   const db = await getDb();
   if (!db) throw new Error("db unavailable");
-  const rows = await queryRows<ReviewRow>(
+  const rows = await selectReviewRows(
     db,
-    `SELECT ${LIST_COLUMNS} FROM reviews WHERE author_id = ? ORDER BY created_at DESC LIMIT 100`,
-    [authorId]
+    "r.author_id = ?",
+    [authorId],
+    "ORDER BY r.created_at DESC LIMIT 100"
   );
   return rows.map((row) => toPublic(row, null, authorId));
 }

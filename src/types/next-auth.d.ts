@@ -8,6 +8,8 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
+      /** Live CMS avatar URL re-read from SQLite on every session callback. */
+      avatarUrl: string | null;
     } & DefaultSession["user"];
   }
 }

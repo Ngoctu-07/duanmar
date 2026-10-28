@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS reviews (
   comment TEXT NOT NULL,
   images TEXT NOT NULL DEFAULT '[]',
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  booking_paid_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_reviews_tour_created ON reviews(tour_slug, created_at DESC);
 CREATE TABLE IF NOT EXISTS users (
@@ -201,7 +202,10 @@ async function openTarget(target: DbTarget): Promise<Client | null> {
       ["avatar_preset_id", "TEXT"],
       ["avatar_url", "TEXT"],
     ]);
-    await ensureColumns(created, "reviews", [["author_id", "TEXT"]]);
+    await ensureColumns(created, "reviews", [
+      ["author_id", "TEXT"],
+      ["booking_paid_at", "TEXT"],
+    ]);
     // Must run after ensureColumns: older tables have no author_id yet.
     await created.execute(
       "CREATE INDEX IF NOT EXISTS idx_reviews_author ON reviews(author_id, created_at DESC)"

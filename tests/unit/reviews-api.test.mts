@@ -33,7 +33,7 @@ const entry = (reference: string) => ({
 type Stub = {
   store: Map<string, string>;
   events: string[];
-  calls: Array<{ url: string; status: number }>;
+  calls: Array<{ url: string; status: number; body: string | null }>;
   restore: () => void;
   list: () => unknown[];
 };
@@ -42,7 +42,7 @@ function stubRuntime(initial: unknown[] | undefined, statuses: Array<number | "t
   const store = new Map<string, string>();
   if (initial !== undefined) store.set(REVIEWS_STORAGE_KEY, JSON.stringify(initial));
   const events: string[] = [];
-  const calls: Array<{ url: string; status: number }> = [];
+  const calls: Array<{ url: string; status: number; body: string | null }> = [];
   const queue = [...statuses];
   const prevWindow = (globalThis as { window?: unknown }).window;
   const prevFetch = globalThis.fetch;
@@ -57,10 +57,14 @@ function stubRuntime(initial: unknown[] | undefined, statuses: Array<number | "t
       return true;
     },
   };
-  globalThis.fetch = (async (url: string) => {
+  globalThis.fetch = (async (url: string, init?: RequestInit) => {
     const next = queue.length > 0 ? queue.shift()! : 201;
     if (next === "throw") throw new Error("network down");
-    calls.push({ url: String(url), status: next });
+    calls.push({
+      url: String(url),
+      status: next,
+      body: typeof init?.body === "string" ? init.body : null,
+    });
     return { status: next };
   }) as typeof fetch;
   return {
@@ -97,6 +101,9 @@ await check("M2 accepted entries dropped one by one, key cleared, change notifie
     assert.equal(stub.calls.length, 2);
     assert.equal(stub.store.has(REVIEWS_STORAGE_KEY), false);
     assert.ok(stub.events.includes("vn-reviews:changed"));
+    const body = JSON.parse(stub.calls[0].body ?? "{}") as Record<string, unknown>;
+    assert.equal("authorName" in body, false);
+    assert.equal("authorEmail" in body, false);
   } finally {
     stub.restore();
   }

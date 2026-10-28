@@ -1,9 +1,11 @@
+import { listBookings } from "@/lib/booking-history";
 import type { RatingAggregate } from "@/lib/reviews-db";
 import {
   clearLocalReviews,
   dropLocalReview,
   listReviews,
   notifyReviewsChanged,
+  type ReviewSubmission,
   type TourReview,
 } from "@/lib/reviews";
 
@@ -97,7 +99,7 @@ export async function fetchRatingAggregates(
   return aggregates;
 }
 
-async function postReview(review: TourReview): Promise<number> {
+async function postReview(review: ReviewSubmission): Promise<number> {
   try {
     const response = await fetch("/api/reviews", {
       method: "POST",
@@ -111,7 +113,7 @@ async function postReview(review: TourReview): Promise<number> {
 }
 
 /** Create/edit → drop the local copy + notify. Throws `ReviewApiError` on failure. */
-export async function saveReviewApi(review: TourReview): Promise<void> {
+export async function saveReviewApi(review: ReviewSubmission): Promise<void> {
   const status = await postReview(review);
   if (status < 200 || status >= 300) throw new ReviewApiError(status, "save failed");
   dropLocalReview(review.reference);
@@ -154,10 +156,25 @@ export function migrateLegacyReviews(): Promise<void> {
 }
 
 async function runMigration(): Promise<void> {
+  // Attach the paid time from the device booking so migrated guest reviews
+  // keep the same chronological Decoder ordering as fresh submissions.
+  const bookings = new Map(listBookings().map((booking) => [booking.reference, booking]));
   for (const entry of listReviews()) {
+    const booking = bookings.get(entry.bookingReference);
+    // Strip legacy author name/email before upload; the server owns identity.
+    const payload: ReviewSubmission = {
+      reference: entry.reference,
+      tourSlug: entry.tourSlug,
+      bookingReference: entry.bookingReference,
+      rating: entry.rating,
+      comment: entry.comment,
+      images: entry.images,
+      createdAt: entry.createdAt,
+      ...(booking ? { bookingPaidAt: booking.paidAt } : {}),
+    };
     let status: number;
     try {
-      status = await postReview(entry);
+      status = await postReview(payload);
     } catch {
       return;
     }

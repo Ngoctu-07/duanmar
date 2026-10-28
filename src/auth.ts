@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { authenticate, normalizeEmail } from "@/lib/auth/user-store";
+import { authenticate, findUserById, normalizeEmail } from "@/lib/auth/user-store";
 
 /**
  * Auth.js (NextAuth v5) configuration — email/password only.
@@ -51,11 +51,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user?.id) token.sub = user.id;
       return token;
     },
-    session({ session, token }) {
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.sub ?? "";
+        const id = token.sub ?? "";
+        session.user.id = id;
         if (token.name) session.user.name = token.name;
         if (token.email) session.user.email = token.email;
+        // Re-read the profile so avatar/name edits propagate to every client
+        // (including the review form preview) without re-login.
+        const stored = id ? await findUserById(id) : null;
+        session.user.avatarUrl = stored?.avatarUrl ?? null;
+        if (stored) {
+          session.user.name = stored.name;
+          session.user.email = stored.email;
+        }
       }
       return session;
     },

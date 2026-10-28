@@ -157,19 +157,29 @@ try {
   await page.waitForFunction((sel) => document.querySelectorAll(sel).length === 2, { timeout: 15000 }, DELETE);
   const own = await page.$$eval(CARD, (els) =>
     els.map((el) => ({
-      foreign: el.textContent.includes("K Foreign"),
-      orphan: el.textContent.includes("K Orphan"),
+      ref: el.getAttribute("data-review-reference"),
+      text: el.textContent ?? "",
+      kind: el.getAttribute("data-author-kind"),
       triggers: el.querySelectorAll('[data-testid="review-actions-trigger"]').length,
       deletes: el.querySelectorAll('[data-testid="review-delete"]').length,
       visible: el.offsetParent !== null,
     }))
   );
-  check("K1 three review cards", own.length === 3, JSON.stringify(own.map((c) => c.triggers)));
+  const orphanRow = `${ORPHAN_REF}:${SLUG}`;
+  check("K1 three review cards", own.length === 3, JSON.stringify(own.map((c) => c.ref)));
   check("K1 exactly 1 trigger (owned booking card only)", own.filter((c) => c.triggers === 1).length === 1, JSON.stringify(own));
-  check("K1 orphan card has 0 triggers", own.find((c) => c.orphan)?.triggers === 0, JSON.stringify(own));
-  check("K1 orphan card still visible", own.find((c) => c.orphan)?.visible === true);
+  check("K1 orphan card has 0 triggers", own.find((c) => c.ref === orphanRow)?.triggers === 0, JSON.stringify(own));
+  check("K1 orphan card still visible", own.find((c) => c.ref === orphanRow)?.visible === true);
   check("K1 own cards show Delete (2)", own.filter((c) => c.deletes === 1).length === 2, JSON.stringify(own));
-  check("K1 foreign author card hides Delete", own.find((c) => c.foreign)?.deletes === 0, JSON.stringify(own));
+  check("K1 foreign author card hides Delete", own.find((c) => c.ref === FOREIGN_ROW)?.deletes === 0, JSON.stringify(own));
+  const foreignCard = own.find((c) => c.ref === FOREIGN_ROW);
+  check(
+    "K1 foreign card shows the live account name, not the submitted snapshot",
+    foreignCard?.kind === "user" &&
+      foreignCard.text.includes("Foreign Reviewer") &&
+      !foreignCard.text.includes("K Foreign"),
+    JSON.stringify(foreignCard)
+  );
   const foreignDeleteStatus = await page.evaluate(
     async (ref) => {
       const response = await fetch(`/api/reviews/${encodeURIComponent(ref)}`, {
@@ -265,6 +275,26 @@ try {
   check("K5 textarea cleared (else-branch)", cleared.value === "", JSON.stringify(cleared.value));
   check("K5 all 5 stars aria-pressed false", cleared.stars.length === 5 && cleared.stars.every((s) => s === "false"), JSON.stringify(cleared.stars));
   check("K5 editWindowClosed hint reset", cleared.hint === false);
+  const preview = await page.evaluate(() => {
+    const form = document.querySelector('[data-testid="write-review-form"]');
+    const name = form?.querySelector('[data-testid="review-author-preview"]');
+    const avatar = form?.querySelector('[data-testid="review-avatar"]');
+    return {
+      text: name?.textContent ?? "",
+      kind: name?.getAttribute("data-author-kind"),
+      avatar: avatar?.getAttribute("data-avatar-kind"),
+    };
+  });
+  check(
+    "K5 form preview shows the live signed-in account name",
+    preview.text === "Review Owner" && preview.kind === "user",
+    JSON.stringify(preview)
+  );
+  check(
+    "K5 form preview uses the default silhouette when no avatar preset is selected",
+    preview.avatar === "default",
+    JSON.stringify(preview)
+  );
 
   // --- K6 hygiene: no pageerrors, full cleanup of probe data (device + server)
   check("K6 zero pageerrors", pageErrors.length === 0, pageErrors.join("; "));

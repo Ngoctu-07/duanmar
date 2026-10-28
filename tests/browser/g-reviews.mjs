@@ -251,8 +251,21 @@ try {
   await page.click(SUBMIT);
   await page.waitForSelector(CARD, { timeout: 15000 });
   const cardText = await page.$eval(CARD, (el) => el.textContent ?? "");
-  check("R5 card shows probe author", cardText.includes("G Review Probe"), cardText.slice(0, 60));
+  check("R5 guest card uses a Decoder pseudonym", /Decoder \d{2}/.test(cardText), cardText.slice(0, 60));
   check("R5 card shows comment", cardText.includes("Amazing food and friendly guides!"));
+  const guestAvatar = await page.$eval(
+    `${CARD} [data-testid="review-avatar"]`,
+    (el) => ({ kind: el.getAttribute("data-avatar-kind"), tag: el.tagName })
+  );
+  check(
+    "R5 guest card shows the default silhouette avatar",
+    guestAvatar.kind === "default" && guestAvatar.tag === "SPAN",
+    JSON.stringify(guestAvatar)
+  );
+  check(
+    "R5 card is marked as a guest author",
+    (await page.$eval(CARD, (el) => el.getAttribute("data-author-kind"))) === "guest"
+  );
   const filled = await page.$$eval(`${CARD} svg.fill-current`, (els) => els.length);
   check("R5 card shows 4 filled stars", filled === 4, `filled=${filled}`);
   const thumbs = await page.$$eval(`${CARD} img`, (els) => els.length);
@@ -323,6 +336,14 @@ try {
     record?.aggregate?.avg === 5 && record?.aggregate?.count === 1, JSON.stringify(record?.aggregate));
   check("R9 row carries no authorEmail / visitor identity",
     mine && !("authorEmail" in mine) && !("visitor" in mine), JSON.stringify(Object.keys(mine ?? {})));
+  check(
+    "R9 guest row exposes only a generated Decoder identity",
+    /^Decoder \d{2}$/.test(mine?.authorName ?? "") &&
+      mine?.isGuest === true &&
+      mine?.authorAvatarUrl === null &&
+      typeof mine?.guestNumber === "number",
+    JSON.stringify({ name: mine?.authorName, guest: mine?.isGuest, avatar: mine?.authorAvatarUrl, n: mine?.guestNumber })
+  );
   check("R9 row is owned by our visitor", mine?.owned === true, JSON.stringify(mine?.owned));
   const localLeftover = await page.evaluate(
     ([key, ref]) => {

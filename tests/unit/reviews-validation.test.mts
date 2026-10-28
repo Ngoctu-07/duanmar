@@ -1,7 +1,5 @@
 import assert from "node:assert/strict";
 import {
-  MAX_AUTHOR_EMAIL_CHARS,
-  MAX_AUTHOR_NAME_CHARS,
   MAX_COMMENT_CHARS,
   MAX_IMAGE_CHARS,
   ReviewValidationError,
@@ -44,9 +42,10 @@ const rejects = (body: unknown, reason: RegExp) =>
     `expected rejection matching ${reason}`
   );
 
-check("V1 valid payload → trims text, normalizes createdAt to ISO", () => {
+check("V1 valid payload → trims text, normalizes createdAt to ISO, drops author PII", () => {
   const input = validateReviewPayload(validBody(), NOW);
-  assert.equal(input.authorName, "An Nguyen");
+  assert.equal("authorName" in input, false);
+  assert.equal("authorEmail" in input, false);
   assert.equal(input.comment, "Great tour");
   assert.equal(input.createdAt, "2026-10-07T10:00:00.000Z");
   assert.equal(input.reference, "VN-1:ha-giang-loop");
@@ -104,21 +103,17 @@ check("V7 comment bounds: 1..2000 trimmed chars", () => {
   rejects(validBody({ comment: 7 }), /invalid comment/);
 });
 
-check("V8 authorName bounds: 1..80 trimmed chars", () => {
-  assert.equal(validateReviewPayload(validBody({ authorName: "n".repeat(MAX_AUTHOR_NAME_CHARS) }), NOW).authorName.length, 80);
-  rejects(validBody({ authorName: "n".repeat(MAX_AUTHOR_NAME_CHARS + 1) }), /invalid authorName/);
-  rejects(validBody({ authorName: "" }), /invalid authorName/);
-  rejects(validBody({ authorName: "   " }), /invalid authorName/);
-});
-
-check("V9 authorEmail: ≤200 chars, contains @, no whitespace", () => {
-  const atMax = `${"a".repeat(MAX_AUTHOR_EMAIL_CHARS - 2)}@b`;
-  assert.equal(atMax.length, 200);
-  assert.equal(validateReviewPayload(validBody({ authorEmail: atMax }), NOW).authorEmail, atMax);
-  rejects(validBody({ authorEmail: `${"a".repeat(MAX_AUTHOR_EMAIL_CHARS - 1)}@b` }), /invalid authorEmail/);
-  rejects(validBody({ authorEmail: "plainaddress" }), /invalid authorEmail/);
-  rejects(validBody({ authorEmail: "a b@example.com" }), /invalid authorEmail/);
-  rejects(validBody({ authorEmail: "" }), /invalid authorEmail/);
+check("V8 legacy author fields are ignored and never required", () => {
+  const input = validateReviewPayload(
+    validBody({ authorName: "n".repeat(500), authorEmail: "not-an-email" }),
+    NOW
+  );
+  assert.equal("authorName" in input, false);
+  assert.equal("authorEmail" in input, false);
+  const bare = validBody();
+  delete bare.authorName;
+  delete bare.authorEmail;
+  assert.equal(validateReviewPayload(bare, NOW).rating, 4);
 });
 
 check("V10 images: ≤3 entries, ≤300k chars, raster data-url prefix only", () => {
@@ -145,6 +140,19 @@ check("V11 createdAt bounds: ≥2020-01-01, ≤now+60s, parseable", () => {
   rejects(validBody({ createdAt: "2019-12-31T23:59:59.999Z" }), /before 2020/);
   rejects(validBody({ createdAt: "not a date" }), /invalid createdAt/);
   rejects(validBody({ createdAt: 1_700_000_000_000 }), /invalid createdAt/);
+});
+
+check("V12 bookingPaidAt is optional but bounded and normalized", () => {
+  assert.equal(validateReviewPayload(validBody(), NOW).bookingPaidAt, undefined);
+  const paidAt = "2026-10-06T09:15:00+07:00";
+  assert.equal(
+    validateReviewPayload(validBody({ bookingPaidAt: paidAt }), NOW).bookingPaidAt,
+    "2026-10-06T02:15:00.000Z"
+  );
+  rejects(validBody({ bookingPaidAt: new Date(Date.parse(NOW) + 60_001).toISOString() }), /bookingPaidAt in future/);
+  rejects(validBody({ bookingPaidAt: "2019-12-31T23:59:59.999Z" }), /bookingPaidAt before 2020/);
+  rejects(validBody({ bookingPaidAt: "not a date" }), /invalid bookingPaidAt/);
+  rejects(validBody({ bookingPaidAt: 1_700_000_000_000 }), /invalid bookingPaidAt/);
 });
 
 console.log(`${passed} passed, ${failed} failed`);
