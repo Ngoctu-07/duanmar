@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Barlow_Semi_Condensed, Sora, Oswald } from "next/font/google";
 import localFont from "next/font/local";
 import { CrtStaticOverlay } from "@/components/layout/crt-static-overlay";
+import { GlobalTorchSpotlight } from "@/components/layout/global-torch-spotlight";
+import { InvertedLaserCursor } from "@/components/layout/inverted-laser-cursor";
 import "./globals.css";
 
 // Global body/UI face: paragraphs, labels, descriptions and every generic UI
@@ -64,8 +66,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="antialiased">
+        <GlobalTorchSpotlight />
         {children}
         <CrtStaticOverlay />
+        <InvertedLaserCursor />
       </body>
     </html>
   );

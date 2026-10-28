@@ -254,7 +254,9 @@
      hanging below the hero. 0.4 × 0.5625 × 50vw = 11.25vw (max 10.8rem). The
      search section uses this to reserve clear space below the overhang. */
   --hero-video-overhang: min(11.25vw, 10.8rem);
-  background-color: var(--background);
+  /* Transparent so the global torch/lore layer behind the app can show through
+     the homepage sections instead of being covered by #121212. */
+  background-color: transparent;
   color: var(--body-text);
   color-scheme: dark;
 }
@@ -336,6 +338,157 @@
   .horror-fog-b,
   .horror-ember {
     animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Global torch + hidden lore layer (rendered by GlobalTorchSpotlight in the
+   root layout). The layer is fixed behind the app and paints pitch-black
+   #060606; a 200px radial mask reveals the lore texture only under the
+   pointer, with a warm emissive glow. Form focus pauses the reveal via
+   `data-paused`. Touch and reduced-motion visitors get a static centred glow.
+--------------------------------------------------------------------------- */
+.global-torch {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background-color: #060606;
+  contain: strict;
+}
+.global-torch-reveal {
+  position: absolute;
+  inset: 0;
+  background-image: url("/images/global-lore-texture.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.95;
+  filter: brightness(1.9) contrast(1.06) saturate(0.9);
+  -webkit-mask-image: radial-gradient(
+    circle 200px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgb(255 255 255 / 100%) 0%,
+    rgb(255 255 255 / 40%) 50%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    circle 200px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgb(255 255 255 / 100%) 0%,
+    rgb(255 255 255 / 40%) 50%,
+    transparent 100%
+  );
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  transition: opacity 200ms ease-out;
+}
+.global-torch-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle 280px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgb(255 232 190 / 12%) 0%,
+    rgb(255 216 162 / 4%) 45%,
+    transparent 72%
+  );
+  transition: opacity 200ms ease-out;
+}
+.global-torch[data-paused="true"] .global-torch-reveal,
+.global-torch[data-paused="true"] .global-torch-glow {
+  opacity: 0;
+}
+/* Touch / coarse pointers: static, dimmer ambient glow in the centre. */
+@media (hover: none), (pointer: coarse) {
+  .global-torch-reveal {
+    opacity: 0.5;
+    -webkit-mask-image: radial-gradient(
+      circle 260px at 50% 38%,
+      rgb(255 255 255 / 80%) 0%,
+      rgb(255 255 255 / 30%) 50%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      circle 260px at 50% 38%,
+      rgb(255 255 255 / 80%) 0%,
+      rgb(255 255 255 / 30%) 50%,
+      transparent 100%
+    );
+  }
+  .global-torch-glow {
+    background: radial-gradient(
+      circle 320px at 50% 38%,
+      rgb(255 232 190 / 8%) 0%,
+      rgb(255 216 162 / 3%) 45%,
+      transparent 72%
+    );
+  }
+}
+/* Reduced motion: no pointer-following beam, keep a centred torch. */
+@media (prefers-reduced-motion: reduce) {
+  .global-torch-reveal {
+    -webkit-mask-image: radial-gradient(
+      circle 220px at 50% 38%,
+      rgb(255 255 255 / 90%) 0%,
+      rgb(255 255 255 / 35%) 50%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      circle 220px at 50% 38%,
+      rgb(255 255 255 / 90%) 0%,
+      rgb(255 255 255 / 35%) 50%,
+      transparent 100%
+    );
+  }
+  .global-torch-glow {
+    background: radial-gradient(
+      circle 300px at 50% 38%,
+      rgb(255 232 190 / 10%) 0%,
+      rgb(255 216 162 / 4%) 45%,
+      transparent 72%
+    );
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Inverted laser cursor (rendered by InvertedLaserCursor in the root layout).
+   A single 8px white disc, no rings/halos/trails. `difference` inverts whatever
+   is underneath: near-white over #060606, near-black over white copy, a hue
+   flip over brand colour. Tracking writes --cursor-x / --cursor-y once per
+   animation frame; the transform stays on the compositor.
+--------------------------------------------------------------------------- */
+.laser-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2147483647;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  border: 0;
+  outline: 0;
+  background-color: #ffffff;
+  box-shadow: none;
+  pointer-events: none;
+  mix-blend-mode: difference;
+  transform: translate3d(var(--cursor-x, -100px), var(--cursor-y, -100px), 0)
+    translate(-50%, -50%);
+  opacity: 0;
+  will-change: transform;
+}
+.laser-cursor[data-visible="true"] {
+  opacity: 1;
+}
+/* Hide the native arrow/I-beam only where the dot can actually follow a mouse.
+   Keyboard and touch users keep their platform cursor. */
+@media (hover: hover) and (pointer: fine) {
+  html.laser-cursor-active,
+  html.laser-cursor-active * {
+    cursor: none !important;
+  }
+}
+/* Touch / coarse pointers: the custom dot has nothing to track. */
+@media (hover: none), (pointer: coarse) {
+  .laser-cursor {
+    display: none;
   }
 }
 
