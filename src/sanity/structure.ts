@@ -14,7 +14,18 @@ export const structure: StructureResolver = (S) =>
             .schemaType('siteConfiguration')
             .documentId('siteConfiguration')
         ),
+      S.listItem()
+        .id('storiesSection')
+        .title('Stories & Inspiration Section')
+        .schemaType('storiesSection')
+        .child(
+          S.document()
+            .schemaType('storiesSection')
+            .documentId('storiesSection')
+        ),
       ...S.documentTypeListItems().filter(
-        (item) => item.getId() !== 'siteConfiguration'
+        (item) =>
+          item.getId() !== 'siteConfiguration' &&
+          item.getId() !== 'storiesSection'
       ),
     ])

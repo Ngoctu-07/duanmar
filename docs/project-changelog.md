@@ -1,5 +1,15 @@
 # Project Changelog
 
+## 2026-11-01
+
+### Changed
+- **[UI] Stories & Inspiration subtitle copy + CMS override** (task "Update Stories & Inspiration Subtitle Copy & Configure CMS Schema Fallback")
+  - **Copy** Homepage `StoriesSection` subtitle VI fallback is now "Mỗi bước chân là một ẩn số, mỗi điểm đến là một bí mật." (`src/lib/stories-section-copy.ts`, shared with the schema seed). EN keeps its `blog.subtitle` i18n line.
+  - **CMS** NEW singleton document `storiesSection` (`subtitle` string, `initialValue` = the VI copy, max 160) registered in the Studio with a fixed `storiesSection` document id; NEW `STORIES_SECTION_QUERY` feeds the homepage via `fetchPublished` with the `sanity:stories-section` tag. Empty/missing document → hardcoded fallback.
+  - **Typography** Subtitle switched to the Barlow body sans (`font-sans`) with muted dark tokens `text-neutral-400 opacity-80 tracking-wider` (0.05em), replacing `text-muted-foreground`.
+  - **Tests** NEW unit `stories-section-cms` **8/8** (default copy, schema field/initialValue, registration + singleton, GROQ parse, homepage wiring, fallback + class contract). Full unit suite **67/67 files**; `tsc --noEmit` 0; `eslint` 0.
+  - Docs impact: minor (changelog này)
+
 ## 2026-10-28
 
 ### Added

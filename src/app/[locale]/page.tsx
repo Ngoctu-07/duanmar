@@ -6,6 +6,7 @@ import { AboutUsSection } from "@/components/homepage/about-us-section";
 import { StoriesSection } from "@/components/homepage/stories-section";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { HOMEPAGE_QUERY, FEATURED_DESTINATIONS_QUERY } from "@/sanity/queries/homepage";
+import { STORIES_SECTION_QUERY } from "@/sanity/queries/stories-section";
 import { ALL_TOUR_PRICING_QUERY } from "@/sanity/queries/tour-pricing";
 import { getLocale, getTranslations } from "next-intl/server";
 import { buildPriceRangeLabels } from "@/lib/pricing";
@@ -16,7 +17,7 @@ const HERO_AMBIENT_SRC =
   process.env.NEXT_PUBLIC_HERO_AMBIENT_VIDEO?.trim() || null;
 
 export default async function HomePage() {
-  const [locale, priceT, homepageData, destinationsData, pricingDocs] =
+  const [locale, priceT, homepageData, destinationsData, pricingDocs, storiesSectionData] =
     await Promise.all([
       getLocale(),
       getTranslations("priceRange"),
@@ -25,6 +26,9 @@ export default async function HomePage() {
         tags: ["sanity:destination:list"],
       }),
       fetchPublished(ALL_TOUR_PRICING_QUERY, {}, { tags: ["sanity:pricing:all"] }),
+      fetchPublished(STORIES_SECTION_QUERY, {}, {
+        tags: ["sanity:stories-section"],
+      }),
     ]);
   const priceRanges = buildPriceRangeLabels(pricingDocs, locale, priceT("label"));
   // Hero media: the new centered promo field wins over the legacy uploaded
@@ -70,7 +74,7 @@ export default async function HomePage() {
         storyEn={homepageData?.narrativeStory_en ?? null}
         storyVi={homepageData?.narrativeStory_vi ?? null}
       />
-      <StoriesSection />
+      <StoriesSection subtitle={storiesSectionData?.subtitle ?? null} />
     </div>
   );
 }

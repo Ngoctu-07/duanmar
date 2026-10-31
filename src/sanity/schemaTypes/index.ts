@@ -6,6 +6,7 @@ import destination from './destination'
 import homepage from './homepage'
 import promotion from './promotion'
 import siteConfiguration from './site-configuration'
+import storiesSection from './stories-section'
 import tourPricing from './tour-pricing'
 
 export const schema: { types: SchemaTypeDefinition[] } = {
@@ -17,6 +18,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     homepage,
     promotion,
     siteConfiguration,
+    storiesSection,
     tourPricing,
   ],
 }
