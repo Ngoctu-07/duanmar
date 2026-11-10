@@ -138,7 +138,7 @@ export function DealDescription({
           ref={textRef}
           id={panelId}
           data-testid="deal-description"
-          className={cn("text-sm leading-relaxed text-body", clamped && CLAMP_CLASS)}
+          className={cn("text-sm leading-relaxed text-neutral-300", clamped && CLAMP_CLASS)}
         >
           {description}
         </p>

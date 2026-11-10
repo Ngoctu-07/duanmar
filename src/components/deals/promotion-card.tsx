@@ -40,9 +40,9 @@ export function PromotionCard({
   const hasDiscount = Boolean(card.price && card.originalPrice && card.price !== card.originalPrice);
   const mainPrice = card.price ?? card.originalPrice;
   const exhausted = card.isExhausted;
-  const href = card.tourSlug
-    ? `/explore/destinations/${card.tourSlug}`
-    : "/contact";
+  const href =
+    card.ctaLink ??
+    (card.tourSlug ? `/explore/destinations/${card.tourSlug}` : "/contact");
 
   return (
     <article
@@ -77,7 +77,7 @@ export function PromotionCard({
           </div>
         )}
         {card.badgeTag && (
-          <span className="absolute left-4 top-4 bg-primary px-3 py-1 font-condensed text-xs font-medium uppercase tracking-[0.18em] text-primary-foreground">
+          <span className="absolute left-4 top-4 bg-primary px-2.5 py-1 font-condensed text-xs font-bold uppercase tracking-[0.18em] text-white">
             {card.badgeTag}
           </span>
         )}
@@ -91,7 +91,7 @@ export function PromotionCard({
         )}
       </div>
       <div className="flex flex-1 flex-col p-6">
-        <h2 className="font-sans text-lg font-semibold leading-snug tracking-tight text-heading">
+        <h2 className="font-sans text-lg font-semibold leading-snug tracking-tight text-white">
           {card.title}
         </h2>
         {card.description && (
@@ -109,7 +109,7 @@ export function PromotionCard({
             )}
           </div>
         )}
-        <p className="mt-4 text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+        <p className="mt-4 text-[11px] uppercase tracking-[0.22em] text-neutral-400">
           {countdownLabel}
           {card.dateLabel && ` · ${card.dateLabel}`}
         </p>

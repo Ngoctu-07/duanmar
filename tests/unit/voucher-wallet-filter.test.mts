@@ -133,9 +133,10 @@ check("W7 localization only receives live masters, so hidden rows cannot leak", 
 
 check("W8 GROQ projects isActive for wallet master validation", () => {
   assert.ok(query.includes("isActive,"), "promotion projection must include isActive");
+  assert.ok(query.includes("_id in $ids"), "wallet lookup must stay id-based");
   assert.ok(
-    query.includes("*[_type == \"promotion\" && _id in $ids]"),
-    "wallet lookup must stay id-based"
+    query.includes('_type in ["promotion", "promotions", "promotionAndPackage", "deals"]'),
+    "wallet lookup must accept the same schema aliases"
   );
 });
 

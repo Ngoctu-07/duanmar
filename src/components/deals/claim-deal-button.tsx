@@ -48,7 +48,7 @@ export function ClaimDealButton({
   const [justClaimed, setJustClaimed] = useState(false);
   const isClaimed = claimed || justClaimed;
   const ctaClass =
-    "flex w-full items-center justify-center rounded-none px-6 py-3 font-condensed text-sm font-medium uppercase tracking-[0.22em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+    "flex w-full items-center justify-center rounded-sm px-6 py-2.5 font-condensed text-sm font-medium uppercase tracking-[0.22em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   const claim = async () => {
     if (isClaimed || busy || exhausted) return;
@@ -116,7 +116,7 @@ export function ClaimDealButton({
           ctaClass,
           isClaimed
             ? "cursor-not-allowed border border-white/20 bg-transparent text-white/50"
-            : "bg-primary text-primary-foreground hover:bg-primary/90"
+            : "bg-primary text-primary-foreground hover:bg-[#cc3d3d]"
         )}
       >
         {isClaimed ? claimedLabel : label}

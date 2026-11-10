@@ -9,6 +9,7 @@ const {
   daysUntilValid,
   formatPromoPrice,
   toPromotionCard,
+  promotionExpiry,
 } = await import("../../src/lib/promotions.ts");
 const { parse } = await import("groq-js");
 
@@ -106,13 +107,23 @@ check("PROMOTIONS_QUERY exported and parses with groq-js", () => {
   parse(PROMOTIONS_QUERY);
 });
 
-check("query filters isActive, orders by validUntil, projects all fields", () => {
-  assert.ok(PROMOTIONS_QUERY.includes("isActive == true"), "must hide inactive promos");
-  assert.ok(PROMOTIONS_QUERY.includes("order(validUntil asc)"));
+check("query is published/active (not date-filtered), newest first, projects all fields", () => {
+  assert.ok(
+    PROMOTIONS_QUERY.includes('_type in ["promotion", "promotions", "promotionAndPackage", "deals"]'),
+    "legacy schema aliases missing"
+  );
+  assert.ok(PROMOTIONS_QUERY.includes("isActive != false"), "missing active rows must not be hidden");
+  assert.ok(
+    PROMOTIONS_QUERY.includes('!(_id in path("drafts.**"))'),
+    "draft documents must be excluded"
+  );
+  assert.ok(PROMOTIONS_QUERY.includes("order(_createdAt desc)"));
+  assert.ok(!PROMOTIONS_QUERY.includes("validUntil >"), "expiry must not hide published deals");
   for (const field of [
     "_id", "title_en", "title_vi", "badgeTag_en", "badgeTag_vi",
-    "description_en", "description_vi", "discountedPrice", "originalPrice",
-    "currency", "validUntil", "bannerImage", "coverImage", "targetTour->", "promoCode",
+    "description_en", "description_vi", "title", "badgeTag", "description",
+    "discountedPrice", "originalPrice", "currency", "validUntil", "expiryDate",
+    "bannerImage", "coverImage", "thumbnail", "ctaLink", "targetTour->", "promoCode",
     "maxSlots", "usedCount", "minGuests", "startDate", "endDate", "isActive",
   ]) {
     assert.ok(PROMOTIONS_QUERY.includes(field), `projection missing ${field}`);
@@ -164,6 +175,26 @@ check("pickPromotionText: locale pick + blank translation falls back to the othe
   assert.equal(pickPromotionText({ ...base, badgeTag_en: null }, "en").badgeTag, "Giảm 20%");
 });
 
+check("pickPromotionText: legacy { en, vi } objects unwrap with the same fallback", () => {
+  const legacy = {
+    ...base,
+    title_en: null,
+    title_vi: null,
+    title: { en: "Legacy EN", vi: "Legacy VI" },
+    description_en: null,
+    description_vi: null,
+    description: { en: "EN copy", vi: "VI copy" },
+    badgeTag_en: null,
+    badgeTag_vi: null,
+    badgeTag: { en: "5% OFF", vi: "Giảm 5%" },
+  };
+  assert.equal(pickPromotionText(legacy, "vi").title, "Legacy VI");
+  assert.equal(pickPromotionText(legacy, "en").title, "Legacy EN");
+  assert.equal(pickPromotionText({ ...legacy, title: { en: "Only EN" } }, "vi").title, "Only EN");
+  assert.equal(pickPromotionText(legacy, "vi").description, "VI copy");
+  assert.equal(pickPromotionText(legacy, "en").badgeTag, "5% OFF");
+});
+
 check("isPromotionLive: inclusive last day, hidden after, fail-closed on bad date", () => {
   assert.equal(isPromotionLive(base, new Date("2026-10-05T10:00:00Z")), true);
   assert.equal(isPromotionLive(base, new Date("2026-10-06T00:00:00Z")), false);
@@ -175,8 +206,31 @@ check("isPromotionLive: inclusive last day, hidden after, fail-closed on bad dat
 check("daysUntilValid: positive, last-day 0, negative for past", () => {
   assert.equal(daysUntilValid("2026-10-05", new Date("2026-10-02T12:00:00Z")), 3);
   assert.equal(daysUntilValid("2026-10-05", new Date("2026-10-05T23:00:00Z")), 0);
+  assert.equal(daysUntilValid("2026-10-05T20:00:00Z", new Date("2026-10-02T12:00:00Z")), 3);
   assert.equal(daysUntilValid("2026-10-01", new Date("2026-10-05T00:00:00Z")), -4);
   assert.equal(daysUntilValid(null, new Date()), Number.NEGATIVE_INFINITY);
+});
+
+check("expiry unwraps validUntil → expiryDate → endDate", () => {
+  assert.equal(promotionExpiry(base), "2026-10-05");
+  assert.equal(
+    promotionExpiry({ ...base, validUntil: null, expiryDate: "2026-11-30" }),
+    "2026-11-30"
+  );
+  assert.equal(
+    promotionExpiry({ ...base, validUntil: undefined, expiryDate: null, endDate: "2026-12-15" }),
+    "2026-12-15"
+  );
+  assert.equal(promotionExpiry({ ...base, validUntil: undefined, expiryDate: null, endDate: null }), null);
+});
+
+check("toPromotionCard: expired offers stay renderable with an isExpired flag", () => {
+  const card = toPromotionCard({ ...base, validUntil: "2020-01-01" }, "vi");
+  assert.equal(card.isExpired, true);
+  assert.ok(card.daysLeft < 0);
+  assert.equal(card.title, "Ưu đãi đặt sớm");
+  const live = toPromotionCard({ ...base, validUntil: "2099-01-01" }, "vi", 0);
+  assert.equal(live.isExpired, false);
 });
 
 check("formatPromoPrice: doc currency honoured, unusable input → null", () => {
@@ -206,6 +260,26 @@ check("toPromotionCard: localized view model with alt fallback + tour slug", () 
     toPromotionCard({ ...base, coverImage: { asset: { url: "u" }, alt: null } }, "en").coverAlt,
     "Early Bird: winter departures"
   );
+});
+
+check("toPromotionCard: thumbnail/expiryDate/ctaLink legacy aliases", () => {
+  const legacy = {
+    ...base,
+    validUntil: null,
+    expiryDate: "2026-12-31",
+    coverImage: null,
+    bannerImage: null,
+    thumbnail: { asset: { url: "https://cdn.sanity.io/t.jpg" }, alt: "Thumb" },
+    ctaLink: "/explore/destinations/hcm",
+  };
+  const card = toPromotionCard(legacy, "en");
+  assert.equal(card.coverUrl, "https://cdn.sanity.io/t.jpg");
+  assert.equal(card.coverAlt, "Thumb");
+  assert.equal(card.validUntil, "2026-12-31");
+  assert.equal(card.ctaLink, "/explore/destinations/hcm");
+  assert.equal(card.isExpired, false);
+  // Unsafe schemes are ignored by the card.
+  assert.equal(toPromotionCard({ ...base, ctaLink: "javascript:alert(1)" }, "en").ctaLink, null);
 });
 
 /* --- card structure (source-level; the browser test renders the live page) --- */
@@ -249,7 +323,8 @@ check("card structure: cover → body (title/description/expiry) → bottom CTA"
   ]);
   assert.ok(cardSource.indexOf("aspect-[16/10]") < cardSource.indexOf("<h2"), "image must precede the body");
   assert.ok(cardSource.indexOf("<h2") < cardSource.indexOf("mt-auto"), "CTA must follow the body");
-  assert.ok(cardSource.includes("const href = card.tourSlug"), "CTA target logic missing");
+  assert.ok(cardSource.includes("const href ="), "CTA target logic missing");
+  assert.ok(cardSource.includes("card.ctaLink ??"));
   assert.ok(cardSource.includes("? `/explore/destinations/${card.tourSlug}`"), "tour target missing");
   assert.ok(cardSource.includes(': "/contact"'), "contact fallback missing");
 });
@@ -282,13 +357,20 @@ check("deal titles use Barlow Semi Condensed (font-sans), not the display face",
   assert.ok(/text-(lg|xl)/.test(titleClass), "deal title needs a standard size");
 });
 
-check("deals page renders a responsive 3-column card grid", () => {
+check("deals page renders published offers even when expired (no date filter)", () => {
   has(dealsPage, [
     "grid-cols-1",
     "md:grid-cols-2",
     "lg:grid-cols-3",
+    "gap-6",
+    "card.isExpired",
+    't("expired")',
     'claimNowLabel={t("claimNow")}',
+    'fresh: true',
+    "revalidate = 0",
   ]);
+  assert.ok(!dealsPage.includes("filterLivePromotions"), "expiry must not filter the deals grid");
+  assert.ok(!dealsPage.includes("filterLivePromotions("), "deal visibility is editorial (isActive)");
 });
 
 /* --- messages --- */
@@ -303,6 +385,7 @@ check("countdown/empty/CTA keys added to both locales; chrome keys kept", () => 
     for (const key of [
       "endsInDays",
       "lastDay",
+      "expired",
       "empty",
       "claimNow",
       "title",

@@ -9,6 +9,9 @@ const PROMOTION_FIELDS = `
     badgeTag_vi,
     description_en,
     description_vi,
+    title,
+    badgeTag,
+    description,
     discountedPrice,
     originalPrice,
     currency,
@@ -18,20 +21,32 @@ const PROMOTION_FIELDS = `
     minGuests,
     startDate,
     endDate,
+    expiryDate,
     validUntil,
     isActive,
     bannerImage { ${imageFragment} },
     coverImage { ${imageFragment} },
+    thumbnail { ${imageFragment} },
+    ctaLink,
     targetTour->{ _id, "slug": slug.current }
 `;
 
 /**
- * Active promotions only. Expiry (`validUntil`) is filtered in JS by
- * `filterLivePromotions` — a GROQ `now()` compare would drop a promo at
- * 00:00 UTC on its own last day and break the "last day" countdown label.
+ * Every published, active promotion — including offers whose `validUntil` has
+ * already passed. Expiry is presentation metadata (the card marks the offer as
+ * ended); it must not hide an editor-published deal from the /deals grid. The
+ * search page still filters to live offers via `filterLivePromotions`.
+ *
+ * `isActive != false` treats a missing boolean as active (imported/legacy docs),
+ * and the draft guard keeps the query safe outside the published perspective.
+ * Legacy schema names are accepted so imported documents still surface.
  */
 export const PROMOTIONS_QUERY = defineQuery(`
-  *[_type == "promotion" && isActive == true] | order(validUntil asc){${PROMOTION_FIELDS}}
+  *[
+    _type in ["promotion", "promotions", "promotionAndPackage", "deals"] &&
+    isActive != false &&
+    !(_id in path("drafts.**"))
+  ] | order(_createdAt desc){${PROMOTION_FIELDS}}
 `);
 
 /**
@@ -44,5 +59,8 @@ export const PROMOTIONS_QUERY = defineQuery(`
  * Localized copy and capacity still come from the live document.
  */
 export const PROMOTIONS_BY_IDS_QUERY = defineQuery(`
-  *[_type == "promotion" && _id in $ids]{${PROMOTION_FIELDS}}
+  *[
+    _type in ["promotion", "promotions", "promotionAndPackage", "deals"] &&
+    _id in $ids
+  ]{${PROMOTION_FIELDS}}
 `);

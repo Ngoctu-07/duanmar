@@ -949,6 +949,7 @@
     "disclaimer": "Sample offers shown for illustration — final pricing and availability are confirmed by our partners at the time of booking.",
     "endsInDays": "{count, plural, one {# day left} other {# days left}}",
     "lastDay": "Last day today",
+    "expired": "Ended",
     "empty": "No active promotions right now — please check back soon.",
     "viewTour": "View tour",
     "claimNow": "Claim now",

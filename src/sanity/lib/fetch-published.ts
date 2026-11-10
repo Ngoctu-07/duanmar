@@ -9,6 +9,11 @@ export const SANITY_TAG = "sanity";
 export type FetchPublishedOptions = {
   /** Entity tags, e.g. `sanity:destination:hcm`. All fetches also carry the global tag. */
   tags?: string[];
+  /**
+   * Skip `unstable_cache` for this call. Use on routes that must reflect an
+   * editor publish immediately (e.g. /deals, which is already per-user dynamic).
+   */
+  fresh?: boolean;
 };
 
 /** Cache key for a query+params pair (collision-safe across distinct inputs). */
@@ -35,6 +40,10 @@ export async function fetchPublished<G extends string>(
   // Fail-open catch lives OUTSIDE the cache: failed reads must not be cached.
   const read = () =>
     client.fetch(query, params, { perspective: "published", stega: false });
+
+  // Fresh routes bypass the data cache entirely; the tag purge still covers the
+  // cached callers. `fresh` is intentionally not combined with unstable_cache.
+  if (options.fresh) return read().catch(() => null);
 
   return unstable_cache(read, sanityCacheKey(query, params), {
     tags: sanityTags(options.tags),

@@ -6,6 +6,12 @@ export interface PromotionImage {
   alt?: string | null;
 }
 
+/** Legacy/alternative localized object shape (`{ en, vi }`). */
+export interface LocalizedPromotionText {
+  en?: string | null;
+  vi?: string | null;
+}
+
 /** Shape returned by `PROMOTIONS_QUERY` (see `src/sanity/queries/promotions.ts`). */
 export interface PromotionRecord {
   _id: string;
@@ -15,6 +21,10 @@ export interface PromotionRecord {
   badgeTag_vi?: string | null;
   description_en?: string | null;
   description_vi?: string | null;
+  /** Alternative localized shape used by imported/legacy promotion documents. */
+  title?: LocalizedPromotionText | string | null;
+  badgeTag?: LocalizedPromotionText | string | null;
+  description?: LocalizedPromotionText | string | null;
   discountedPrice?: number | null;
   originalPrice?: number | null;
   currency?: string | null;
@@ -34,6 +44,12 @@ export interface PromotionRecord {
   endDate?: string | null;
   bannerImage?: PromotionImage | null;
   coverImage?: PromotionImage | null;
+  /** Alternative thumbnail field used by the legacy promotions schema. */
+  thumbnail?: PromotionImage | null;
+  /** Alternative expiry fields (`expiryDate`/`endDate`) used by legacy documents. */
+  expiryDate?: string | null;
+  /** Optional CMS destination for the card CTA. */
+  ctaLink?: string | null;
   targetTour?: { _id: string; slug?: string | null } | null;
 }
 
@@ -48,8 +64,12 @@ export interface PromotionCard {
   promoCode: string | null;
   validUntil: string | null;
   daysLeft: number;
+  /** `validUntil` has already passed (the deal is still listed while active). */
+  isExpired: boolean;
   dateLabel: string;
   tourSlug: string | null;
+  /** Optional CMS CTA override (internal path or absolute http(s) URL). */
+  ctaLink: string | null;
   coverUrl: string | null;
   coverAlt: string;
   /** Derived capacity state (see `computePromotionCapacity`). */
@@ -64,8 +84,11 @@ const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 /** UTC midnight timestamp for a `YYYY-MM-DD` date, or `null` when malformed. */
 function utcDay(day: string | null | undefined): number | null {
-  if (typeof day !== "string" || !ISO_DAY.test(day)) return null;
-  const ts = Date.parse(`${day}T00:00:00Z`);
+  if (typeof day !== "string") return null;
+  // Accept ISO datetimes from imported/legacy `expiryDate` values as well.
+  const dayOnly = day.slice(0, 10);
+  if (!ISO_DAY.test(dayOnly)) return null;
+  const ts = Date.parse(`${dayOnly}T00:00:00Z`);
   return Number.isNaN(ts) ? null : ts;
 }
 
@@ -76,8 +99,35 @@ function todayMs(now?: Date): number {
 const isBlank = (value?: string | null): boolean => !value || value.trim() === "";
 
 /**
+ * Reads a `{ en, vi }` localized object (or plain string) with the same
+ * locale-first fallback as the flat `_en`/`_vi` fields.
+ */
+function readLocalizedText(
+  value: LocalizedPromotionText | string | null | undefined,
+  locale: string
+): string | null {
+  if (typeof value === "string") return isBlank(value) ? null : value.trim();
+  if (!value || typeof value !== "object") return null;
+  const primary = locale === "vi" ? value.vi : value.en;
+  const secondary = locale === "vi" ? value.en : value.vi;
+  if (!isBlank(primary)) return (primary as string).trim();
+  if (!isBlank(secondary)) return (secondary as string).trim();
+  return null;
+}
+
+/**
+ * Expiry unwrapping for both document shapes: the native `validUntil` wins,
+ * then the legacy `expiryDate`, then the booking-window `endDate`. Keeps a
+ * single inclusive day compare in one place.
+ */
+export function promotionExpiry(promo: PromotionRecord): string | null {
+  return promo.validUntil ?? promo.expiryDate ?? promo.endDate ?? null;
+}
+
+/**
  * Locale pick with the house fallback chain: `vi` → `title_vi`, everything
  * else → `title_en`; a blank/missing translation falls back to the other one.
+ * Legacy `{ en, vi }` objects are unwrapped only when the flat fields are empty.
  */
 export function pickPromotionText(
   promo: PromotionRecord,
@@ -92,15 +142,22 @@ export function pickPromotionText(
   };
 
   return {
-    title: pick(promo.title_vi, promo.title_en) ?? "",
-    badgeTag: pick(promo.badgeTag_vi, promo.badgeTag_en),
-    description: pick(promo.description_vi, promo.description_en),
+    title:
+      pick(promo.title_vi, promo.title_en) ??
+      readLocalizedText(promo.title, locale) ??
+      "",
+    badgeTag:
+      pick(promo.badgeTag_vi, promo.badgeTag_en) ??
+      readLocalizedText(promo.badgeTag, locale),
+    description:
+      pick(promo.description_vi, promo.description_en) ??
+      readLocalizedText(promo.description, locale),
   };
 }
 
-/** Fail closed: missing/malformed `validUntil` is never live. Day is inclusive. */
+/** Fail closed: missing/malformed expiry is never live. Day is inclusive. */
 export function isPromotionLive(promo: PromotionRecord, now?: Date): boolean {
-  const target = utcDay(promo.validUntil);
+  const target = utcDay(promotionExpiry(promo));
   if (target === null) return false;
   return target >= todayMs(now);
 }
@@ -176,18 +233,25 @@ export function toPromotionCard(
   const text = pickPromotionText(promo, locale);
   const price = formatPromoPrice(promo.discountedPrice, promo.currency, locale);
   const original = formatPromoPrice(promo.originalPrice, promo.currency, locale);
-  // Cover is the new card thumbnail; existing docs keep their banner as fallback.
-  const image = promo.coverImage ?? promo.bannerImage;
+  // Cover is the new card thumbnail; existing docs keep their banner as fallback,
+  // and imported legacy docs may only carry `thumbnail`.
+  const image = promo.coverImage ?? promo.bannerImage ?? promo.thumbnail;
   const coverAlt = image?.alt?.trim() || text.title;
+  const expiry = promotionExpiry(promo);
+  const expiryDay = utcDay(expiry) ? (expiry as string).slice(0, 10) : null;
+  const daysLeft = daysUntilValid(expiryDay);
   const numberLocale = locale === "vi" ? "vi-VN" : "en-GB";
-  const dateLabel = utcDay(promo.validUntil)
+  const dateLabel = expiryDay
     ? new Intl.DateTimeFormat(numberLocale, {
         day: "numeric",
         month: "short",
         year: "numeric",
         timeZone: "UTC",
-      }).format(new Date(promo.validUntil as string))
+      }).format(new Date(expiryDay))
     : "";
+  // Only internal paths or absolute http(s) links are accepted from the CMS.
+  const rawCta = typeof promo.ctaLink === "string" ? promo.ctaLink.trim() : "";
+  const ctaLink = /^(https?:\/\/|\/)[^\s]*$/i.test(rawCta) ? rawCta : null;
 
   return {
     id: promo._id,
@@ -197,10 +261,12 @@ export function toPromotionCard(
     price,
     originalPrice: original,
     promoCode: isBlank(promo.promoCode) ? null : (promo.promoCode as string).trim(),
-    validUntil: utcDay(promo.validUntil) ? (promo.validUntil as string) : null,
-    daysLeft: daysUntilValid(promo.validUntil),
+    validUntil: expiryDay,
+    daysLeft,
+    isExpired: daysLeft < 0,
     dateLabel,
     tourSlug: promo.targetTour?.slug ?? null,
+    ctaLink,
     coverUrl: image?.asset?.url ?? null,
     coverAlt,
     ...computePromotionCapacity(promo, onlineClaims),

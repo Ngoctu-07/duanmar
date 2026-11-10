@@ -949,6 +949,7 @@
     "disclaimer": "Ưu đãi mang tính minh họa — giá và tình trạng cuối cùng được đối tác xác nhận tại thời điểm đặt.",
     "endsInDays": "{count, plural, other {còn # ngày}}",
     "lastDay": "Hôm nay là ngày cuối",
+    "expired": "Đã kết thúc",
     "empty": "Hiện chưa có ưu đãi đang diễn ra — bạn quay lại sau nhé.",
     "viewTour": "Xem tour",
     "claimNow": "Nhận ngay",
