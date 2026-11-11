@@ -5,6 +5,8 @@ import { toMailtoHref } from "../../src/lib/contact-channels.ts";
 const read = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
 
 const supportSource = read("src/app/[locale]/support/page.tsx");
+const faqSectionSource = read("src/components/support/support-faq-section.tsx");
+const faqAnswerSource = read("src/components/support/support-faq-answer.tsx");
 const messagesVi = JSON.parse(read("src/messages/vi.json"));
 const messagesEn = JSON.parse(read("src/messages/en.json"));
 
@@ -40,13 +42,20 @@ check("empty CMS email defaults to Duanmartravel@gmail.com", () => {
 });
 
 check("legacy hardcoded hcmussh email removed", () => {
-  if (supportSource.includes("hcmussh")) throw new Error("legacy email still present");
+  if (
+    supportSource.includes("hcmussh") ||
+    faqSectionSource.includes("hcmussh") ||
+    faqAnswerSource.includes("hcmussh")
+  )
+    throw new Error("legacy email still present");
 });
 
 check("mailto href is sanitized from the resolved email", () => {
   if (!supportSource.includes("toMailtoHref"))
     throw new Error("toMailtoHref not used for href");
-  if (!supportSource.includes("{supportEmail}"))
+  if (!supportSource.includes("supportMailto={supportMailto}"))
+    throw new Error("resolved mailto is not passed to the FAQ section");
+  if (!faqAnswerSource.includes("{supportEmail}"))
     throw new Error("pill does not render the dynamic email value");
 });
 

@@ -1089,23 +1089,23 @@
     ],
     "faq": [
       {
-        "q": "1. How to book a tour with DUANMAR?",
+        "q": "How to book a tour with DUANMAR?",
         "a": "Follow the five steps below — consultation, details, payment, confirmation, departure."
       },
       {
-        "q": "2. What are the deposit requirements and how long is my spot held?",
+        "q": "What are the deposit requirements and how long is my spot held?",
         "a": "Reserve with a minimum 20% deposit or 100% full payment. Each reservation is held for up to 2 weeks; if payment is not completed before expiry, the deposit is non-refundable."
       },
       {
-        "q": "3. Do I need to prepare anything or note health concerns when booking?",
+        "q": "Do I need to prepare anything or note health concerns when booking?",
         "a": "Yes — please note any medical conditions, heart or neurological issues, or other sensitive health concerns in Step 2 so we can tailor the itinerary script to you."
       },
       {
-        "q": "4. After a successful deposit, how do I confirm my trip details?",
+        "q": "After a successful deposit, how do I confirm my trip details?",
         "a": "You will receive an automated confirmation email with the full itinerary, remaining-balance deadline, and safety guidelines — plus a reminder email shortly before departure."
       },
       {
-        "q": "5. Which channels can I use to reach support directly?",
+        "q": "Which channels can I use to reach support directly?",
         "a": "Reach us via Hotline/Zalo below, email, the AI Chatbot, or the website live chat — we reply within one business day."
       }
     ]
@@ -1162,10 +1162,16 @@
   },
   "support": {
     "title": "Support & FAQs",
-    "subtitle": "Answers to the questions travelers ask most",
-    "contactTitle": "Still have questions?",
-    "contactText": "Our team is happy to help with anything not covered here.",
-    "contactCta": "Contact us"
+    "subtitle": "All the information you need before and after embarking on your decoding journey",
+    "tabsLabel": "FAQ categories",
+    "tabs": {
+      "booking": "Tour Booking Guide",
+      "health": "Health & Safety"
+    },
+    "empty": "No questions in this section yet.",
+    "contactTitle": "STILL HAVE QUESTIONS?",
+    "contactText": "Our Station Master team is available 24/7 to assist with your journey preparations.",
+    "contactCta": "CONTACT US"
   },
   "privacy": {
     "title": "Privacy Policy & Terms of Use",

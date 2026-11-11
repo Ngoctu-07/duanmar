@@ -67,8 +67,8 @@ try {
     { path: "/vi/deals", selector: "h1", text: "Ưu đãi & Gói tour" },
     {
       path: "/vi/support#how-to-book",
-      selector: '[data-testid="how-to-book-stepper"] h2',
-      text: "Hướng dẫn đặt tour",
+      selector: "h1",
+      text: "Hỗ trợ & Câu hỏi thường gặp",
     },
     { path: "/vi/blog", selector: "h1", text: "Câu chuyện & cảm hứng" },
     { path: "/vi/contact", selector: "h1", text: "Liên hệ với chúng tôi" },
@@ -197,8 +197,8 @@ try {
     { path: "/vi/tours/domestic", selector: "h1", text: "Tour trong nước" },
     {
       path: "/vi/support#how-to-book",
-      selector: '[data-testid="how-to-book-stepper"] h2',
-      text: "Hướng dẫn đặt tour",
+      selector: "h1",
+      text: "Hỗ trợ & Câu hỏi thường gặp",
     },
     { path: "/vi/blog", selector: "h1", text: "Câu chuyện & cảm hứng" },
     { path: "/vi/contact", selector: "h1", text: "Liên hệ với chúng tôi" },

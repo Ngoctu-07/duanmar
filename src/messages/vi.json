@@ -1089,23 +1089,23 @@
     ],
     "faq": [
       {
-        "q": "1. Làm thế nào để đặt tour tại DỰ ÁN MAR?",
+        "q": "Làm thế nào để đặt tour tại DỰ ÁN MAR?",
         "a": "Hãy thực hiện theo năm bước dưới đây — tư vấn, thông tin, thanh toán, xác nhận, khởi hành."
       },
       {
-        "q": "2. Quy định về đặt cọc và thời hạn giữ chỗ như thế nào?",
+        "q": "Quy định về đặt cọc và thời hạn giữ chỗ như thế nào?",
         "a": "Bạn giữ chỗ bằng đặt cọc tối thiểu 20% hoặc thanh toán 100%. Mỗi đơn được giữ chỗ tối đa 2 tuần; quá hạn mà chưa hoàn tất thanh toán, tiền cọc sẽ không được hoàn lại."
       },
       {
-        "q": "3. Tôi có cần chuẩn bị hay lưu ý đặc biệt gì về sức khỏe khi đăng ký tour không?",
+        "q": "Tôi có cần chuẩn bị hay lưu ý đặc biệt gì về sức khỏe khi đăng ký tour không?",
         "a": "Có — vui lòng ghi rõ tình trạng bệnh lý, vấn đề tim mạch/thần kinh hoặc các lưu ý sức khỏe đặc biệt ở Bước 2 để chúng tôi điều chỉnh kịch bản lịch trình phù hợp."
       },
       {
-        "q": "4. Sau khi đặt cọc thành công, làm sao để tôi xác nhận thông tin chuyến đi?",
+        "q": "Sau khi đặt cọc thành công, làm sao để tôi xác nhận thông tin chuyến đi?",
         "a": "Bạn sẽ nhận email xác nhận tự động gồm lịch trình chi tiết, hạn thanh toán số tiền còn lại và hướng dẫn an toàn — kèm email nhắc nhở trước ngày khởi hành."
       },
       {
-        "q": "5. Tôi có thể liên hệ hỗ trợ trực tiếp qua những kênh nào?",
+        "q": "Tôi có thể liên hệ hỗ trợ trực tiếp qua những kênh nào?",
         "a": "Liên hệ qua Hotline/Zalo bên dưới, email, AI Chatbot hoặc live chat trên website — chúng tôi phản hồi trong vòng một ngày làm việc."
       }
     ]
@@ -1162,10 +1162,16 @@
   },
   "support": {
     "title": "Hỗ trợ & Câu hỏi thường gặp",
-    "subtitle": "Trả lời những câu hỏi du khách thường gặp nhất",
-    "contactTitle": "Vẫn còn thắc mắc?",
-    "contactText": "Đội ngũ chúng tôi sẵn lòng giải đáp mọi điều chưa có ở đây.",
-    "contactCta": "Liên hệ chúng tôi"
+    "subtitle": "Mọi thông tin bạn cần trước và sau khi bước vào hành trình giải mã",
+    "tabsLabel": "Danh mục câu hỏi",
+    "tabs": {
+      "booking": "Hướng dẫn đặt tour",
+      "health": "Sức khỏe"
+    },
+    "empty": "Chưa có câu hỏi trong mục này.",
+    "contactTitle": "VẪN CÒN THẮC MẮC?",
+    "contactText": "Đội ngũ Trạm Trưởng luôn túc trực 24/7 để hỗ trợ bạn chuẩn bị cho chuyến đi.",
+    "contactCta": "LIÊN HỆ CHÚNG TÔI"
   },
   "privacy": {
     "title": "Chính sách quyền riêng tư & Điều khoản sử dụng",

@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
-import { ChevronDown, Mail, Phone } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { SupportFaqSection } from "@/components/support/support-faq-section";
+import type {
+  SupportCategory,
+  SupportFaqExtras,
+  SupportStep,
+} from "@/components/support/support-faq-types";
 import { fetchPublished } from "@/sanity/lib/fetch-published";
 import { SITE_CONFIGURATION_QUERY } from "@/sanity/queries/site-configuration";
 import { toMailtoHref } from "@/lib/contact-channels";
@@ -14,38 +19,39 @@ export const metadata: Metadata = {
 
 const HOTLINE_DISPLAY = "+84 813669240";
 const HOTLINE_HREF = "tel:+84813669240";
-/** Fallback when Studio `contactSettings.email` is empty (FAQ #5 email pill). */
+/** Fallback when Studio `contactSettings.email` is empty (FAQ support-channels pill). */
 const DEFAULT_SUPPORT_EMAIL = "Duanmartravel@gmail.com";
-
-function HotlineLink() {
-  return (
-    <a
-      href={HOTLINE_HREF}
-      className="font-extrabold text-red-500 hover:underline inline-flex items-center gap-1"
-    >
-      <Phone className="h-4 w-4 stroke-[2.5]" />
-      {HOTLINE_DISPLAY}
-    </a>
-  );
-}
-
-interface BookingStep {
-  title: string;
-  body: string;
-}
 
 interface BookingFaq {
   q: string;
   a: string;
 }
 
+interface FaqMeta {
+  category: SupportCategory;
+  extras?: SupportFaqExtras;
+}
+
+/**
+ * Category for each `bookingSteps.faq` entry, in authoring order:
+ * 1 booking steps · 2 deposit · 3 health · 4 confirmation · 5 support channels.
+ * Content stays in the message catalogs; only its grouping lives here.
+ */
+const FAQ_META: readonly FaqMeta[] = [
+  { category: "booking", extras: "steps" },
+  { category: "booking" },
+  { category: "health" },
+  { category: "booking" },
+  { category: "booking", extras: "channels" },
+];
+
 export default async function SupportPage() {
   const t = await getTranslations("support");
   const tb = await getTranslations("bookingSteps");
-  const steps = tb.raw("steps") as BookingStep[];
+  const steps = tb.raw("steps") as SupportStep[];
   const bookingFaqs = tb.raw("faq") as BookingFaq[];
 
-  // FAQ #5 email pill follows the single Studio source of truth
+  // Support-channels pill follows the single Studio source of truth
   // (`siteConfiguration.contactSettings.email`), defaulting when empty.
   const siteConfig = await fetchPublished(
     SITE_CONFIGURATION_QUERY,
@@ -56,6 +62,22 @@ export default async function SupportPage() {
     (siteConfig?.contactSettings?.email ?? "").trim() || DEFAULT_SUPPORT_EMAIL;
   const supportMailto =
     toMailtoHref(supportEmail) ?? `mailto:${DEFAULT_SUPPORT_EMAIL}`;
+
+  const faqItems = bookingFaqs.map((faq, index) => {
+    const meta = FAQ_META[index] ?? { category: "booking" as const };
+    return {
+      id: `faq-${index + 1}`,
+      category: meta.category,
+      question: faq.q,
+      answer: faq.a,
+      extras: meta.extras,
+    };
+  });
+
+  const tabs = [
+    { id: "booking" as const, label: t("tabs.booking") },
+    { id: "health" as const, label: t("tabs.health") },
+  ];
 
   const howToJsonLd = {
     "@context": "https://schema.org",
@@ -83,110 +105,40 @@ export default async function SupportPage() {
         <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
       </div>
 
-      <section
-        id="how-to-book"
-        data-testid="how-to-book-stepper"
-        className="mx-auto mb-12 max-w-5xl scroll-mt-24 rounded-none border border-zinc-200 bg-card p-6 sm:p-10 dark:border-zinc-700/50 dark:bg-neutral-900/90"
-      >
-        <div className="mb-6 text-center">
-          <h2 className="display-title mb-2">
-            {tb("title")}
-          </h2>
-          <p className="mx-auto max-w-2xl text-sm text-muted-foreground sm:text-base">
-            {tb("subtitle")}
-          </p>
-        </div>
-        <div className="mx-auto max-w-3xl space-y-4">
-          {bookingFaqs.map((item, index) => (
-            <details
-              key={item.q}
-              data-testid={`booking-faq-${index + 1}`}
-              className="group rounded-none border border-zinc-200 bg-muted/40 p-5 dark:border-zinc-700/50 dark:bg-[#1f1f23]"
-            >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium [&::-webkit-details-marker]:hidden">
-                {item.q}
-                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-              </summary>
-              <div className="mt-4">
-                {index === 0 ? (
-                  <>
-                    <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-                      {item.a}
-                    </p>
-                    <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {steps.map((step, stepIndex) => (
-                        <li
-                          key={step.title}
-                          data-testid={`booking-step-${stepIndex + 1}`}
-                          className="flex flex-col rounded-none border border-zinc-200 bg-background p-5 transition-colors hover:border-zinc-300 dark:border-zinc-700/50 dark:bg-zinc-800 dark:hover:border-zinc-600"
-                        >
-                          <span
-                            aria-hidden
-                            className="mb-3 flex size-10 items-center justify-center rounded-none bg-primary text-sm font-bold text-primary-foreground"
-                          >
-                            {String(stepIndex + 1).padStart(2, "0")}
-                          </span>
-                          <h3 className="mb-2 text-base font-semibold">
-                            {step.title}
-                          </h3>
-                          <p className="text-sm leading-relaxed text-muted-foreground">
-                            {step.body}
-                          </p>
-                          {stepIndex === 0 && (
-                            <p className="mt-3">
-                              <span className="mr-2 text-sm text-muted-foreground">
-                                {tb("hotlineLabel")}:
-                              </span>
-                              <HotlineLink />
-                            </p>
-                          )}
-                        </li>
-                      ))}
-                    </ol>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                      {item.a}
-                    </p>
-                    {index === 4 && (
-                      <div className="mt-4 flex flex-wrap gap-3">
-                        <span className="inline-flex items-center gap-2 rounded-none border border-red-900/30 bg-red-500/10 px-4 py-2 text-sm">
-                          <span className="text-muted-foreground">
-                            {tb("hotlineLabel")}/Zalo:
-                          </span>
-                          <HotlineLink />
-                        </span>
-                        <a
-                          href={supportMailto}
-                          data-testid="support-email-link"
-                          className="inline-flex items-center gap-2 rounded-none border border-red-900/30 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-500 hover:underline"
-                        >
-                          <Mail className="h-4 w-4 stroke-[2.5]" />
-                          {supportEmail}
-                        </a>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </details>
-          ))}
-        </div>
-      </section>
+      <SupportFaqSection
+        tabs={tabs}
+        items={faqItems}
+        steps={steps}
+        hotline={{
+          label: tb("hotlineLabel"),
+          display: HOTLINE_DISPLAY,
+          href: HOTLINE_HREF,
+        }}
+        supportEmail={supportEmail}
+        supportMailto={supportMailto}
+        tabsLabel={t("tabsLabel")}
+        emptyLabel={t("empty")}
+      />
 
-      <div className="mx-auto mt-12 max-w-3xl text-center">
-        <h2 id="contact" className="mb-2 scroll-mt-24 text-xl font-semibold">
+      <section
+        id="contact"
+        data-testid="support-contact-box"
+        className="mx-auto mt-12 max-w-[45.6rem] scroll-mt-24 border border-white/10 bg-card p-[1.9rem] text-center sm:p-[2.375rem]"
+      >
+        <h2 className="font-sans text-xl font-bold tracking-wide text-white uppercase">
           {t("contactTitle")}
         </h2>
-        <p className="mb-4 text-sm text-muted-foreground">{t("contactText")}</p>
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+          {t("contactText")}
+        </p>
         <Link
           href="/contact"
-          className="text-sm font-medium text-link hover:underline"
+          data-testid="support-contact-cta"
+          className="mt-6 inline-flex cursor-pointer items-center justify-center rounded-sm bg-[#b3151b] px-8 py-3 text-sm font-bold tracking-wider text-white uppercase transition-colors hover:bg-[#cc3d3d]"
         >
           {t("contactCta")}
         </Link>
-      </div>
+      </section>
     </div>
   );
 }
