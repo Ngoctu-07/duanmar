@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
+import { CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
 import { PaymentSuccessToast } from "@/components/booking/payment-success-toast";
 import { formatPrice, type PriceCurrency } from "@/lib/pricing";
 import {
@@ -15,6 +15,8 @@ interface BookingPaymentSectionProps {
   locale: string;
   currency: PriceCurrency;
   reference: string;
+  /** Payment already confirmed → QR + method picker are unmounted. */
+  paid?: boolean;
   /** Fired once per successful payment with the method used. */
   onPaid?: (method: PaymentMethod) => void;
 }
@@ -35,6 +37,7 @@ export function BookingPaymentSection({
   locale,
   currency,
   reference,
+  paid = false,
   onPaid,
 }: BookingPaymentSectionProps) {
   const t = useTranslations("booking");
@@ -98,6 +101,33 @@ export function BookingPaymentSection({
       <p className="mt-5 rounded-none border bg-muted/40 p-5 text-sm text-muted-foreground">
         {t("priceMissingNote")}
       </p>
+    );
+  }
+
+  // Payment confirmed: unmount the QR block and the method picker entirely so
+  // the confirmation screen shows one unambiguous success state.
+  if (paid) {
+    return (
+      <section
+        aria-labelledby="booking-payment-heading"
+        className="mt-5 rounded-none border bg-card p-5"
+      >
+        <h2
+          id="booking-payment-heading"
+          className="text-sm font-semibold uppercase tracking-widest text-link"
+        >
+          {t("paymentTitle")}
+        </h2>
+        <p
+          aria-live="polite"
+          data-testid="payment-paid"
+          className="mt-3 flex items-center gap-2 text-sm font-bold text-green-400"
+        >
+          <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+          {t("statusSuccess")}
+        </p>
+        <PaymentSuccessToast show={showToast} />
+      </section>
     );
   }
 
@@ -189,14 +219,6 @@ export function BookingPaymentSection({
               </p>
               <p className="mt-3 text-xs text-muted-foreground">{t("qrHint")}</p>
               <p className="text-xs text-muted-foreground">{t("demoQr")}</p>
-              {status === "success" && (
-                <Link
-                  href="/account"
-                  className="mt-3 inline-block text-sm font-medium text-link hover:underline"
-                >
-                  {t("viewMyTrips")}
-                </Link>
-              )}
             </div>
           </div>
         </div>

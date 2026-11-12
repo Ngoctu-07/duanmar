@@ -51,6 +51,9 @@ export function BookingSummary({
   const [reference] = useState(() =>
     `VN-${Date.now().toString(36).toUpperCase()}`
   );
+  // Payment is confirmed in-page by the mock webhook; once true the pre-booking
+  // instructions and the QR/payment UI are removed from the confirmation view.
+  const [isPaid, setIsPaid] = useState(false);
   const discountAmount = discount && discount.amount > 0 ? discount.amount : null;
 
   const rows = buildTicketRows({
@@ -69,6 +72,7 @@ export function BookingSummary({
   });
 
   const handlePaid = (paymentMethod: PaymentMethod) => {
+    setIsPaid(true);
     const paidAt = new Date().toISOString();
     const difficulty = normalizeBookingDifficulty(values.difficulty);
     const booking = {
@@ -147,7 +151,9 @@ export function BookingSummary({
           {t("summaryTitle")}
         </h2>
       </div>
-      <p className="mt-2 text-sm text-muted-foreground">{t("summaryNote")}</p>
+      {!isPaid && (
+        <p className="mt-2 text-sm text-muted-foreground">{t("summaryNote")}</p>
+      )}
 
       <dl className="mt-4 divide-y divide-border text-sm">
         {rows.map((row) => (
@@ -176,15 +182,26 @@ export function BookingSummary({
         locale={locale}
         currency={currency}
         reference={reference}
+        paid={isPaid}
         onPaid={handlePaid}
       />
 
-      <Link
-        href={`/explore/destinations/${slug}`}
-        className="mt-4 inline-block text-sm text-link hover:underline"
-      >
-        {t("backToTour")}
-      </Link>
+      {isPaid && (
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
+          <Link
+            href="/#featured-tours"
+            className="w-full rounded-sm border border-white/25 px-6 py-3.5 text-center text-sm font-semibold uppercase tracking-wider text-white transition-colors hover:border-white sm:w-auto"
+          >
+            {t("backToHomepage")}
+          </Link>
+          <Link
+            href={`/my-trips/${reference}`}
+            className="w-full rounded-sm bg-[#b3151b] px-8 py-3.5 text-center text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-[#cc3d3d] sm:w-auto"
+          >
+            {t("viewTourTicket")}
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

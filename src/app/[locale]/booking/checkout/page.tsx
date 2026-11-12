@@ -64,7 +64,6 @@ export default async function CheckoutPage({
 
       <h1 className="display-title mt-6">{t("title")}</h1>
       <p className="mt-1 text-lg text-muted-foreground">{tourName}</p>
-      <p className="mt-2 text-sm text-muted-foreground">{t("subtitle")}</p>
 
       <div className="mt-6">
         <BookingForm

@@ -10,10 +10,10 @@ interface FeaturedDestinationsProps {
 }
 
 /**
- * Homepage "Featured Destinations" — open horror-gallery layout: a small red
- * eyebrow over a tall condensed title, then borderless cards with wide
- * sharp-cornered thumbnails and left-aligned content beneath (no visible card
- * box).
+ * Homepage "Featured Destinations" — open horror-gallery layout: a tall
+ * condensed title, then borderless cards with wide sharp-cornered thumbnails
+ * and left-aligned content beneath (no visible card box). No eyebrow label sits
+ * above the heading.
  */
 export function FeaturedDestinations({
   destinations,
@@ -23,14 +23,12 @@ export function FeaturedDestinations({
 
   return (
     <section
+      id="featured-tours"
       data-testid="featured-destinations"
-      className="relative pt-10 pb-20 md:pt-14 md:pb-28"
+      className="relative scroll-mt-20 pb-20 md:pb-28"
     >
       <div className="container mx-auto px-4">
         <header className="mx-auto mb-14 max-w-4xl text-center md:mb-20">
-          <p className="mb-4 font-sans text-[11px] font-medium uppercase tracking-[0.45em] text-link">
-            {t("featuredEyebrow")}
-          </p>
           <h2 className="display-title">{t("featuredDestinations")}</h2>
         </header>
         <div className={TOUR_CARD_GRID}>

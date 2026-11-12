@@ -2,23 +2,34 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { cn } from "@/lib/utils";
 
 /**
- * Primary CTA in the tour meta tag row. Deliberately the same type size and
- * padding as the outlined chips beside it (`text-sm`, `px-3 py-1`) so the row
- * reads as one tag set — only the solid brand-red fill marks it as the action.
+ * Primary booking CTA for the sticky tour sidebar. Rendered full-width inside
+ * the pricing card so the highest-intent action owns the most visual weight on
+ * the page (solid brand red, uppercase, generous hit area).
  *
- * Open to guests: booking does not require an account (only applying a
- * voucher does — that gate lives in the checkout voucher section).
+ * Open to guests: booking does not require an account (only applying a voucher
+ * does — that gate lives in the checkout voucher section).
  */
-export function BookTicketButton({ slug }: { slug: string }) {
+export function BookTicketButton({
+  slug,
+  className,
+}: {
+  slug: string;
+  className?: string;
+}) {
   const t = useTranslations("booking");
   const href = `/booking/checkout?tour=${encodeURIComponent(slug)}`;
 
   return (
     <Link
       href={href}
-      className="inline-flex items-center rounded-none bg-primary px-3 py-1 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 print:hidden"
+      data-testid="book-ticket-cta"
+      className={cn(
+        "flex w-full cursor-pointer items-center justify-center rounded-sm bg-[#b3151b] px-6 py-4 text-base font-bold uppercase tracking-wider text-white transition-colors hover:bg-[#cc3d3d] print:hidden",
+        className
+      )}
     >
       {t("bookNow")}
     </Link>

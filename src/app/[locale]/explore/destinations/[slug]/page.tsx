@@ -3,15 +3,13 @@ import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
-import { BookTicketButton } from "@/components/booking/book-ticket-button";
 import { TourRatingBadge } from "@/components/rating/tour-rating-badge";
-
 import { TourDetailExtras } from "@/components/explore/tour-detail-extras";
 import { TourPoster } from "@/components/explore/tour-poster";
+import { TourStarterKit } from "@/components/explore/tour-starter-kit";
 import { CustomerReviews } from "@/components/reviews/customer-reviews";
 import { PriceBlock } from "@/components/pricing/price-block";
 import { ItineraryAccordion, type ItineraryDay } from "@/components/explore/itinerary-accordion";
-import { cn } from "@/lib/utils";
 import { mapPricingTiers } from "@/lib/pricing";
 import { pickMainPoster } from "@/lib/destination-poster";
 import {
@@ -129,46 +127,41 @@ export default async function DestinationDetailPage({ params }: PageProps) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
-      <Link
-        href="/explore/destinations"
-        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        ← {t("backToList")}
-      </Link>
-
-      {/* Header row: title + tags. Outside the grid so the poster can start on
-          the description baseline. Wide horizontal gap keeps the display title
-          visually separated from the taxonomy chips; it collapses to the row
-          gap when the header wraps. */}
-      <header className="mt-8 flex flex-wrap items-center gap-x-10 gap-y-5">
-        <h1 className="display-title min-w-0">{tourName}</h1>
-        <TourRatingBadge slug={slug} initialAggregate={initialAggregate} />
-        <div
-          data-testid="tour-meta-tags"
-          className="flex flex-wrap items-center gap-5"
-        >
-          <span
-            data-testid="tour-country-chip"
-            className="rounded-none border px-3 py-1 text-sm font-medium capitalize"
-          >
-            {destination.country?.[locale as "vi" | "en"] ??
-              (destination.category === "domestic"
-                ? t("vietnam")
-                : t(destination.region as "north" | "central" | "south"))}
-          </span>
-          <BookTicketButton slug={destination.slug.current} />
-        </div>
-      </header>
-
-      {/* Two-column body: description → itinerary → price left, static poster
-          right; items-start keeps both tops equal. */}
-      <div
-        className={cn(
-          "mt-8 grid grid-cols-1 items-start gap-8",
-          posterImage ? "lg:grid-cols-2 lg:gap-8" : "max-w-3xl"
-        )}
-      >
+      {/* Balanced 50/50 body: reading column on the left, poster +
+          pricing/booking sidebar on the right. Both columns are static and
+          scroll together with the page on every tour. Only existing tour data
+          is rearranged — no extra badges or placeholder copy. */}
+      <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2">
         <article className="flex min-w-0 flex-col gap-6">
+          <Link
+            href="/explore/destinations"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            ← {t("backToList")}
+          </Link>
+
+          {/* Title + rating + country chip share the top of the reading column. */}
+          <header className="flex flex-col gap-4 border-b border-border/60 pb-6">
+            <h1 className="display-title min-w-0">{tourName}</h1>
+            <div className="flex flex-wrap items-center gap-5">
+              <TourRatingBadge slug={slug} initialAggregate={initialAggregate} />
+              <div
+                data-testid="tour-meta-tags"
+                className="flex flex-wrap items-center gap-5"
+              >
+                <span
+                  data-testid="tour-country-chip"
+                  className="rounded-none border px-3 py-1 text-sm font-medium capitalize"
+                >
+                  {destination.country?.[locale as "vi" | "en"] ??
+                    (destination.category === "domestic"
+                      ? t("vietnam")
+                      : t(destination.region as "north" | "central" | "south"))}
+                </span>
+              </div>
+            </div>
+          </header>
+
           {tourDescription && (
             <p
               data-testid="tour-description"
@@ -178,21 +171,24 @@ export default async function DestinationDetailPage({ params }: PageProps) {
             </p>
           )}
 
+          <TourStarterKit items={highlights} />
+
           {hasItinerary && (
             <ItineraryAccordion title={t("itinerary.title")} days={itineraryDays} />
           )}
-
-          <PriceBlock tiers={tiers} locale={locale} />
         </article>
 
-        {posterImage && <TourPoster image={posterImage} />}
+        <aside className="flex min-w-0 flex-col gap-6 self-start">
+          {posterImage && <TourPoster image={posterImage} />}
+          <PriceBlock
+            tiers={tiers}
+            locale={locale}
+            slug={destination.slug.current}
+          />
+        </aside>
       </div>
 
-      <TourDetailExtras
-        highlights={highlights}
-        included={included}
-        excluded={excluded}
-      />
+      <TourDetailExtras included={included} excluded={excluded} />
 
       {/* key=slug remounts on soft-nav instead of showing the previous list. */}
       <div className="mt-14">

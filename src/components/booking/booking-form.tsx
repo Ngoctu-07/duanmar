@@ -16,6 +16,7 @@ import { normalizeBookingDifficulty } from "@/lib/booking-difficulty";
 import { BookingContactSection } from "./booking-contact-section";
 import { BookingDateSection } from "./booking-date-section";
 import { BookingDifficultySection } from "./booking-difficulty-section";
+import { BookingGuestsSection } from "./booking-guests-section";
 import { BookingPricingSection } from "./booking-pricing-section";
 import { BookingSummary } from "./booking-summary";
 import { BookingVoucherSection } from "./booking-voucher-section";
@@ -183,7 +184,11 @@ export function BookingForm({
   }
 
   return (
-    <form onSubmit={submit} noValidate className="space-y-5">
+    <>
+      {/* Pre-booking guidance only: it unmounts together with the form once the
+          booking is submitted, so the confirmation/ticket view stays clean. */}
+      <p className="mb-5 text-sm text-muted-foreground">{t("subtitle")}</p>
+      <form onSubmit={submit} noValidate className="space-y-5">
       <BookingContactSection values={values} errors={errors} onChange={change} />
       <BookingDateSection
         values={values}
@@ -193,18 +198,10 @@ export function BookingForm({
         capacity={activeCapacity}
         guestCount={guestCount}
       />
-      <BookingPricingSection
+      <BookingGuestsSection
         values={values}
         errors={errors}
         onChange={change}
-        guestCount={guestCount}
-        tier={tier}
-        subtotal={total}
-        discount={discount}
-        voucherCode={applicableVoucher?.code ?? null}
-        payable={payable}
-        locale={locale}
-        currency={currency}
       />
 
       <BookingDifficultySection
@@ -226,9 +223,23 @@ export function BookingForm({
         currency={currency}
       />
 
+      {/* Final summary sits after the voucher step so the discount line and
+          payable total reflect the applied offer before the CTA. */}
+      <BookingPricingSection
+        guestCount={guestCount}
+        tier={tier}
+        subtotal={total}
+        discount={discount}
+        voucherCode={applicableVoucher?.code ?? null}
+        payable={payable}
+        locale={locale}
+        currency={currency}
+      />
+
       <Button type="submit" className="h-9 w-full">
         {t("submit")}
       </Button>
     </form>
+    </>
   );
 }

@@ -10,16 +10,34 @@ interface FieldProps {
   /** Hide the visible label when a section heading already names the field
       (the control keeps its own accessible name). */
   hideLabel?: boolean;
+  /** Marks the label with the required asterisk (white, matches the label). */
+  required?: boolean;
   children: ReactNode;
 }
 
 /** Label + control + inline error, wired with `aria-describedby`. */
-export function Field({ id, label, error, hideLabel, children }: FieldProps) {
+export function Field({
+  id,
+  label,
+  error,
+  hideLabel,
+  required,
+  children,
+}: FieldProps) {
   const t = useTranslations("booking");
 
   return (
     <div className="grid gap-1.5">
-      {!hideLabel && <Label htmlFor={id}>{label}</Label>}
+      {!hideLabel && (
+        <Label htmlFor={id}>
+          {label}
+          {required && (
+            <span aria-hidden="true" className="ml-1 text-white">
+              *
+            </span>
+          )}
+        </Label>
+      )}
       {children}
       {error && (
         <p id={`${id}-error`} role="alert" className="text-xs text-destructive">
